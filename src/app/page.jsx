@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import Image from 'next/image';
+// using standard <img> for external logo URL
 import { 
   FileText, 
   ClipboardList, 
@@ -89,13 +89,12 @@ export default function LandingPage() {
         <div className="flex justify-between items-center px-margin-mobile md:px-margin-desktop py-4 w-full max-w-7xl mx-auto">
           {/* Logo container */}
           <div className="flex items-center gap-3">
-            <Image 
-              src="/logo.png" 
-              alt="UACC Logo" 
-              height={36} 
-              width={140} 
+            <img
+              src="https://uganda-aircargo.com/wp-content/uploads/2025/03/Uganda-Air-Cargo-Logo-1.png"
+              alt="UACC Logo"
+              height={36}
+              width={140}
               className="h-9 w-auto object-contain"
-              priority
             />
             <span className="font-heading font-bold text-lg md:text-xl tracking-tight border-l border-uacc-gold/20 pl-3 hidden sm:inline text-white">
               DIMS
@@ -746,11 +745,11 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto px-margin-mobile md:px-margin-desktop grid grid-cols-1 md:grid-cols-12 gap-10 mb-12">
           {/* Column 1 (Left: Branding & Architect info) */}
           <div className="md:col-span-5 flex flex-col items-start gap-4">
-            <Image 
-              src="/logo.png" 
-              alt="UACC Logo" 
-              height={40} 
-              width={160} 
+            <img
+              src="https://uganda-aircargo.com/wp-content/uploads/2025/03/Uganda-Air-Cargo-Logo-1.png"
+              alt="UACC Logo"
+              height={40}
+              width={160}
               className="h-10 w-auto object-contain"
             />
             <div className="text-sm font-heading font-bold text-white tracking-wide">
