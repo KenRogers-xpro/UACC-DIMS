@@ -19,7 +19,9 @@ import {
   Bot, 
   Send,
   Briefcase,
-  UserCheck
+  UserCheck,
+  Sun,
+  Moon
 } from 'lucide-react';
 
 export default function LandingPage() {
@@ -36,6 +38,21 @@ export default function LandingPage() {
     }
   ]);
   const [isTyping, setIsTyping] = useState(false);
+  const [theme, setTheme] = useState('dark');
+
+  useEffect(() => {
+    const storedTheme = window.localStorage.getItem('theme');
+    const preferredTheme = storedTheme || (window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
+    setTheme(preferredTheme);
+    document.documentElement.classList.toggle('light', preferredTheme === 'light');
+  }, []);
+
+  const toggleTheme = () => {
+    const nextTheme = theme === 'dark' ? 'light' : 'dark';
+    window.localStorage.setItem('theme', nextTheme);
+    setTheme(nextTheme);
+    document.documentElement.classList.toggle('light', nextTheme === 'light');
+  };
 
   // Monitor scroll positioning to update active navigation links
   useEffect(() => {
@@ -80,7 +97,7 @@ export default function LandingPage() {
   ];
 
   return (
-    <div className="relative min-h-screen text-[#dfe2ee] font-sans selection:bg-uacc-red selection:text-white">
+    <div className="relative min-h-screen font-sans selection:bg-uacc-red selection:text-white" style={{ color: 'var(--text)' }}>
       {/* Animated Fixed Dot Grid Background */}
       <div className="dot-grid" />
 
@@ -96,7 +113,7 @@ export default function LandingPage() {
               width={140}
               className="h-9 w-auto object-contain"
             />
-            <span className="font-heading font-bold text-lg md:text-xl tracking-tight border-l border-uacc-gold/20 pl-3 hidden sm:inline text-white">
+            <span className="font-heading font-bold text-lg md:text-xl tracking-tight border-l border-uacc-gold/20 pl-3 hidden sm:inline" style={{ color: 'var(--text)' }}>
               DIMS
             </span>
           </div>
@@ -115,14 +132,22 @@ export default function LandingPage() {
               >
                 {link.label}
                 {activeSection === link.id && (
-                  <span className="absolute bottom-0 left-3 right-3 h-[2px] bg-uacc-gold rounded-full" />
+                  <span className="absolute bottom-0 left-3 right-3 h-0.5 bg-uacc-gold rounded-full" />
                 )}
               </a>
             ))}
           </div>
 
           {/* Action buttons (desktop) */}
-          <div className="hidden md:flex items-center gap-4">
+          <div className="hidden md:flex items-center gap-3">
+            <button
+              onClick={toggleTheme}
+              className="p-2 rounded-full border border-white/20 text-on-surface hover:bg-white/10 transition-all duration-200"
+              aria-label="Toggle light and dark theme"
+              title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} theme`}
+            >
+              {theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
+            </button>
             <a 
               href="/login" 
               className="px-5 py-2 text-white border border-white/20 rounded font-heading text-xs uppercase tracking-wider hover:bg-white/5 hover:border-white transition-all duration-200"
@@ -149,7 +174,7 @@ export default function LandingPage() {
 
         {/* Collapsed Mobile Menu Drawer */}
         {mobileMenuOpen && (
-          <div className="md:hidden w-full bg-[#0f131c] border-b border-uacc-gold/20 px-margin-mobile py-6 flex flex-col gap-4 animate-fadeIn">
+          <div className="md:hidden w-full bg-surface border-b border-uacc-gold/20 px-margin-mobile py-6 flex flex-col gap-4 animate-fadeIn">
             <div className="flex flex-col gap-2">
               {navLinks.map((link) => (
                 <a
@@ -168,6 +193,15 @@ export default function LandingPage() {
             </div>
             <hr className="border-white/5" />
             <div className="flex flex-col gap-3">
+              <button
+                onClick={() => {
+                  toggleTheme();
+                  setMobileMenuOpen(false);
+                }}
+                className="w-full text-center py-3 text-on-surface border border-white/20 rounded font-heading text-xs uppercase tracking-wider hover:bg-white/5 transition-all"
+              >
+                Switch to {theme === 'dark' ? 'Light' : 'Dark'} Theme
+              </button>
               <a 
                 href="/login" 
                 onClick={() => setMobileMenuOpen(false)}
@@ -202,7 +236,7 @@ export default function LandingPage() {
           </svg>
         </div>
         {/* Gold Glow Top Right */}
-        <div className="absolute top-0 right-0 w-[300px] h-[300px] md:w-[600px] md:h-[600px] bg-gradient-to-bl from-uacc-gold/10 to-transparent rounded-full blur-[100px] pointer-events-none z-0"></div>
+<div className="absolute top-0 right-0 w-[300px] h-[300px] md:w-[600px] md:h-[600px] bg-linear-to-bl from-uacc-gold/10 to-transparent rounded-full blur-[100px] pointer-events-none z-0"></div>
 
         <div className="grid grid-cols-1 md:grid-cols-12 gap-12 items-center relative z-10">
           {/* Left Column (60% desktop) */}
@@ -310,9 +344,9 @@ export default function LandingPage() {
               </div>
 
               {/* AI Chat Bubble at Bottom */}
-              <div className="p-3.5 glass-panel border-uacc-red/20 rounded-lg bg-[#140b0b]/30">
+              <div className="p-3.5 glass-panel border-uacc-red/20 rounded-lg bg-[rgba(204,34,0,0.15)]">
                 <div className="flex items-start gap-3">
-                  <div className="p-1.5 rounded-full bg-uacc-red/20 text-uacc-red flex-shrink-0">
+                  <div className="p-1.5 rounded-full bg-uacc-red/20 text-uacc-red shrink-0">
                     <Bot size={16} />
                   </div>
                   <div>
@@ -331,9 +365,9 @@ export default function LandingPage() {
       </section>
 
       {/* SECTION 3 — Context Bar */}
-      <section className="border-y border-uacc-gold/20 bg-[#0a0e16] py-6 relative z-20 overflow-hidden">
+      <section className="border-y border-uacc-gold/20 bg-surface-low py-6 relative z-20 overflow-hidden">
         <div className="max-w-7xl mx-auto px-margin-mobile md:px-margin-desktop text-center flex items-center justify-center gap-3">
-          <Plane className="text-uacc-gold w-4 h-4 flex-shrink-0 animate-pulse rotate-90" />
+          <Plane className="text-uacc-gold w-4 h-4 shrink-0 animate-pulse rotate-90" />
           <p className="font-heading text-[10px] md:text-xs text-uacc-gold-light uppercase tracking-[0.25em] leading-normal max-w-full">
             ✈ Deployed for Uganda Air Cargo Corporation <span className="mx-2 text-uacc-gold/30">·</span> Entebbe International Airport <span className="mx-2 text-uacc-gold/30">·</span> Ministry of Defence &amp; Veteran Affairs
           </p>
@@ -353,7 +387,7 @@ export default function LandingPage() {
           <h2 className="font-heading text-3xl md:text-5xl font-bold text-white tracking-tight">
             Four Modules. One Intelligent System.
           </h2>
-          <div className="w-16 h-[2px] bg-gradient-to-r from-uacc-gold to-uacc-red mt-2 rounded"></div>
+          <div className="w-16 h-0.5 bg-linear-to-r from-uacc-gold to-uacc-red mt-2 rounded"></div>
         </div>
 
         {/* 2x2 Grid / 1 column mobile */}
@@ -364,7 +398,7 @@ export default function LandingPage() {
             <div className="absolute top-0 left-0 w-2 h-full bg-uacc-gold opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
             
             <div className="flex items-start gap-5">
-              <div className="p-4 rounded-lg bg-uacc-gold/10 text-uacc-gold flex-shrink-0 group-hover:scale-110 transition-transform duration-300">
+              <div className="p-4 rounded-lg bg-uacc-gold/10 text-uacc-gold shrink-0 group-hover:scale-110 transition-transform duration-300">
                 <FileText size={24} />
               </div>
               <div className="flex flex-col gap-2">
@@ -387,7 +421,7 @@ export default function LandingPage() {
             <div className="absolute top-0 left-0 w-2 h-full bg-uacc-red opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
 
             <div className="flex items-start gap-5">
-              <div className="p-4 rounded-lg bg-uacc-red/10 text-uacc-red flex-shrink-0 group-hover:scale-110 transition-transform duration-300">
+              <div className="p-4 rounded-lg bg-uacc-red/10 text-uacc-red shrink-0 group-hover:scale-110 transition-transform duration-300">
                 <ClipboardList size={24} />
               </div>
               <div className="flex flex-col gap-2">
@@ -410,7 +444,7 @@ export default function LandingPage() {
             <div className="absolute top-0 left-0 w-2 h-full bg-uacc-gold opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
 
             <div className="flex items-start gap-5">
-              <div className="p-4 rounded-lg bg-uacc-gold/10 text-uacc-gold flex-shrink-0 group-hover:scale-110 transition-transform duration-300">
+              <div className="p-4 rounded-lg bg-uacc-gold/10 text-uacc-gold shrink-0 group-hover:scale-110 transition-transform duration-300">
                 <Clock size={24} />
               </div>
               <div className="flex flex-col gap-2">
@@ -433,7 +467,7 @@ export default function LandingPage() {
             <div className="absolute top-0 left-0 w-2 h-full bg-uacc-red opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
 
             <div className="flex items-start gap-5">
-              <div className="p-4 rounded-lg bg-uacc-red/10 text-uacc-red flex-shrink-0 group-hover:scale-110 transition-transform duration-300">
+              <div className="p-4 rounded-lg bg-uacc-red/10 text-uacc-red shrink-0 group-hover:scale-110 transition-transform duration-300">
                 <BarChart2 size={24} />
               </div>
               <div className="flex flex-col gap-2">
@@ -455,7 +489,8 @@ export default function LandingPage() {
       {/* SECTION 5 — AI Agent Spotlight */}
       <section 
         id="ai-agent" 
-        className="relative z-10 py-24 bg-[#0a0f18]/60 border-y border-white/5 overflow-hidden"
+        className="relative z-10 py-24 border-y border-white/5 overflow-hidden"
+        style={{ backgroundColor: theme === 'dark' ? 'rgba(10,15,24,0.6)' : 'rgba(249,250,251,0.75)' }}
       >
         {/* Subtle diagonal red-to-gold glow behind content */}
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_45%_50%,rgba(204,34,0,0.04)_0%,rgba(201,151,58,0.04)_60%,transparent_100%)] pointer-events-none z-0"></div>
@@ -476,24 +511,24 @@ export default function LandingPage() {
             {/* Bullet points with checkmarks */}
             <div className="flex flex-col gap-4 mt-2">
               <div className="flex items-start gap-3">
-                <span className="p-1 rounded bg-uacc-gold/20 text-uacc-gold flex-shrink-0 mt-0.5">
-                  <Check size={14} className="stroke-[3]" />
+                <span className="p-1 rounded bg-uacc-gold/20 text-uacc-gold shrink-0 mt-0.5">
+                  <Check size={14} className="stroke-3" />
                 </span>
                 <span className="text-sm md:text-base text-on-surface">
                   Suggests procurement item details based on historical approvals
                 </span>
               </div>
               <div className="flex items-start gap-3">
-                <span className="p-1 rounded bg-uacc-gold/20 text-uacc-gold flex-shrink-0 mt-0.5">
-                  <Check size={14} className="stroke-[3]" />
+                <span className="p-1 rounded bg-uacc-gold/20 text-uacc-gold shrink-0 mt-0.5">
+                  <Check size={14} className="stroke-3" />
                 </span>
                 <span className="text-sm md:text-base text-on-surface">
                   Flags unusual cost estimates before submission
                 </span>
               </div>
               <div className="flex items-start gap-3">
-                <span className="p-1 rounded bg-uacc-gold/20 text-uacc-gold flex-shrink-0 mt-0.5">
-                  <Check size={14} className="stroke-[3]" />
+                <span className="p-1 rounded bg-uacc-gold/20 text-uacc-gold shrink-0 mt-0.5">
+                  <Check size={14} className="stroke-3" />
                 </span>
                 <span className="text-sm md:text-base text-on-surface">
                   Answers questions like &quot;Which department had the most pending requests this month?&quot;
@@ -518,9 +553,9 @@ export default function LandingPage() {
           {/* Right Column (chat interface card) */}
           <div className="md:col-span-6 w-full">
             {/* Chat Frame Container */}
-            <div className="glass-panel border-t-2 border-t-uacc-gold bg-[#0d1a2e]/90 rounded-xl overflow-hidden shadow-[0_12px_40px_rgba(0,0,0,0.5)]">
+            <div className="glass-panel border-t-2 border-t-uacc-gold rounded-xl overflow-hidden shadow-[0_12px_40px_rgba(0,0,0,0.5)]" style={{ backgroundColor: theme === 'dark' ? 'rgba(13,26,46,0.9)' : 'rgba(255,255,255,0.88)' }}>
               {/* Header */}
-              <div className="flex justify-between items-center px-6 py-4 bg-[#0a1424] border-b border-white/5">
+              <div className="flex justify-between items-center px-6 py-4 border-b border-white/5" style={{ backgroundColor: theme === 'dark' ? 'rgb(10,20,36)' : 'rgba(255,255,255,0.75)' }}>
                 <div className="flex items-center gap-3">
                   <div className="p-2 rounded-lg bg-uacc-gold/10 text-uacc-gold">
                     <Bot size={20} />
@@ -596,7 +631,7 @@ export default function LandingPage() {
               </div>
 
               {/* Chat Input placeholder */}
-              <div className="p-4 bg-[#0a1424] border-t border-white/5 flex gap-2">
+              <div className="p-4 border-t border-white/5 flex gap-2" style={{ backgroundColor: theme === 'dark' ? 'rgb(10,20,36)' : 'rgba(255,255,255,0.75)' }}>
                 <input 
                   type="text" 
                   placeholder="Ask a question about aircraft logistics, procurement status..." 
@@ -628,7 +663,7 @@ export default function LandingPage() {
           <h2 className="font-heading text-3xl md:text-5xl font-bold text-white tracking-tight">
             Built for Every Role at UACC
           </h2>
-          <div className="w-16 h-[2px] bg-gradient-to-r from-uacc-gold to-uacc-red mt-2 rounded"></div>
+          <div className="w-16 h-0.5 bg-linear-to-r from-uacc-gold to-uacc-red mt-2 rounded"></div>
         </div>
 
         {/* 5 columns flex-wrap responsive layout */}
@@ -713,7 +748,8 @@ export default function LandingPage() {
       {/* SECTION 7 — CTA Banner */}
       <section 
         id="about" 
-        className="relative z-10 w-full bg-gradient-to-r from-[#1A0500] to-[#2D0800] py-20 border-t border-uacc-gold/30 overflow-hidden"
+        className="relative z-10 w-full py-20 border-t border-uacc-gold/30 overflow-hidden"
+        style={{ background: theme === 'dark' ? 'linear-gradient(90deg,#1A0500,#2D0800)' : 'linear-gradient(90deg,#fff1d6,#ffe8b5)' }}
       >
         {/* Glow vector arc ornament */}
         <div className="absolute right-0 bottom-0 w-[400px] h-[200px] opacity-10 pointer-events-none text-uacc-gold">
@@ -741,7 +777,7 @@ export default function LandingPage() {
       </section>
 
       {/* SECTION 8 — Footer */}
-      <footer className="relative z-10 bg-[#080C14] border-t border-white/5 pt-16 pb-8">
+      <footer className="relative z-10 border-t border-white/5 pt-16 pb-8" style={{ backgroundColor: theme === 'dark' ? '#080C14' : '#f8fafc' }}>
         <div className="max-w-7xl mx-auto px-margin-mobile md:px-margin-desktop grid grid-cols-1 md:grid-cols-12 gap-10 mb-12">
           {/* Column 1 (Left: Branding & Architect info) */}
           <div className="md:col-span-5 flex flex-col items-start gap-4">
@@ -752,13 +788,13 @@ export default function LandingPage() {
               width={160}
               className="h-10 w-auto object-contain"
             />
-            <div className="text-sm font-heading font-bold text-white tracking-wide">
+            <div className="text-sm font-heading font-bold tracking-wide" style={{ color: 'var(--text)' }}>
               DIMS v1.0 — Digital Information and Management System
             </div>
-            <p className="text-xs text-on-surface-variant leading-relaxed max-w-sm">
+            <p className="text-xs leading-relaxed max-w-sm" style={{ color: 'rgba(var(--text-rgb),0.8)' }}>
               Developed by Lutaaya Ken Rogers · Nkumba University · BCS Final Year Project 2026
             </p>
-            <p className="text-xs text-on-surface-variant/70">
+            <p className="text-xs" style={{ color: 'rgba(var(--text-rgb),0.7)' }}>
               © 2026 Uganda Air Cargo Corporation. All rights reserved.
             </p>
           </div>

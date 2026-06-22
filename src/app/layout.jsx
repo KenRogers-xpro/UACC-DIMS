@@ -21,7 +21,7 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="en" className={`${inter.variable} ${spaceGrotesk.variable} scroll-smooth`}>
-      <body className="antialiased min-h-screen relative bg-[#080C14]">
+      <body className="antialiased min-h-screen relative" style={{ backgroundColor: 'var(--background)' }}>
         {children}
       </body>
     </html>
