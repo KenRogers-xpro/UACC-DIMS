@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import Link from 'next/link';
 // using standard <img> for external logo URL
 import { 
   FileText, 
@@ -148,18 +149,18 @@ export default function LandingPage() {
             >
               {theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
             </button>
-            <a 
+            <Link 
               href="/login" 
               className="px-5 py-2 text-white border border-white/20 rounded font-heading text-xs uppercase tracking-wider hover:bg-white/5 hover:border-white transition-all duration-200"
             >
               Sign In
-            </a>
-            <a 
+            </Link>
+            <Link 
               href="/login" 
               className="btn-primary px-5 py-2 rounded font-heading text-xs uppercase tracking-wider font-bold"
             >
               Get Started
-            </a>
+            </Link>
           </div>
 
           {/* Mobile hamburger menu toggle */}
@@ -202,20 +203,20 @@ export default function LandingPage() {
               >
                 Switch to {theme === 'dark' ? 'Light' : 'Dark'} Theme
               </button>
-              <a 
+              <Link 
                 href="/login" 
                 onClick={() => setMobileMenuOpen(false)}
                 className="w-full text-center py-3 text-white border border-white/20 rounded font-heading text-xs uppercase tracking-wider hover:bg-white/5 transition-all"
               >
                 Sign In
-              </a>
-              <a 
+              </Link>
+              <Link 
                 href="/login" 
                 onClick={() => setMobileMenuOpen(false)}
                 className="w-full text-center btn-primary py-3 rounded font-heading text-xs uppercase tracking-wider font-bold"
               >
                 Get Started
-              </a>
+              </Link>
             </div>
           </div>
         )}
@@ -766,12 +767,12 @@ export default function LandingPage() {
             DIMS is built specifically for UACC&apos;s operational structure, legal obligations, and five-department workflow.
           </p>
           <div className="mt-4">
-            <a 
+            <Link 
               href="/login" 
               className="px-8 py-4 bg-white text-uacc-red font-heading text-xs uppercase tracking-wider font-bold rounded-full hover:bg-neutral-100 transform hover:-translate-y-0.5 transition-all shadow-[0_4px_20px_rgba(204,34,0,0.15)] inline-block"
             >
               Access the System
-            </a>
+            </Link>
           </div>
         </div>
       </section>
@@ -806,13 +807,13 @@ export default function LandingPage() {
             </h4>
             <div className="flex flex-col gap-2.5">
               {['Dashboard', 'Documents', 'Procurement', 'Activity Logs', 'Reports'].map((link) => (
-                <a 
+                <Link 
                   key={link} 
                   href="/login" 
                   className="text-xs text-on-surface-variant hover:text-uacc-gold transition-colors duration-200"
                 >
                   {link}
-                </a>
+                </Link>
               ))}
             </div>
           </div>
