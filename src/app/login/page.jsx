@@ -1,13 +1,27 @@
 'use client';
 
-import { useState } from 'react';
-import { Lock, Mail, ChevronDown, CheckSquare, ArrowRight, Plane } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Lock, Mail, ChevronDown, CheckSquare, ArrowRight, Plane, Shield } from 'lucide-react';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [department, setDepartment] = useState('Select Access Group');
   const [remember, setRemember] = useState(false);
+  const [theme, setTheme] = useState('dark');
+
+  useEffect(() => {
+    // Read theme from localStorage and apply it
+    const savedTheme = typeof window !== 'undefined' ? window.localStorage.getItem('theme') : 'dark';
+    if (savedTheme) {
+      setTheme(savedTheme);
+      if (savedTheme === 'light') {
+        document.documentElement.classList.add('light');
+      } else {
+        document.documentElement.classList.remove('light');
+      }
+    }
+  }, []);
 
   const departments = [
     'Operations',
@@ -20,11 +34,11 @@ export default function LoginPage() {
   return (
     <main className="min-h-screen bg-[#060916] text-white flex items-center justify-center px-4 py-10">
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute left-1/2 top-0 w-[950px] h-[950px] -translate-x-1/2 rounded-full bg-gradient-to-br from-[#CC2200]/15 via-transparent to-transparent blur-[120px] opacity-70" />
-        <div className="absolute right-0 bottom-0 w-[700px] h-[700px] rounded-full bg-gradient-to-tl from-[#C9973A]/15 via-transparent to-transparent blur-[100px] opacity-60" />
+        <div className="absolute left-1/2 top-0 w-[950px] h-[950px] -translate-x-1/2 rounded-full bg-linear-to-br from-uacc-red/15 via-transparent to-transparent blur-[120px] opacity-70" />
+        <div className="absolute right-0 bottom-0 w-[700px] h-[700px] rounded-full bg-linear-to-tl from-uacc-gold/15 via-transparent to-transparent blur-[100px] opacity-60" />
       </div>
 
-      <div className="relative z-10 w-full max-w-md rounded-[32px] border border-white/10 bg-[#0c1120]/95 shadow-[0_30px_100px_rgba(0,0,0,0.45)] backdrop-blur-xl overflow-hidden">
+      <div className="relative z-10 rounded-4xl border border-white/10 bg-[#0c1120]/95 shadow-[0_30px_100px_rgba(0,0,0,0.45)] backdrop-blur-xl overflow-hidden" style={{ width: '100%', maxWidth: '28rem' }}>
         <div className="px-10 py-12">
           <div className="flex flex-col items-center gap-4 text-center">
             <div className="flex items-center gap-3 rounded-full bg-white/5 px-4 py-2 border border-white/10">
@@ -115,7 +129,9 @@ export default function LoginPage() {
 
         <div className="border-t border-white/10 bg-white/5 px-10 py-5 text-center text-[11px] text-white/50">
           <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-2 text-[10px] uppercase tracking-[0.35em] text-white/70 mx-auto">
-            <Shield className="h-3.5 w-3.5 text-uacc-gold" />
+            <svg className="h-3.5 w-3.5 text-uacc-gold" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden>
+              <path d="M12 2l7 3v5c0 5-3.6 9.7-7 12-3.4-2.3-7-7-7-12V5l7-3z" />
+            </svg>
             Protected by enterprise security
           </div>
           <p className="mt-4">This is a secure government system. All activities are logged and monitored.</p>
