@@ -2,6 +2,8 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import ThemeToggle from '@/components/ui/ThemeToggle';
+import { useTheme } from 'next-themes';
 // using standard <img> for external logo URL
 import { 
   FileText, 
@@ -21,8 +23,6 @@ import {
   Send,
   Briefcase,
   UserCheck,
-  Sun,
-  Moon
 } from 'lucide-react';
 
 export default function LandingPage() {
@@ -39,21 +39,13 @@ export default function LandingPage() {
     }
   ]);
   const [isTyping, setIsTyping] = useState(false);
-  const [theme, setTheme] = useState('dark');
+  const { theme, resolvedTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
 
-  useEffect(() => {
-    const storedTheme = window.localStorage.getItem('theme');
-    const preferredTheme = storedTheme || (window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
-    setTheme(preferredTheme);
-    document.documentElement.classList.toggle('light', preferredTheme === 'light');
-  }, []);
+  useEffect(() => setMounted(true), []);
 
-  const toggleTheme = () => {
-    const nextTheme = theme === 'dark' ? 'light' : 'dark';
-    window.localStorage.setItem('theme', nextTheme);
-    setTheme(nextTheme);
-    document.documentElement.classList.toggle('light', nextTheme === 'light');
-  };
+  // Use resolvedTheme for rendering decisions (avoids hydration mismatch)
+  const currentTheme = mounted ? (resolvedTheme || 'dark') : 'dark';
 
   // Monitor scroll positioning to update active navigation links
   useEffect(() => {
@@ -98,7 +90,7 @@ export default function LandingPage() {
   ];
 
   return (
-    <div className="relative min-h-screen font-sans selection:bg-uacc-red selection:text-white" style={{ color: 'var(--text)' }}>
+    <div className="relative min-h-screen font-sans selection:bg-uacc-red selection:text-white" style={{ color: 'var(--text-secondary)' }}>
       {/* Animated Fixed Dot Grid Background */}
       <div className="dot-grid" />
 
@@ -114,7 +106,7 @@ export default function LandingPage() {
               width={140}
               className="h-9 w-auto object-contain"
             />
-            <span className="font-heading font-bold text-lg md:text-xl tracking-tight border-l border-uacc-gold/20 pl-3 hidden sm:inline" style={{ color: 'var(--text)' }}>
+            <span className="font-heading font-bold text-lg md:text-xl tracking-tight border-l pl-3 hidden sm:inline" style={{ color: 'var(--text-primary)', borderColor: 'var(--border-gold)' }}>
               DIMS
             </span>
           </div>
@@ -128,8 +120,9 @@ export default function LandingPage() {
                 className={`font-heading text-sm uppercase tracking-wider px-3 py-1.5 rounded transition-all duration-300 relative ${
                   activeSection === link.id
                     ? 'text-uacc-gold font-semibold'
-                    : 'text-on-surface-variant hover:text-on-surface hover:bg-white/5'
+                    : 'hover:bg-white/5'
                 }`}
+                style={activeSection !== link.id ? { color: 'var(--text-muted)' } : {}}
               >
                 {link.label}
                 {activeSection === link.id && (
@@ -141,17 +134,11 @@ export default function LandingPage() {
 
           {/* Action buttons (desktop) */}
           <div className="hidden md:flex items-center gap-3">
-            <button
-              onClick={toggleTheme}
-              className="p-2 rounded-full border border-white/20 text-on-surface hover:bg-white/10 transition-all duration-200"
-              aria-label="Toggle light and dark theme"
-              title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} theme`}
-            >
-              {theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
-            </button>
+            <ThemeToggle />
             <Link 
               href="/login" 
-              className="px-5 py-2 text-white border border-white/20 rounded font-heading text-xs uppercase tracking-wider hover:bg-white/5 hover:border-white transition-all duration-200"
+              className="px-5 py-2 border rounded font-heading text-xs uppercase tracking-wider transition-all duration-200"
+              style={{ color: 'var(--text-primary)', borderColor: 'var(--border-default)' }}
             >
               Sign In
             </Link>
@@ -166,7 +153,8 @@ export default function LandingPage() {
           {/* Mobile hamburger menu toggle */}
           <button 
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="md:hidden p-2 text-on-surface hover:text-white focus:outline-none"
+            className="md:hidden p-2 focus:outline-none"
+            style={{ color: 'var(--text-muted)' }}
             aria-label="Toggle navigation menu"
           >
             {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
@@ -175,7 +163,7 @@ export default function LandingPage() {
 
         {/* Collapsed Mobile Menu Drawer */}
         {mobileMenuOpen && (
-          <div className="md:hidden w-full bg-surface border-b border-uacc-gold/20 px-margin-mobile py-6 flex flex-col gap-4 animate-fadeIn">
+          <div className="md:hidden w-full px-margin-mobile py-6 flex flex-col gap-4 animate-fadeIn" style={{ backgroundColor: 'var(--bg-surface)', borderBottom: '1px solid var(--border-gold)' }}>
             <div className="flex flex-col gap-2">
               {navLinks.map((link) => (
                 <a
@@ -185,28 +173,24 @@ export default function LandingPage() {
                   className={`font-heading text-sm uppercase tracking-wider py-3 px-4 rounded transition-all ${
                     activeSection === link.id
                       ? 'bg-uacc-gold/10 text-uacc-gold font-bold'
-                      : 'text-on-surface-variant hover:text-on-surface hover:bg-white/5'
+                      : ''
                   }`}
+                  style={activeSection !== link.id ? { color: 'var(--text-muted)' } : {}}
                 >
                   {link.label}
                 </a>
               ))}
             </div>
-            <hr className="border-white/5" />
+            <hr style={{ borderColor: 'var(--border-subtle)' }} />
             <div className="flex flex-col gap-3">
-              <button
-                onClick={() => {
-                  toggleTheme();
-                  setMobileMenuOpen(false);
-                }}
-                className="w-full text-center py-3 text-on-surface border border-white/20 rounded font-heading text-xs uppercase tracking-wider hover:bg-white/5 transition-all"
-              >
-                Switch to {theme === 'dark' ? 'Light' : 'Dark'} Theme
-              </button>
+              <div className="flex items-center justify-center pt-2">
+                <ThemeToggle />
+              </div>
               <Link 
                 href="/login" 
                 onClick={() => setMobileMenuOpen(false)}
-                className="w-full text-center py-3 text-white border border-white/20 rounded font-heading text-xs uppercase tracking-wider hover:bg-white/5 transition-all"
+                className="w-full text-center py-3 border rounded font-heading text-xs uppercase tracking-wider transition-all"
+                style={{ color: 'var(--text-primary)', borderColor: 'var(--border-default)' }}
               >
                 Sign In
               </Link>
@@ -250,7 +234,7 @@ export default function LandingPage() {
               </span>
             </div>
 
-            {/* H1 Heading */}
+            {/* H1 Heading — text-white stays white in both themes for hero impact */}
             <h1 className="font-heading text-4xl sm:text-5xl md:text-[68px] font-bold text-white tracking-tight leading-[1.05]">
               The Future of <br className="hidden sm:inline" />
               Operations at <br />
@@ -258,7 +242,7 @@ export default function LandingPage() {
             </h1>
 
             {/* Subtext */}
-            <p className="text-on-surface-variant text-base md:text-lg max-w-2xl leading-relaxed">
+            <p className="text-base md:text-lg max-w-2xl leading-relaxed" style={{ color: 'var(--text-muted)' }}>
               DIMS replaces paper-based workflows with a secure, intelligent digital system — document management, procurement approvals, activity logging, and an AI agent that learns from your data.
             </p>
 
@@ -279,12 +263,12 @@ export default function LandingPage() {
             </div>
 
             {/* Stats row below thin divider */}
-            <div className="w-full mt-8 pt-8 border-t border-white/5">
-              <p className="font-heading text-xs md:text-sm tracking-wider text-on-surface-variant flex flex-wrap items-center gap-x-3 gap-y-1">
+            <div className="w-full mt-8 pt-8" style={{ borderTop: '1px solid var(--border-subtle)' }}>
+              <p className="font-heading text-xs md:text-sm tracking-wider flex flex-wrap items-center gap-x-3 gap-y-1" style={{ color: 'var(--text-muted)' }}>
                 <span className="text-uacc-gold font-bold">230+</span> Assets Digitized 
-                <span className="text-white/20">·</span>
+                <span style={{ color: 'var(--text-faint)' }}>·</span>
                 <span className="text-uacc-gold font-bold">5</span> Departments Connected 
-                <span className="text-white/20">·</span>
+                <span style={{ color: 'var(--text-faint)' }}>·</span>
                 <span className="text-uacc-gold font-bold animate-pulse">AI-Powered</span> Insights
               </p>
             </div>
@@ -296,10 +280,10 @@ export default function LandingPage() {
             <div className="glass-panel rounded-xl p-6 absolute -top-6 -right-6 z-0 opacity-40 blur-sm w-48 h-48 border-uacc-gold/10 pointer-events-none"></div>
 
             {/* Main status glass card */}
-            <div className="glass-panel rounded-xl p-6 md:p-8 relative z-10 w-full backdrop-blur-2xl border-uacc-gold/30 shadow-[0_0_40px_rgba(201,151,58,0.1)]">
+            <div className="glass-panel rounded-xl p-6 md:p-8 relative z-10 w-full backdrop-blur-2xl shadow-[0_0_40px_rgba(201,151,58,0.1)]" style={{ borderColor: 'var(--border-gold-hover)' }}>
               {/* Status Header */}
-              <div className="flex justify-between items-center mb-6 pb-4 border-b border-white/10">
-                <span className="font-heading text-xs uppercase tracking-wider text-white">System Status</span>
+              <div className="flex justify-between items-center mb-6 pb-4" style={{ borderBottom: '1px solid var(--border-default)' }}>
+                <span className="font-heading text-xs uppercase tracking-wider" style={{ color: 'var(--text-primary)' }}>System Status</span>
                 <div className="flex items-center gap-2">
                   <span className="relative flex h-2 w-2">
                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
@@ -313,24 +297,24 @@ export default function LandingPage() {
 
               {/* 3 Metric Mini-cards */}
               <div className="flex flex-col gap-3 mb-6">
-                <div className="flex justify-between items-center bg-white/3 px-4 py-2.5 rounded border border-white/5 hover:bg-white/8 hover:border-uacc-gold/20 transition-all duration-300">
-                  <span className="text-xs text-on-surface-variant font-medium">Total Documents</span>
+                <div className="flex justify-between items-center px-4 py-2.5 rounded transition-all duration-300" style={{ background: 'var(--glass-bg)', border: '1px solid var(--border-subtle)' }}>
+                  <span className="text-xs font-medium" style={{ color: 'var(--text-muted)' }}>Total Documents</span>
                   <span className="text-base font-bold font-heading text-uacc-gold-light">847</span>
                 </div>
-                <div className="flex justify-between items-center bg-white/3 px-4 py-2.5 rounded border border-white/5 hover:bg-white/8 hover:border-uacc-red/20 transition-all duration-300">
-                  <span className="text-xs text-on-surface-variant font-medium">Pending Approvals</span>
+                <div className="flex justify-between items-center px-4 py-2.5 rounded transition-all duration-300" style={{ background: 'var(--glass-bg)', border: '1px solid var(--border-subtle)' }}>
+                  <span className="text-xs font-medium" style={{ color: 'var(--text-muted)' }}>Pending Approvals</span>
                   <span className="text-base font-bold font-heading text-uacc-red">12</span>
                 </div>
-                <div className="flex justify-between items-center bg-white/3 px-4 py-2.5 rounded border border-white/5 hover:bg-white/8 hover:border-uacc-gold/20 transition-all duration-300">
-                  <span className="text-xs text-on-surface-variant font-medium">Logs Today</span>
+                <div className="flex justify-between items-center px-4 py-2.5 rounded transition-all duration-300" style={{ background: 'var(--glass-bg)', border: '1px solid var(--border-subtle)' }}>
+                  <span className="text-xs font-medium" style={{ color: 'var(--text-muted)' }}>Logs Today</span>
                   <span className="text-base font-bold font-heading text-uacc-gold-light">34</span>
                 </div>
               </div>
 
               {/* Mini CSS Bar Chart Mockup */}
-              <div className="bg-white/3 rounded p-4 border border-white/5 mb-6">
+              <div className="rounded p-4 mb-6" style={{ background: 'var(--glass-bg)', border: '1px solid var(--border-subtle)' }}>
                 <div className="flex justify-between items-center mb-4">
-                  <span className="text-[10px] uppercase tracking-wider text-on-surface-variant font-heading">
+                  <span className="text-[10px] uppercase tracking-wider font-heading" style={{ color: 'var(--text-muted)' }}>
                     Procurement Requests — Last 30 Days
                   </span>
                   <span className="text-[10px] text-uacc-gold font-semibold font-heading">Active</span>
@@ -354,7 +338,7 @@ export default function LandingPage() {
                     <p className="font-heading text-[10px] text-uacc-red font-bold tracking-widest uppercase mb-1">
                       DIMS AI Assistant
                     </p>
-                    <p className="text-xs text-on-surface leading-normal">
+                    <p className="text-xs leading-normal" style={{ color: 'var(--text-secondary)' }}>
                       3 procurement requests are awaiting your approval. Engineering dept has the highest pending count.
                     </p>
                   </div>
@@ -365,8 +349,8 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* SECTION 3 — Context Bar */}
-      <section className="border-y border-uacc-gold/20 bg-surface-low py-6 relative z-20 overflow-hidden">
+      {/* SECTION 3 — Context Bar — stays dark in both themes for brand consistency */}
+      <section className="border-y border-uacc-gold/20 bg-[#080C14] py-6 relative z-20 overflow-hidden">
         <div className="max-w-7xl mx-auto px-margin-mobile md:px-margin-desktop text-center flex items-center justify-center gap-3">
           <Plane className="text-uacc-gold w-4 h-4 shrink-0 animate-pulse rotate-90" />
           <p className="font-heading text-[10px] md:text-xs text-uacc-gold-light uppercase tracking-[0.25em] leading-normal max-w-full">
@@ -385,7 +369,7 @@ export default function LandingPage() {
           <span className="font-heading text-xs tracking-[0.25em] text-uacc-gold uppercase font-semibold">
             What DIMS Does
           </span>
-          <h2 className="font-heading text-3xl md:text-5xl font-bold text-white tracking-tight">
+          <h2 className="font-heading text-3xl md:text-5xl font-bold tracking-tight" style={{ color: 'var(--text-primary)' }}>
             Four Modules. One Intelligent System.
           </h2>
           <div className="w-16 h-0.5 bg-linear-to-r from-uacc-gold to-uacc-red mt-2 rounded"></div>
@@ -403,10 +387,10 @@ export default function LandingPage() {
                 <FileText size={24} />
               </div>
               <div className="flex flex-col gap-2">
-                <h3 className="font-heading text-xl font-bold text-white">
+                <h3 className="font-heading text-xl font-bold" style={{ color: 'var(--text-primary)' }}>
                   Document Storage &amp; Retrieval
                 </h3>
-                <p className="text-on-surface-variant text-sm md:text-base leading-relaxed">
+                <p className="text-sm md:text-base leading-relaxed" style={{ color: 'var(--text-muted)' }}>
                   Upload, categorize, search, and retrieve official documents instantly — replacing physical filing cabinets with full-text search and role-based access control.
                 </p>
                 <span className="text-xs text-uacc-gold font-semibold uppercase tracking-wider mt-2 group-hover:translate-x-2 transition-transform duration-300 inline-flex items-center gap-1.5">
@@ -426,10 +410,10 @@ export default function LandingPage() {
                 <ClipboardList size={24} />
               </div>
               <div className="flex flex-col gap-2">
-                <h3 className="font-heading text-xl font-bold text-white">
+                <h3 className="font-heading text-xl font-bold" style={{ color: 'var(--text-primary)' }}>
                   Digital Form 5 &amp; Approval Chain
                 </h3>
-                <p className="text-on-surface-variant text-sm md:text-base leading-relaxed">
+                <p className="text-sm md:text-base leading-relaxed" style={{ color: 'var(--text-muted)' }}>
                   Submit procurement requests digitally. Automatic multi-stage routing to Department Head, Finance, and General Manager — with email notifications at every stage.
                 </p>
                 <span className="text-xs text-uacc-red font-semibold uppercase tracking-wider mt-2 group-hover:translate-x-2 transition-transform duration-300 inline-flex items-center gap-1.5">
@@ -449,10 +433,10 @@ export default function LandingPage() {
                 <Clock size={24} />
               </div>
               <div className="flex flex-col gap-2">
-                <h3 className="font-heading text-xl font-bold text-white">
+                <h3 className="font-heading text-xl font-bold" style={{ color: 'var(--text-primary)' }}>
                   Staff Activity Records
                 </h3>
-                <p className="text-on-surface-variant text-sm md:text-base leading-relaxed">
+                <p className="text-sm md:text-base leading-relaxed" style={{ color: 'var(--text-muted)' }}>
                   Replace handwritten departmental logbooks with timestamped digital entries — searchable, cross-referenceable, and exportable as PDF for audit purposes.
                 </p>
                 <span className="text-xs text-uacc-gold font-semibold uppercase tracking-wider mt-2 group-hover:translate-x-2 transition-transform duration-300 inline-flex items-center gap-1.5">
@@ -472,10 +456,10 @@ export default function LandingPage() {
                 <BarChart2 size={24} />
               </div>
               <div className="flex flex-col gap-2">
-                <h3 className="font-heading text-xl font-bold text-white">
+                <h3 className="font-heading text-xl font-bold" style={{ color: 'var(--text-primary)' }}>
                   Real-Time Management Dashboard
                 </h3>
-                <p className="text-on-surface-variant text-sm md:text-base leading-relaxed">
+                <p className="text-sm md:text-base leading-relaxed" style={{ color: 'var(--text-muted)' }}>
                   Live metrics, interactive charts, and one-click PDF report generation — giving management instant operational visibility across all five departments.
                 </p>
                 <span className="text-xs text-uacc-red font-semibold uppercase tracking-wider mt-2 group-hover:translate-x-2 transition-transform duration-300 inline-flex items-center gap-1.5">
@@ -490,8 +474,8 @@ export default function LandingPage() {
       {/* SECTION 5 — AI Agent Spotlight */}
       <section 
         id="ai-agent" 
-        className="relative z-10 py-24 border-y border-white/5 overflow-hidden"
-        style={{ backgroundColor: theme === 'dark' ? 'rgba(10,15,24,0.6)' : 'rgba(249,250,251,0.75)' }}
+        className="relative z-10 py-24 overflow-hidden"
+        style={{ backgroundColor: 'var(--bg-overlay)', borderTop: '1px solid var(--border-subtle)', borderBottom: '1px solid var(--border-subtle)' }}
       >
         {/* Subtle diagonal red-to-gold glow behind content */}
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_45%_50%,rgba(204,34,0,0.04)_0%,rgba(201,151,58,0.04)_60%,transparent_100%)] pointer-events-none z-0"></div>
@@ -502,10 +486,10 @@ export default function LandingPage() {
             <span className="font-heading text-xs tracking-[0.25em] text-uacc-gold uppercase font-semibold">
               ✦ Intelligent Core
             </span>
-            <h2 className="font-heading text-3xl md:text-5xl font-bold text-white tracking-tight">
+            <h2 className="font-heading text-3xl md:text-5xl font-bold tracking-tight" style={{ color: 'var(--text-primary)' }}>
               An AI Agent That Learns From Your Operations
             </h2>
-            <p className="text-on-surface-variant text-base md:text-lg leading-relaxed">
+            <p className="text-base md:text-lg leading-relaxed" style={{ color: 'var(--text-muted)' }}>
               DIMS includes a built-in AI agent powered by Claude (Anthropic) that reads your live operational data and surfaces insights, flags anomalies, and answers questions in plain English.
             </p>
 
@@ -515,7 +499,7 @@ export default function LandingPage() {
                 <span className="p-1 rounded bg-uacc-gold/20 text-uacc-gold shrink-0 mt-0.5">
                   <Check size={14} className="stroke-3" />
                 </span>
-                <span className="text-sm md:text-base text-on-surface">
+                <span className="text-sm md:text-base" style={{ color: 'var(--text-secondary)' }}>
                   Suggests procurement item details based on historical approvals
                 </span>
               </div>
@@ -523,7 +507,7 @@ export default function LandingPage() {
                 <span className="p-1 rounded bg-uacc-gold/20 text-uacc-gold shrink-0 mt-0.5">
                   <Check size={14} className="stroke-3" />
                 </span>
-                <span className="text-sm md:text-base text-on-surface">
+                <span className="text-sm md:text-base" style={{ color: 'var(--text-secondary)' }}>
                   Flags unusual cost estimates before submission
                 </span>
               </div>
@@ -531,7 +515,7 @@ export default function LandingPage() {
                 <span className="p-1 rounded bg-uacc-gold/20 text-uacc-gold shrink-0 mt-0.5">
                   <Check size={14} className="stroke-3" />
                 </span>
-                <span className="text-sm md:text-base text-on-surface">
+                <span className="text-sm md:text-base" style={{ color: 'var(--text-secondary)' }}>
                   Answers questions like &quot;Which department had the most pending requests this month?&quot;
                 </span>
               </div>
@@ -545,7 +529,7 @@ export default function LandingPage() {
               >
                 Meet the AI Agent →
               </a>
-              <span className="font-heading text-[10px] text-on-surface-variant/50 uppercase tracking-widest text-center sm:text-left">
+              <span className="font-heading text-[10px] uppercase tracking-widest text-center sm:text-left" style={{ color: 'var(--text-faint)' }}>
                 Powered by Claude · Anthropic API · Data stays on your server
               </span>
             </div>
@@ -554,18 +538,18 @@ export default function LandingPage() {
           {/* Right Column (chat interface card) */}
           <div className="md:col-span-6 w-full">
             {/* Chat Frame Container */}
-            <div className="glass-panel border-t-2 border-t-uacc-gold rounded-xl overflow-hidden shadow-[0_12px_40px_rgba(0,0,0,0.5)]" style={{ backgroundColor: theme === 'dark' ? 'rgba(13,26,46,0.9)' : 'rgba(255,255,255,0.88)' }}>
+            <div className="glass-panel border-t-2 border-t-uacc-gold rounded-xl overflow-hidden shadow-[0_12px_40px_rgba(0,0,0,0.5)]" style={{ backgroundColor: 'var(--bg-surface)' }}>
               {/* Header */}
-              <div className="flex justify-between items-center px-6 py-4 border-b border-white/5" style={{ backgroundColor: theme === 'dark' ? 'rgb(10,20,36)' : 'rgba(255,255,255,0.75)' }}>
+              <div className="flex justify-between items-center px-6 py-4" style={{ backgroundColor: 'var(--bg-surface-low)', borderBottom: '1px solid var(--border-subtle)' }}>
                 <div className="flex items-center gap-3">
                   <div className="p-2 rounded-lg bg-uacc-gold/10 text-uacc-gold">
                     <Bot size={20} />
                   </div>
                   <div>
-                    <h4 className="text-sm font-heading font-bold text-white">DIMS AI Agent</h4>
+                    <h4 className="text-sm font-heading font-bold" style={{ color: 'var(--text-primary)' }}>DIMS AI Agent</h4>
                     <div className="flex items-center gap-1.5">
                       <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                      <span className="text-[10px] text-on-surface-variant">Online</span>
+                      <span className="text-[10px]" style={{ color: 'var(--text-muted)' }}>Online</span>
                     </div>
                   </div>
                 </div>
@@ -576,7 +560,8 @@ export default function LandingPage() {
                       "Show doc status for Engineering.", 
                       "Engineering has uploaded 145 files this month. 98% are technical manuals."
                     )}
-                    className="text-[9px] bg-white/5 border border-white/10 hover:border-uacc-gold/30 hover:bg-white/10 px-2.5 py-1 rounded text-uacc-gold transition-all"
+                    className="text-[9px] px-2.5 py-1 rounded text-uacc-gold transition-all"
+                    style={{ background: 'var(--glass-bg)', border: '1px solid var(--border-default)' }}
                   >
                     Doc Status
                   </button>
@@ -585,7 +570,8 @@ export default function LandingPage() {
                       "How many logs today?", 
                       "34 logs submitted across 5 departments. 30 approved, 4 pending in Operations."
                     )}
-                    className="text-[9px] bg-white/5 border border-white/10 hover:border-uacc-gold/30 hover:bg-white/10 px-2.5 py-1 rounded text-uacc-gold transition-all"
+                    className="text-[9px] px-2.5 py-1 rounded text-uacc-gold transition-all"
+                    style={{ background: 'var(--glass-bg)', border: '1px solid var(--border-default)' }}
                   >
                     Today&apos;s Logs
                   </button>
@@ -601,15 +587,19 @@ export default function LandingPage() {
                       msg.role === 'user' ? 'self-end items-end' : 'self-start items-start'
                     }`}
                   >
-                    <span className="text-[9px] text-on-surface-variant font-heading uppercase mb-1 tracking-wider">
+                    <span className="text-[9px] font-heading uppercase mb-1 tracking-wider" style={{ color: 'var(--text-muted)' }}>
                       {msg.role === 'user' ? 'You' : 'DIMS AI Agent'}
                     </span>
                     <div 
                       className={`p-3.5 rounded-lg text-sm leading-relaxed ${
                         msg.role === 'user'
-                          ? 'bg-white/5 border border-white/10 text-white rounded-tr-none'
-                          : 'bg-uacc-gold/8 border-l-2 border-uacc-gold text-on-surface rounded-tl-none'
+                          ? 'rounded-tr-none'
+                          : 'border-l-2 border-uacc-gold rounded-tl-none'
                       }`}
+                      style={msg.role === 'user' 
+                        ? { background: 'var(--glass-bg)', border: '1px solid var(--border-default)', color: 'var(--text-primary)' }
+                        : { background: 'rgba(201,151,58,0.08)', color: 'var(--text-secondary)' }
+                      }
                     >
                       {msg.text}
                     </div>
@@ -619,10 +609,10 @@ export default function LandingPage() {
                 {/* Animated Typing Indicator */}
                 {isTyping && (
                   <div className="self-start flex flex-col items-start max-w-[85%]">
-                    <span className="text-[9px] text-on-surface-variant font-heading uppercase mb-1 tracking-wider">
+                    <span className="text-[9px] font-heading uppercase mb-1 tracking-wider" style={{ color: 'var(--text-muted)' }}>
                       DIMS AI Agent
                     </span>
-                    <div className="flex gap-1.5 items-center px-4 py-3 bg-uacc-gold/8 border-l-2 border-uacc-gold rounded-lg rounded-tl-none">
+                    <div className="flex gap-1.5 items-center px-4 py-3 border-l-2 border-uacc-gold rounded-lg rounded-tl-none" style={{ background: 'rgba(201,151,58,0.08)' }}>
                       <span className="w-1.5 h-1.5 rounded-full bg-uacc-gold animate-bounce" style={{ animationDelay: '0ms' }}></span>
                       <span className="w-1.5 h-1.5 rounded-full bg-uacc-gold animate-bounce" style={{ animationDelay: '150ms' }}></span>
                       <span className="w-1.5 h-1.5 rounded-full bg-uacc-gold animate-bounce" style={{ animationDelay: '300ms' }}></span>
@@ -632,12 +622,12 @@ export default function LandingPage() {
               </div>
 
               {/* Chat Input placeholder */}
-              <div className="p-4 border-t border-white/5 flex gap-2" style={{ backgroundColor: theme === 'dark' ? 'rgb(10,20,36)' : 'rgba(255,255,255,0.75)' }}>
+              <div className="p-4 flex gap-2" style={{ backgroundColor: 'var(--bg-surface-low)', borderTop: '1px solid var(--border-subtle)' }}>
                 <input 
                   type="text" 
                   placeholder="Ask a question about aircraft logistics, procurement status..." 
                   disabled
-                  className="w-full bg-black/20 border border-white/10 rounded px-4 py-2 text-xs focus:outline-none focus:border-uacc-gold text-on-surface-variant cursor-not-allowed"
+                  className="input-field cursor-not-allowed"
                 />
                 <button 
                   disabled
@@ -661,7 +651,7 @@ export default function LandingPage() {
           <span className="font-heading text-xs tracking-[0.25em] text-uacc-gold uppercase font-semibold">
             Operational Scopes
           </span>
-          <h2 className="font-heading text-3xl md:text-5xl font-bold text-white tracking-tight">
+          <h2 className="font-heading text-3xl md:text-5xl font-bold tracking-tight" style={{ color: 'var(--text-primary)' }}>
             Built for Every Role at UACC
           </h2>
           <div className="w-16 h-0.5 bg-linear-to-r from-uacc-gold to-uacc-red mt-2 rounded"></div>
@@ -675,10 +665,10 @@ export default function LandingPage() {
               <Briefcase size={20} />
             </div>
             <div className="flex flex-col gap-1">
-              <h3 className="font-heading text-white text-base font-bold flex items-center gap-1.5">
+              <h3 className="font-heading text-base font-bold flex items-center gap-1.5" style={{ color: 'var(--text-primary)' }}>
                 General Manager <span className="text-xs">👔</span>
               </h3>
-              <p className="text-on-surface-variant text-xs leading-relaxed">
+              <p className="text-xs leading-relaxed" style={{ color: 'var(--text-muted)' }}>
                 Full visibility across all departments
               </p>
             </div>
@@ -690,10 +680,10 @@ export default function LandingPage() {
               <UserCheck size={20} />
             </div>
             <div className="flex flex-col gap-1">
-              <h3 className="font-heading text-white text-base font-bold flex items-center gap-1.5">
+              <h3 className="font-heading text-base font-bold flex items-center gap-1.5" style={{ color: 'var(--text-primary)' }}>
                 Department Head <span className="text-xs">🏢</span>
               </h3>
-              <p className="text-on-surface-variant text-xs leading-relaxed">
+              <p className="text-xs leading-relaxed" style={{ color: 'var(--text-muted)' }}>
                 Approve requests, review team logs
               </p>
             </div>
@@ -705,10 +695,10 @@ export default function LandingPage() {
               <User size={20} />
             </div>
             <div className="flex flex-col gap-1">
-              <h3 className="font-heading text-white text-base font-bold flex items-center gap-1.5">
+              <h3 className="font-heading text-base font-bold flex items-center gap-1.5" style={{ color: 'var(--text-primary)' }}>
                 Staff <span className="text-xs">👤</span>
               </h3>
-              <p className="text-on-surface-variant text-xs leading-relaxed">
+              <p className="text-xs leading-relaxed" style={{ color: 'var(--text-muted)' }}>
                 Submit requests, log activity, access documents
               </p>
             </div>
@@ -720,10 +710,10 @@ export default function LandingPage() {
               <Settings size={20} />
             </div>
             <div className="flex flex-col gap-1">
-              <h3 className="font-heading text-white text-base font-bold flex items-center gap-1.5">
+              <h3 className="font-heading text-base font-bold flex items-center gap-1.5" style={{ color: 'var(--text-primary)' }}>
                 IT Administrator <span className="text-xs">🖥️</span>
               </h3>
-              <p className="text-on-surface-variant text-xs leading-relaxed">
+              <p className="text-xs leading-relaxed" style={{ color: 'var(--text-muted)' }}>
                 Manage users, roles, system settings
               </p>
             </div>
@@ -735,10 +725,10 @@ export default function LandingPage() {
               <Shield size={20} />
             </div>
             <div className="flex flex-col gap-1">
-              <h3 className="font-heading text-white text-base font-bold flex items-center gap-1.5">
+              <h3 className="font-heading text-base font-bold flex items-center gap-1.5" style={{ color: 'var(--text-primary)' }}>
                 Auditor <span className="text-xs">🔍</span>
               </h3>
-              <p className="text-on-surface-variant text-xs leading-relaxed">
+              <p className="text-xs leading-relaxed" style={{ color: 'var(--text-muted)' }}>
                 Read-only access to the full audit trail
               </p>
             </div>
@@ -746,11 +736,11 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* SECTION 7 — CTA Banner */}
+      {/* SECTION 7 — CTA Banner — intentionally dark red in both themes */}
       <section 
         id="about" 
         className="relative z-10 w-full py-20 border-t border-uacc-gold/30 overflow-hidden"
-        style={{ background: theme === 'dark' ? 'linear-gradient(90deg,#1A0500,#2D0800)' : 'linear-gradient(90deg,#fff1d6,#ffe8b5)' }}
+        style={{ background: 'linear-gradient(90deg,#1A0500,#2D0800)' }}
       >
         {/* Glow vector arc ornament */}
         <div className="absolute right-0 bottom-0 w-[400px] h-[200px] opacity-10 pointer-events-none text-uacc-gold">
@@ -763,7 +753,7 @@ export default function LandingPage() {
           <h2 className="font-heading text-3xl md:text-5xl font-bold text-white tracking-tight">
             Ready to go paperless?
           </h2>
-          <p className="text-on-surface/80 text-base md:text-lg max-w-2xl leading-relaxed">
+          <p className="text-white/80 text-base md:text-lg max-w-2xl leading-relaxed">
             DIMS is built specifically for UACC&apos;s operational structure, legal obligations, and five-department workflow.
           </p>
           <div className="mt-4">
@@ -778,7 +768,7 @@ export default function LandingPage() {
       </section>
 
       {/* SECTION 8 — Footer */}
-      <footer className="relative z-10 border-t border-white/5 pt-16 pb-8" style={{ backgroundColor: theme === 'dark' ? '#080C14' : '#f8fafc' }}>
+      <footer className="relative z-10 pt-16 pb-8" style={{ backgroundColor: 'var(--bg-base)', borderTop: '1px solid var(--border-subtle)' }}>
         <div className="max-w-7xl mx-auto px-margin-mobile md:px-margin-desktop grid grid-cols-1 md:grid-cols-12 gap-10 mb-12">
           {/* Column 1 (Left: Branding & Architect info) */}
           <div className="md:col-span-5 flex flex-col items-start gap-4">
@@ -789,20 +779,20 @@ export default function LandingPage() {
               width={160}
               className="h-10 w-auto object-contain"
             />
-            <div className="text-sm font-heading font-bold tracking-wide" style={{ color: 'var(--text)' }}>
+            <div className="text-sm font-heading font-bold tracking-wide" style={{ color: 'var(--text-primary)' }}>
               DIMS v1.0 — Digital Information and Management System
             </div>
-            <p className="text-xs leading-relaxed max-w-sm" style={{ color: 'rgba(var(--text-rgb),0.8)' }}>
+            <p className="text-xs leading-relaxed max-w-sm" style={{ color: 'var(--text-muted)' }}>
               Developed by Lutaaya Ken Rogers · Nkumba University · BCS Final Year Project 2026
             </p>
-            <p className="text-xs" style={{ color: 'rgba(var(--text-rgb),0.7)' }}>
+            <p className="text-xs" style={{ color: 'var(--text-faint)' }}>
               © 2026 Uganda Air Cargo Corporation. All rights reserved.
             </p>
           </div>
 
           {/* Column 2 (Center: Platform directory links to login) */}
           <div className="md:col-span-3 flex flex-col gap-4 md:pl-10">
-            <h4 className="font-heading text-xs uppercase tracking-widest text-white font-bold">
+            <h4 className="font-heading text-xs uppercase tracking-widest font-bold" style={{ color: 'var(--text-primary)' }}>
               Platform Nav
             </h4>
             <div className="flex flex-col gap-2.5">
@@ -810,7 +800,8 @@ export default function LandingPage() {
                 <Link 
                   key={link} 
                   href="/login" 
-                  className="text-xs text-on-surface-variant hover:text-uacc-gold transition-colors duration-200"
+                  className="text-xs hover:text-uacc-gold transition-colors duration-200"
+                  style={{ color: 'var(--text-muted)' }}
                 >
                   {link}
                 </Link>
@@ -820,11 +811,11 @@ export default function LandingPage() {
 
           {/* Column 3 (Right: Address & Hub Info) */}
           <div className="md:col-span-4 flex flex-col gap-4">
-            <h4 className="font-heading text-xs uppercase tracking-widest text-white font-bold">
+            <h4 className="font-heading text-xs uppercase tracking-widest font-bold" style={{ color: 'var(--text-primary)' }}>
               Contact &amp; Hub
             </h4>
-            <div className="flex flex-col gap-2 text-xs text-on-surface-variant leading-relaxed">
-              <span className="text-white font-semibold">Uganda Air Cargo Corporation</span>
+            <div className="flex flex-col gap-2 text-xs leading-relaxed" style={{ color: 'var(--text-muted)' }}>
+              <span className="font-semibold" style={{ color: 'var(--text-primary)' }}>Uganda Air Cargo Corporation</span>
               <span>Plot 103A–107A, Circular Road, Bugonga</span>
               <span>Entebbe International Airport, Uganda</span>
               <span>P.O. Box 343 Entebbe</span>
@@ -840,7 +831,7 @@ export default function LandingPage() {
 
         {/* Bottom Bar: Thin gold line divider and centered copyright */}
         <div className="max-w-7xl mx-auto px-margin-mobile md:px-margin-desktop border-t border-uacc-gold/25 pt-6 text-center">
-          <p className="text-[10px] text-on-surface-variant/40 uppercase tracking-widest">
+          <p className="text-[10px] uppercase tracking-widest" style={{ color: 'var(--text-faint)' }}>
             UGANDA AIR CARGO CORPORATION · SECURITY LEVEL: SECURE LOGISTICS PLATFORM · INTERNAL USE ONLY
           </p>
         </div>
