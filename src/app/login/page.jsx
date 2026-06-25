@@ -62,7 +62,7 @@ export default function LoginPage() {
   return (
     <div
       className="relative min-h-screen font-sans overflow-hidden"
-      style={{ backgroundColor: '#080C14', color: 'var(--text)' }}
+      style={{ backgroundColor: 'var(--bg-base)', color: 'var(--text-secondary)' }}
     >
       {/* ── Animated dot-grid background ───────────────────────────────────── */}
       <div className="dot-grid" />
@@ -73,7 +73,8 @@ export default function LoginPage() {
       {/* ── Back to home link ───────────────────────────────────────────────── */}
       <Link
         href="/"
-        className="absolute top-6 left-6 z-50 flex items-center gap-2 text-on-surface-variant hover:text-uacc-gold-light text-xs font-heading tracking-wider transition-colors duration-200 group"
+        className="absolute top-6 left-6 z-50 flex items-center gap-2 hover:text-uacc-gold-light text-xs font-heading tracking-wider transition-colors duration-200 group"
+        style={{ color: 'var(--text-muted)' }}
       >
         <ArrowLeft
           size={14}
@@ -87,6 +88,7 @@ export default function LoginPage() {
 
         {/* ══════════════════════════════════════════════════════════════════
             LEFT PANEL — desktop only (hidden on mobile)
+            Stays dark navy (#0A1628) in both themes for brand identity
         ══════════════════════════════════════════════════════════════════ */}
         <div
           className="hidden lg:flex lg:w-1/2 flex-col justify-between py-16 px-14 relative overflow-hidden"
@@ -138,7 +140,7 @@ export default function LoginPage() {
               <h1 className="font-heading text-4xl xl:text-5xl font-bold text-white tracking-tight leading-[1.1]">
                 Secure Access to DIMS
               </h1>
-              <p className="text-on-surface-variant text-sm md:text-base leading-relaxed max-w-sm">
+              <p className="text-sm md:text-base leading-relaxed max-w-sm" style={{ color: '#cbd5e0' }}>
                 Digital Information and Management System &mdash; Uganda Air
                 Cargo Corporation
               </p>
@@ -154,14 +156,14 @@ export default function LoginPage() {
                   <div className="flex-shrink-0 w-7 h-7 rounded-full bg-uacc-gold/15 border border-uacc-gold/30 flex items-center justify-center">
                     <Check size={13} className="text-uacc-gold stroke-[2.5]" />
                   </div>
-                  <span className="text-on-surface text-sm">{feat}</span>
+                  <span className="text-white/90 text-sm">{feat}</span>
                 </div>
               ))}
             </div>
           </div>
 
           {/* Bottom label */}
-          <p className="text-[10px] text-on-surface-variant/40 font-heading tracking-widest uppercase relative z-10">
+          <p className="text-[10px] text-white/25 font-heading tracking-widest uppercase relative z-10">
             Uganda Air Cargo Corporation &middot; Entebbe International Airport
             &middot; Est. 1994
           </p>
@@ -173,8 +175,8 @@ export default function LoginPage() {
         <div className="w-full lg:w-1/2 flex items-center justify-center px-5 sm:px-8 py-20 lg:py-12">
           {/* Glass card */}
           <div
-            className="w-full max-w-[460px] glass-panel rounded-2xl p-8 sm:p-10 shadow-[0_24px_80px_rgba(0,0,0,0.6)] border-white/10"
-            style={{ backgroundColor: '#0f131c' }}
+            className="w-full max-w-[460px] glass-panel rounded-2xl p-8 sm:p-10 shadow-[0_24px_80px_rgba(0,0,0,0.6)]"
+            style={{ backgroundColor: 'var(--card-bg)', borderColor: 'var(--card-border)' }}
           >
             {/* ── Card Header ──────────────────────────────────────────── */}
             <div className="flex flex-col gap-2 mb-8">
@@ -191,11 +193,12 @@ export default function LoginPage() {
               </div>
 
               <h2
-                className="font-heading text-[28px] font-bold text-white leading-tight tracking-tight"
+                className="font-heading text-[28px] font-bold leading-tight tracking-tight"
+                style={{ color: 'var(--text-primary)' }}
               >
                 Sign In
               </h2>
-              <p className="text-on-surface-variant text-sm">
+              <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
                 Enter your credentials to access DIMS
               </p>
             </div>
@@ -210,7 +213,8 @@ export default function LoginPage() {
               <div className="flex flex-col gap-2">
                 <label
                   htmlFor="login-email"
-                  className="text-xs font-heading font-semibold uppercase tracking-wider text-on-surface-variant"
+                  className="text-xs font-heading font-semibold uppercase tracking-wider"
+                  style={{ color: 'var(--text-muted)' }}
                 >
                   Email Address
                 </label>
@@ -223,8 +227,7 @@ export default function LoginPage() {
                   placeholder="your.email@uacc.go.ug"
                   autoComplete="email"
                   disabled={loading}
-                  className="w-full rounded-lg px-4 py-3 text-sm text-white outline-none transition-all duration-200 border border-white/10 focus:border-uacc-gold disabled:opacity-50 disabled:cursor-not-allowed"
-                  style={{ backgroundColor: '#0a0e16' }}
+                  className="input-field disabled:opacity-50 disabled:cursor-not-allowed"
                 />
               </div>
 
@@ -232,7 +235,8 @@ export default function LoginPage() {
               <div className="flex flex-col gap-2">
                 <label
                   htmlFor="login-password"
-                  className="text-xs font-heading font-semibold uppercase tracking-wider text-on-surface-variant"
+                  className="text-xs font-heading font-semibold uppercase tracking-wider"
+                  style={{ color: 'var(--text-muted)' }}
                 >
                   Password
                 </label>
@@ -246,8 +250,7 @@ export default function LoginPage() {
                     placeholder="••••••••••••"
                     autoComplete="current-password"
                     disabled={loading}
-                    className="w-full rounded-lg px-4 py-3 pr-12 text-sm text-white outline-none transition-all duration-200 border border-white/10 focus:border-uacc-gold disabled:opacity-50 disabled:cursor-not-allowed"
-                    style={{ backgroundColor: '#0a0e16' }}
+                    className="input-field pr-12 disabled:opacity-50 disabled:cursor-not-allowed"
                   />
                   <button
                     type="button"
@@ -255,7 +258,8 @@ export default function LoginPage() {
                     onClick={() => setShowPassword((v) => !v)}
                     disabled={loading}
                     aria-label={showPassword ? 'Hide password' : 'Show password'}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant hover:text-uacc-gold-light transition-colors duration-200 disabled:opacity-40"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 hover:text-uacc-gold-light transition-colors duration-200 disabled:opacity-40"
+                    style={{ color: 'var(--text-muted)' }}
                   >
                     {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                   </button>
@@ -298,11 +302,11 @@ export default function LoginPage() {
 
             {/* ── Below form ────────────────────────────────────────────── */}
             <div className="mt-8 flex flex-col gap-4">
-              <hr className="border-white/5" />
-              <p className="text-center text-xs text-on-surface-variant/60 leading-relaxed">
+              <hr style={{ borderColor: 'var(--border-subtle)' }} />
+              <p className="text-center text-xs leading-relaxed" style={{ color: 'var(--text-muted)' }}>
                 Access is restricted to authorized UACC personnel only.
               </p>
-              <p className="text-center text-[10px] text-on-surface-variant/30 font-heading tracking-wider">
+              <p className="text-center text-[10px] font-heading tracking-wider" style={{ color: 'var(--text-faint)' }}>
                 DIMS v1.0 &nbsp;&middot;&nbsp; &copy; 2026 Uganda Air Cargo
                 Corporation
               </p>
