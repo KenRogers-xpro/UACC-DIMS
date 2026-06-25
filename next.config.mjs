@@ -8,6 +8,8 @@ const nextConfig = {
   turbopack: {
     root: __dirname,
   },
+  // Allow LAN access for HMR (hot module reload) during development
+  allowedDevOrigins: ['172.16.1.5'],
 };
 
 export default nextConfig;
