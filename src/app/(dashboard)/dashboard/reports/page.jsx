@@ -13,7 +13,8 @@ import {
   Loader2,
   X,
   CheckCircle,
-  XCircle
+  XCircle,
+  Info
 } from 'lucide-react'
 
 import {
@@ -67,6 +68,14 @@ const MOCK_DEPT_PERFORMANCE = [
   { dept: 'Finance',      logsSubmitted: 142, avgHours: 4.9, compliance: 89 },
   { dept: 'Pilots',       logsSubmitted: 98,  avgHours: 7.2, compliance: 91 },
   { dept: 'GM Office',    logsSubmitted: 45,  avgHours: 3.8, compliance: 85 },
+]
+
+const MOCK_AUDIT_LOGS = [
+  { timestamp: '2026-06-25 14:32', user: 'Patrick Katusabe', action: 'Approved Procurement Request #PR-042', ipAddress: '192.168.1.45' },
+  { timestamp: '2026-06-25 11:15', user: 'Staff Operations', action: 'Uploaded Document: Cargo SOP v2', ipAddress: '192.168.1.12' },
+  { timestamp: '2026-06-24 09:45', user: 'Head Engineering', action: 'Submitted Weekly Flight Log', ipAddress: '192.168.2.18' },
+  { timestamp: '2026-06-23 16:20', user: 'Lt. Gen. Lakara', action: 'Signed Agreement: ADS Agreement', ipAddress: '192.168.1.2' },
+  { timestamp: '2026-06-22 10:05', user: 'Patrick Katusabe', action: 'Generated Monthly Procurement Report', ipAddress: '192.168.1.45' },
 ]
 
 const REPORT_TYPES = [
@@ -205,9 +214,9 @@ export default function ReportsPage() {
                 <YAxis stroke="var(--text-muted)" fontSize={12} tickLine={false} axisLine={false} />
                 <Tooltip content={<CustomTooltip />} />
                 <Legend iconType="circle" wrapperStyle={{ fontSize: '12px', paddingTop: '10px' }} />
-                <Line type="monotone" dataKey="submitted" stroke="#C9973A" strokeWidth={2} dot={{ fill: '#C9973A', r: 4 }} activeDot={{ r: 6 }} name="Submitted" />
-                <Line type="monotone" dataKey="approved" stroke="#4ade80" strokeWidth={2} dot={{ fill: '#4ade80', r: 4 }} activeDot={{ r: 6 }} name="Approved" />
-                <Line type="monotone" dataKey="rejected" stroke="#CC2200" strokeWidth={2} strokeDasharray="5 5" dot={{ fill: '#CC2200', r: 4 }} activeDot={{ r: 6 }} name="Rejected" />
+                <Line type="monotone" dataKey="submitted" stroke="#C9973A" strokeWidth={2} dot={{ fill: '#C9973A', stroke: '#C9973A', r: 4 }} activeDot={{ r: 6 }} name="Submitted" />
+                <Line type="monotone" dataKey="approved" stroke="#4ade80" strokeWidth={2} dot={false} activeDot={{ r: 6 }} name="Approved" />
+                <Line type="monotone" dataKey="rejected" stroke="#CC2200" strokeWidth={2} strokeDasharray="5 5" dot={false} activeDot={{ r: 6 }} name="Rejected" />
               </LineChart>
             </ResponsiveContainer>
           </div>
@@ -225,8 +234,8 @@ export default function ReportsPage() {
                 {/* Gradient Definition */}
                 <defs>
                   <linearGradient id="colorCount" x1="0" y1="0" x2="1" y2="0">
-                    <stop offset="0%" stopColor="#C9973A" stopOpacity={0.8}/>
-                    <stop offset="100%" stopColor="#CC2200" stopOpacity={0.8}/>
+                    <stop offset="0%" stopColor="#C9973A" stopOpacity={1}/>
+                    <stop offset="100%" stopColor="#CC2200" stopOpacity={1}/>
                   </linearGradient>
                 </defs>
                 <Bar dataKey="count" fill="url(#colorCount)" radius={[0, 4, 4, 0]} barSize={24} label={{ position: 'right', fill: 'var(--text-secondary)', fontSize: 12, fontWeight: 'bold' }} name="Documents" />
@@ -335,12 +344,18 @@ export default function ReportsPage() {
           <Button variant="ghost" icon={Eye} onClick={handlePreview} disabled={generating}>
             Preview Report
           </Button>
-          <Button variant="primary" icon={generating ? Loader2 : Download} onClick={handleExport} disabled={generating} className={generating ? 'opacity-80 cursor-wait' : ''}>
+          <Button
+            variant="primary"
+            icon={generating ? undefined : Download}
+            onClick={handleExport}
+            disabled={generating}
+            className={generating ? 'opacity-80 cursor-wait' : ''}
+          >
             {generating ? (
-              <span className="flex items-center gap-2">
-                <Loader2 size={16} className="animate-spin" />
+              <>
+                <Loader2 size={14} className="animate-spin" />
                 Generating PDF...
-              </span>
+              </>
             ) : (
               'Export as PDF'
             )}
@@ -365,10 +380,13 @@ export default function ReportsPage() {
 
             {/* Mock PDF Header Band */}
             <div className="bg-[#0A2342] border-b-4 border-uacc-gold px-8 py-10 relative z-10 flex flex-col items-center text-center">
-              {/* Optional Placeholder Logo if next/image errors without src, using a div fallback */}
-              <div className="w-16 h-16 bg-uacc-gold/20 border-2 border-uacc-gold rounded-full flex items-center justify-center mb-4 shadow-lg shadow-uacc-gold/20">
-                <FileText size={28} className="text-uacc-gold" />
-              </div>
+              <Image
+                src="/logo.png"
+                alt="UACC Logo"
+                width={64}
+                height={64}
+                className="w-16 h-16 object-contain mb-4 filter drop-shadow-[0_2px_8px_rgba(201,151,58,0.2)]"
+              />
               <h1 className="text-white font-heading font-bold text-xl tracking-[0.2em] mb-2 uppercase">Uganda Air Cargo Corporation</h1>
               <h2 className="text-uacc-gold font-bold text-2xl font-heading tracking-wide mb-3">{selectedReportLabel}</h2>
               <div className="inline-flex bg-white/10 px-4 py-1.5 rounded-full text-xs font-semibold text-white/80 tracking-widest uppercase">
@@ -390,45 +408,134 @@ export default function ReportsPage() {
                 </p>
               </div>
 
-              {/* Data Presentation (Simplified for mock) */}
+              {/* Data Presentation */}
               <h4 className="text-gray-700 font-bold text-sm uppercase tracking-wider mb-3">Data Overview</h4>
-              {reportType === 'PROCUREMENT_SUMMARY' ? (
+              {reportType === 'PROCUREMENT_SUMMARY' && (
                 <table className="w-full text-left border-collapse border border-gray-200">
                   <thead className="bg-gray-50">
                     <tr className="text-xs uppercase tracking-wider text-gray-500 border-b border-gray-200">
                       <th className="p-3 border-r border-gray-200">Month</th>
-                      <th className="p-3 border-r border-gray-200">Submitted</th>
-                      <th className="p-3 border-r border-gray-200">Approved</th>
-                      <th className="p-3">Est. Cost (UGX)</th>
+                      <th className="p-3 border-r border-gray-200 text-center">Submitted</th>
+                      <th className="p-3 border-r border-gray-200 text-center">Approved</th>
+                      <th className="p-3 border-r border-gray-200 text-center">Rejected</th>
+                      <th className="p-3 text-right">Est. Cost (UGX)</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {MOCK_MONTHLY_PROCUREMENT.slice(0, 4).map((row, i) => (
-                      <tr key={i} className="border-b border-gray-200 text-sm text-gray-700">
+                    {MOCK_MONTHLY_PROCUREMENT.map((row, i) => (
+                      <tr key={i} className="border-b border-gray-200 text-sm text-gray-700 hover:bg-gray-50/50">
                         <td className="p-3 font-semibold border-r border-gray-200">{row.month}</td>
-                        <td className="p-3 border-r border-gray-200">{row.submitted}</td>
-                        <td className="p-3 border-r border-gray-200">{row.approved}</td>
-                        <td className="p-3 font-bold text-gray-900">{row.totalCost.toLocaleString()}</td>
+                        <td className="p-3 border-r border-gray-200 text-center">{row.submitted}</td>
+                        <td className="p-3 border-r border-gray-200 text-center">{row.approved}</td>
+                        <td className="p-3 border-r border-gray-200 text-center">{row.rejected}</td>
+                        <td className="p-3 text-right font-bold text-gray-900">{row.totalCost.toLocaleString()}</td>
                       </tr>
                     ))}
-                    <tr className="bg-gray-50/50 text-sm italic text-gray-500">
-                      <td colSpan={4} className="p-3 text-center border-t-2 border-gray-200">+ {MOCK_MONTHLY_PROCUREMENT.length - 4} more records...</td>
-                    </tr>
                   </tbody>
                 </table>
-              ) : (
-                <div className="bg-gray-50 border border-gray-200 rounded-lg p-8 flex flex-col items-center justify-center text-center">
-                  <BarChart2 size={32} className="text-gray-300 mb-3" />
-                  <p className="text-sm font-semibold text-gray-500 uppercase tracking-widest">Tabular Data Rendered Here</p>
-                  <p className="text-xs text-gray-400 mt-1">Full dataset will be included in the exported PDF.</p>
-                </div>
+              )}
+
+              {reportType === 'ACTIVITY_LOG_REPORT' && (
+                <table className="w-full text-left border-collapse border border-gray-200">
+                  <thead className="bg-gray-50">
+                    <tr className="text-xs uppercase tracking-wider text-gray-500 border-b border-gray-200">
+                      <th className="p-3 border-r border-gray-200">Week</th>
+                      <th className="p-3 border-r border-gray-200 text-center">Logs Submitted</th>
+                      <th className="p-3 text-center">Hours Logged</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {MOCK_ACTIVITY_TREND.map((row, i) => (
+                      <tr key={i} className="border-b border-gray-200 text-sm text-gray-700 hover:bg-gray-50/50">
+                        <td className="p-3 font-semibold border-r border-gray-200">{row.week}</td>
+                        <td className="p-3 border-r border-gray-200 text-center">{row.logs}</td>
+                        <td className="p-3 text-center font-bold text-gray-900">{row.hours} hrs</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+
+              {reportType === 'DOCUMENT_INVENTORY' && (
+                <table className="w-full text-left border-collapse border border-gray-200">
+                  <thead className="bg-gray-50">
+                    <tr className="text-xs uppercase tracking-wider text-gray-500 border-b border-gray-200">
+                      <th className="p-3 border-r border-gray-200">Department</th>
+                      <th className="p-3 text-center">Total Documents</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {MOCK_DOCS_BY_DEPT.map((row, i) => (
+                      <tr key={i} className="border-b border-gray-200 text-sm text-gray-700 hover:bg-gray-50/50">
+                        <td className="p-3 font-semibold border-r border-gray-200">{row.dept}</td>
+                        <td className="p-3 text-center font-bold text-gray-900">{row.count} docs</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+
+              {reportType === 'DEPT_PERFORMANCE' && (
+                <table className="w-full text-left border-collapse border border-gray-200">
+                  <thead className="bg-gray-50">
+                    <tr className="text-xs uppercase tracking-wider text-gray-500 border-b border-gray-200">
+                      <th className="p-3 border-r border-gray-200">Department</th>
+                      <th className="p-3 border-r border-gray-200 text-center">Logs Submitted</th>
+                      <th className="p-3 border-r border-gray-200 text-center">Avg Hours/Log</th>
+                      <th className="p-3 text-center">Compliance</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {MOCK_DEPT_PERFORMANCE.map((row, i) => (
+                      <tr key={i} className="border-b border-gray-200 text-sm text-gray-700 hover:bg-gray-50/50">
+                        <td className="p-3 font-semibold border-r border-gray-200">{row.dept}</td>
+                        <td className="p-3 border-r border-gray-200 text-center">{row.logsSubmitted}</td>
+                        <td className="p-3 border-r border-gray-200 text-center">{row.avgHours.toFixed(1)} hrs</td>
+                        <td className="p-3 text-center">
+                          <span className={`inline-block px-2.5 py-1 text-xs font-bold rounded-full ${
+                            row.compliance >= 90 ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                          }`}>
+                            {row.compliance}%
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+
+              {reportType === 'AUDIT_SUMMARY' && (
+                <table className="w-full text-left border-collapse border border-gray-200">
+                  <thead className="bg-gray-50">
+                    <tr className="text-xs uppercase tracking-wider text-gray-500 border-b border-gray-200">
+                      <th className="p-3 border-r border-gray-200">Timestamp</th>
+                      <th className="p-3 border-r border-gray-200">User</th>
+                      <th className="p-3 border-r border-gray-200">Action</th>
+                      <th className="p-3 text-center">IP Address</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {MOCK_AUDIT_LOGS.map((row, i) => (
+                      <tr key={i} className="border-b border-gray-200 text-sm text-gray-700 hover:bg-gray-50/50">
+                        <td className="p-3 font-semibold border-r border-gray-200 whitespace-nowrap">{row.timestamp}</td>
+                        <td className="p-3 border-r border-gray-200 whitespace-nowrap">{row.user}</td>
+                        <td className="p-3 border-r border-gray-200">{row.action}</td>
+                        <td className="p-3 text-center font-mono text-xs text-gray-500 whitespace-nowrap">{row.ipAddress}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               )}
             </div>
 
             {/* Mock PDF Footer */}
             <div className="bg-gray-100 p-6 flex flex-col items-center justify-center text-center border-t border-gray-200 gap-1">
-              <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Confidential &middot; Internal Use Only</span>
-              <span className="text-[10px] text-gray-400">Generated by DIMS v1.0 on {new Date().toLocaleString()}</span>
+              <span className="text-[11px] font-semibold text-gray-500 uppercase tracking-wider">
+                Generated by DIMS v1.0 &middot; Confidential &middot; Internal Use Only
+              </span>
+              <span className="text-[10px] text-gray-400">
+                Generated on: {new Date().toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' })}
+              </span>
             </div>
 
             {/* Modal Bottom Actions */}
@@ -436,8 +543,20 @@ export default function ReportsPage() {
               <Button variant="outline" onClick={() => setPreviewOpen(false)} disabled={generating}>
                 Close Preview
               </Button>
-              <Button variant="primary" icon={generating ? Loader2 : Download} onClick={handleExport} disabled={generating}>
-                {generating ? 'Generating PDF...' : 'Export PDF'}
+              <Button
+                variant="primary"
+                icon={generating ? undefined : Download}
+                onClick={handleExport}
+                disabled={generating}
+              >
+                {generating ? (
+                  <>
+                    <Loader2 size={14} className="animate-spin" />
+                    Generating PDF...
+                  </>
+                ) : (
+                  'Export PDF'
+                )}
               </Button>
             </div>
           </div>
@@ -460,6 +579,7 @@ export default function ReportsPage() {
           >
             {toast.type === 'success' && <CheckCircle size={18} className="text-emerald-400 flex-shrink-0" />}
             {toast.type === 'error' && <XCircle size={18} className="text-uacc-red flex-shrink-0" />}
+            {toast.type === 'info' && <Info size={18} className="text-uacc-gold flex-shrink-0" />}
             <span className="text-xs font-semibold text-white">
               {toast.message}
             </span>
