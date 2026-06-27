@@ -16,6 +16,7 @@ import {
   ChevronRight,
   Bot,
   Settings2,
+  BookOpen,
 } from 'lucide-react'
 
 // Navigation items with role access control
@@ -33,6 +34,14 @@ const NAV_ITEMS = [
     icon: FolderOpen,
     roles: ['GENERAL_MANAGER', 'DEPARTMENT_HEAD', 'STAFF',
             'IT_ADMINISTRATOR', 'AUDITOR'],
+  },
+  {
+    label: 'Records',
+    href: '/dashboard/records',
+    icon: BookOpen,
+    roles: ['GENERAL_MANAGER', 'DEPARTMENT_HEAD', 'STAFF',
+            'IT_ADMINISTRATOR', 'AUDITOR', 'RECORDS_EXECUTIVE'],
+    badge: 'NEW',
   },
   {
     label: 'Procurement',

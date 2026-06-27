@@ -82,7 +82,20 @@ async function main() {
       isActive: true,
     },
   });
-  console.log(`✓ Seeded: ${auditor.name} (${auditor.role})`);
+  // Records Executive
+  const recordsExec = await prisma.user.upsert({
+    where: { email: 'records@uacc.go.ug' },
+    update: {},
+    create: {
+      name: 'Records Executive',
+      email: 'records@uacc.go.ug',
+      password: passwordHash,
+      role: 'RECORDS_EXECUTIVE',
+      department: 'FINANCE_AND_ADMINISTRATION',
+      isActive: true,
+    },
+  });
+  console.log(`✓ Seeded: ${recordsExec.name} (${recordsExec.role})`);
 }
 
 main()

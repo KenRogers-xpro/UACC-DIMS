@@ -8,21 +8,23 @@ datasource db {
 }
 
 model User {
-  id                  Int                  @id @default(autoincrement())
-  name                String
-  email               String               @unique
-  password            String
-  role                Role                 @default(STAFF)
-  department          Department
-  isActive            Boolean              @default(true)
-  createdAt           DateTime             @default(now())
-  updatedAt           DateTime             @updatedAt
+  id         Int        @id @default(autoincrement())
+  name       String
+  email      String     @unique
+  password   String
+  role       Role       @default(STAFF)
+  department Department
+  isActive   Boolean    @default(true)
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
 
   documents           Document[]
   procurementRequests ProcurementRequest[] @relation("RequestedBy")
   approvedRequests    ProcurementRequest[] @relation("ApprovedBy")
   activityLogs        ActivityLog[]
   auditLogs           AuditLog[]
+  registryEntries     RegistryEntry[]
+  annotationsAdded    Annotation[]
 
   @@map("users")
 }
@@ -101,6 +103,7 @@ enum Role {
   STAFF
   IT_ADMINISTRATOR
   AUDITOR
+  RECORDS_EXECUTIVE
 }
 
 enum Department {
@@ -145,4 +148,82 @@ enum AuditAction {
   USER_CREATED
   USER_UPDATED
   USER_DEACTIVATED
+}
+
+model RegistryEntry {
+  id               Int            @id @default(autoincrement())
+  registryNo       String         @unique
+  subject          String         @db.Text
+  docType          DocType
+  direction        DocDirection
+  source           String
+  destination      String
+  receivedFrom     String?
+  handledById      Int
+  handledBy        User           @relation(fields: [handledById], references: [id])
+  priority         DocPriority    @default(NORMAL)
+  medium           DocMedium
+  fileRef          String?
+  physicalLocation String?
+  linkedDocumentId Int?
+  status           RegistryStatus @default(PENDING)
+  dateRegistered   DateTime
+  dateDispatched   DateTime?
+  dateReceived     DateTime?
+  dateClosed       DateTime?
+  annotations      Annotation[]
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+
+  @@map("registry_entries")
+}
+
+model Annotation {
+  id              Int           @id @default(autoincrement())
+  registryEntryId Int
+  registryEntry   RegistryEntry @relation(fields: [registryEntryId], references: [id])
+  authorId        Int
+  author          User          @relation(fields: [authorId], references: [id])
+  text            String        @db.Text
+  createdAt       DateTime      @default(now())
+
+  @@map("annotations")
+}
+
+enum DocType {
+  MEMO
+  CONTRACT
+  POLICY
+  REPORT
+  LETTER
+  INVOICE
+  FORM
+  LOGBOOK
+  OTHER
+}
+
+enum DocDirection {
+  INCOMING
+  OUTGOING
+  INTERNAL
+}
+
+enum DocPriority {
+  NORMAL
+  HIGH
+  CONFIDENTIAL
+}
+
+enum DocMedium {
+  PHYSICAL
+  EMAIL
+  BOTH
+}
+
+enum RegistryStatus {
+  PENDING
+  DISPATCHED
+  RECEIVED
+  ACTIONED
+  CLOSED
 }
