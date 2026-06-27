@@ -15,6 +15,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Bot,
+  Settings2,
 } from 'lucide-react'
 
 // Navigation items with role access control
@@ -72,6 +73,13 @@ const NAV_ITEMS = [
     icon: Bot,
     roles: ['GENERAL_MANAGER', 'DEPARTMENT_HEAD', 'IT_ADMINISTRATOR'],
     badge: 'AI',
+  },
+  {
+    label: 'Settings',
+    href: '/dashboard/settings',
+    icon: Settings2,
+    roles: ['GENERAL_MANAGER', 'DEPARTMENT_HEAD', 'STAFF',
+            'IT_ADMINISTRATOR', 'AUDITOR'],
   },
 ]
 
