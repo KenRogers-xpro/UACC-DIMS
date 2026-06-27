@@ -73,3 +73,10 @@ Thumbs.db
 *.njsproj
 *.sln
 *.sw?
+
+# Next.js build output
+.next/
+out/
+
+# Prisma generated client
+prisma/generated/
