@@ -105,6 +105,9 @@ self.__SERVER_FILES_MANIFEST={
       }
     },
     "outputFileTracingRoot": "C:\\Users\\Nemesis\\Desktop\\UACC DIMS",
+    "allowedDevOrigins": [
+      "172.16.1.5"
+    ],
     "cacheComponents": false,
     "cacheLife": {
       "default": {

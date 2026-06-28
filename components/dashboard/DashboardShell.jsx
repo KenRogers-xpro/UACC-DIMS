@@ -2,6 +2,7 @@
 import { useState } from 'react'
 import Sidebar from '@/components/dashboard/Sidebar'
 import TopBar from '@/components/dashboard/TopBar'
+import AIAgentWidget from '@/components/dashboard/AIAgentWidget'
 
 export default function DashboardShell({ children, session }) {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
@@ -62,6 +63,9 @@ export default function DashboardShell({ children, session }) {
           DIMS v1.0 · Uganda Air Cargo Corporation · Internal Use Only · © 2026
         </div>
       </div>
+
+      {/* Floating AI Agent widget */}
+      <AIAgentWidget />
     </div>
   )
 }

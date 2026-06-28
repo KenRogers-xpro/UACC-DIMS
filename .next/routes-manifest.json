@@ -21,7 +21,16 @@
     "afterFiles": [],
     "fallback": []
   },
-  "dynamicRoutes": [],
+  "dynamicRoutes": [
+    {
+      "page": "/api/auth/[...nextauth]",
+      "regex": "^/api/auth/(.+?)(?:/)?$",
+      "routeKeys": {
+        "nxtPnextauth": "nxtPnextauth"
+      },
+      "namedRegex": "^/api/auth/(?<nxtPnextauth>.+?)(?:/)?$"
+    }
+  ],
   "staticRoutes": [
     {
       "page": "/",
@@ -42,10 +51,82 @@
       "namedRegex": "^/_not\\-found(?:/)?$"
     },
     {
+      "page": "/api/ai",
+      "regex": "^/api/ai(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/ai(?:/)?$"
+    },
+    {
+      "page": "/dashboard",
+      "regex": "^/dashboard(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/dashboard(?:/)?$"
+    },
+    {
+      "page": "/dashboard/activity-logs",
+      "regex": "^/dashboard/activity\\-logs(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/dashboard/activity\\-logs(?:/)?$"
+    },
+    {
+      "page": "/dashboard/ai-agent",
+      "regex": "^/dashboard/ai\\-agent(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/dashboard/ai\\-agent(?:/)?$"
+    },
+    {
+      "page": "/dashboard/audit-trail",
+      "regex": "^/dashboard/audit\\-trail(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/dashboard/audit\\-trail(?:/)?$"
+    },
+    {
+      "page": "/dashboard/documents",
+      "regex": "^/dashboard/documents(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/dashboard/documents(?:/)?$"
+    },
+    {
+      "page": "/dashboard/procurement",
+      "regex": "^/dashboard/procurement(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/dashboard/procurement(?:/)?$"
+    },
+    {
+      "page": "/dashboard/records",
+      "regex": "^/dashboard/records(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/dashboard/records(?:/)?$"
+    },
+    {
+      "page": "/dashboard/reports",
+      "regex": "^/dashboard/reports(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/dashboard/reports(?:/)?$"
+    },
+    {
+      "page": "/dashboard/settings",
+      "regex": "^/dashboard/settings(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/dashboard/settings(?:/)?$"
+    },
+    {
+      "page": "/dashboard/user-management",
+      "regex": "^/dashboard/user\\-management(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/dashboard/user\\-management(?:/)?$"
+    },
+    {
       "page": "/favicon.ico",
       "regex": "^/favicon\\.ico(?:/)?$",
       "routeKeys": {},
       "namedRegex": "^/favicon\\.ico(?:/)?$"
+    },
+    {
+      "page": "/login",
+      "regex": "^/login(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/login(?:/)?$"
     }
   ],
   "dataRoutes": [],
