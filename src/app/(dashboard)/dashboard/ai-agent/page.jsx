@@ -227,7 +227,8 @@ export default function AIAgentPage() {
     }
 
     try {
-      const res = await fetch('/api/ai', {
+      const API_BASE = process.env.NEXT_PUBLIC_API_URL || ''
+      const res = await fetch(`${API_BASE}/ai`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
