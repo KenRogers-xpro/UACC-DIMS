@@ -12,7 +12,7 @@ A secure, role-based internal platform for document management, procurement appr
 |---|---|
 | Framework | Next.js 16 (App Router) |
 | Auth | NextAuth v5 (Credentials + JWT) |
-| Database | MySQL via Prisma ORM |
+| Database / API | Backend REST API (frontend communicates with backend for all data and auth) |
 | Styling | Tailwind CSS v4 + custom design tokens |
 | AI | Claude (Anthropic API) — coming soon |
 
@@ -41,12 +41,12 @@ Copy the example file and fill in your values:
 cp .env.example .env.local
 ```
 
-Then open `.env.local` and update:
+Then open `.env.local` and update the frontend-specific variables:
 
 ```env
-DATABASE_URL="mysql://root:YOUR_PASSWORD@localhost:3306/uacc_dims"
-AUTH_SECRET="YOUR_GENERATED_SECRET"
+NEXT_PUBLIC_API_URL="http://localhost:5000/api"   # Backend API base URL
 NEXTAUTH_URL="http://localhost:3000"
+AUTH_SECRET="YOUR_GENERATED_SECRET"
 ```
 
 To generate a secure `AUTH_SECRET`, run:
@@ -55,32 +55,7 @@ To generate a secure `AUTH_SECRET`, run:
 node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"
 ```
 
-### 4. Set up the database
-
-Make sure MySQL is running and the `uacc_dims` database exists, then push the Prisma schema:
-
-```bash
-npx prisma db push
-```
-
-Or to use migrations (recommended for production):
-
-```bash
-npx prisma migrate dev --name init
-```
-
-### 5. (Optional) Seed an admin user
-
-```bash
-npx prisma studio
-```
-
-Use Prisma Studio to manually insert your first `IT_ADMINISTRATOR` user with a bcrypt-hashed password.
-
-> To hash a password manually:
-> ```bash
-> node -e "const b=require('bcryptjs');b.hash('yourpassword',12).then(console.log)"
-> ```
+Note: The frontend no longer talks directly to the database. All database operations and user management are performed by the backend API.
 
 ### 6. Start the development server
 
@@ -96,12 +71,9 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 
 ```
 UACC-DIMS/
-├── auth.js                          # NextAuth v5 root config (credentials + JWT)
-├── prisma/
-│   └── schema.prisma                # Database schema (MySQL)
+├── auth.js                          # NextAuth v5 root config (delegates auth to backend API)
 ├── lib/
-│   ├── prisma.js                    # Prisma client singleton
-│   └── ai.js                       # AI agent helper
+│   └── ai.js                        # AI agent helper
 ├── src/
 │   └── app/
 │       ├── globals.css              # Design system (tokens, glass panels, animations)

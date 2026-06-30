@@ -1,10 +1,5 @@
 import NextAuth from 'next-auth';
 import Credentials from 'next-auth/providers/credentials';
-import { PrismaClient } from '@prisma/client';
-import bcrypt from 'bcryptjs';
-
-const prisma = new PrismaClient();
-
 export const { handlers, auth, signIn, signOut } = NextAuth({
   session: {
     strategy: 'jwt',
@@ -25,29 +20,28 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) return null;
 
-        // Look up the user in MySQL via Prisma
-        const user = await prisma.user.findUnique({
-          where: { email: credentials.email },
-        });
+        // Delegate authentication to the backend API
+        try {
+          const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'
+          const res = await fetch(`${apiUrl}/auth/login`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email: credentials.email, password: credentials.password }),
+          })
+          const data = await res.json().catch(() => null)
+          if (!data || !data.success || !data.data?.user) return null
 
-        if (!user || !user.isActive) return null;
-
-        // Compare plain-text attempt against bcrypt hash in DB
-        const passwordMatch = await bcrypt.compare(
-          credentials.password,
-          user.password,
-        );
-
-        if (!passwordMatch) return null;
-
-        // Return a JWT-safe subset — never expose the hashed password
-        return {
-          id:         String(user.id),
-          name:       user.name,
-          email:      user.email,
-          role:       user.role,
-          department: user.department,
-        };
+          const u = data.data.user
+          return {
+            id: String(u.id),
+            name: u.name,
+            email: u.email,
+            role: u.role,
+            department: u.department,
+          }
+        } catch (err) {
+          return null
+        }
       },
     }),
   ],

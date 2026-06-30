@@ -50,7 +50,8 @@ export default function LoginPage() {
       setError('Invalid email or password. Please try again.');
       setLoading(false);
     } else {
-      router.refresh();
+      setLoading(false);
+      router.push('/dashboard');
     }
   };
 

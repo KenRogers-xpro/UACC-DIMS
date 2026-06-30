@@ -78,5 +78,5 @@ Thumbs.db
 .next/
 out/
 
-# Prisma generated client
-prisma/generated/
+# Prisma generated client (frontend no longer uses Prisma)
+# prisma/generated/
