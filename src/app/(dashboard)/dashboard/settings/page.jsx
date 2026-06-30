@@ -83,7 +83,7 @@ export default function SettingsPage() {
   const passwordStrength = getPasswordStrength(passwords.new)
 
   return (
-    <div className="p-6 md:p-8 max-w-7xl mx-auto min-h-screen pb-24">
+    <div className="p-6 md:p-8 w-full max-w-screen-2xl mx-auto min-h-screen pb-24">
       
       {/* PAGE HEADER */}
       <div className="mb-6">

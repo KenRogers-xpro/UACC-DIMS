@@ -181,7 +181,7 @@ export default function UserManagementPage() {
   const uniqueDepartments = new Set(users.map(u => u.department)).size
 
   return (
-    <div className="p-6 md:p-8 max-w-7xl mx-auto min-h-screen pb-24">
+    <div className="p-6 md:p-8 w-full max-w-screen-2xl mx-auto min-h-screen pb-24">
       
       {/* PAGE HEADER */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
@@ -393,7 +393,7 @@ export default function UserManagementPage() {
       {modalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setModalOpen(false)}></div>
-          <div className="relative w-full max-w-lg card rounded-2xl p-8 border border-white/10 bg-[#121212] shadow-2xl overflow-y-auto max-h-[90vh] scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
+          <div className="relative w-full max-w-3xl card rounded-2xl p-8 border border-white/10 bg-[#121212] shadow-2xl overflow-y-auto max-h-[90vh] scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
             
             <button 
               onClick={() => setModalOpen(false)}

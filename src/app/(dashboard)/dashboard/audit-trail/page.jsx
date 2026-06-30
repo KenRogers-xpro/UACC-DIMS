@@ -169,7 +169,7 @@ export default function AuditTrailPage() {
   }
 
   return (
-    <div className="p-6 md:p-8 max-w-7xl mx-auto min-h-screen pb-24">
+    <div className="p-6 md:p-8 w-full max-w-screen-2xl mx-auto min-h-screen pb-24">
       
       {/* PAGE HEADER */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
