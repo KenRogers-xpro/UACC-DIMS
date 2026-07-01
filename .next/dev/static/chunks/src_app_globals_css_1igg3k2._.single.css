@@ -953,8 +953,16 @@
     height: calc(var(--spacing) * 48);
   }
 
+  .h-55 {
+    height: calc(var(--spacing) * 55);
+  }
+
   .h-64 {
     height: calc(var(--spacing) * 64);
+  }
+
+  .h-70 {
+    height: calc(var(--spacing) * 70);
   }
 
   .h-\[35\%\] {
@@ -993,14 +1001,6 @@
     height: 200px;
   }
 
-  .h-\[220px\] {
-    height: 220px;
-  }
-
-  .h-\[280px\] {
-    height: 280px;
-  }
-
   .h-\[300px\] {
     height: 300px;
   }
@@ -1033,12 +1033,16 @@
     height: 100vh;
   }
 
+  .max-h-95 {
+    max-height: calc(var(--spacing) * 95);
+  }
+
   .max-h-\[90vh\] {
     max-height: 90vh;
   }
 
-  .max-h-\[380px\] {
-    max-height: 380px;
+  .min-h-80 {
+    min-height: calc(var(--spacing) * 80);
   }
 
   .min-h-\[36px\] {
@@ -1875,6 +1879,14 @@
     border-style: dashed;
   }
 
+  .border-\(--border-default\) {
+    border-color: var(--border-default);
+  }
+
+  .border-\(--border-subtle\) {
+    border-color: var(--border-subtle);
+  }
+
   .border-\[\#0b1120\] {
     border-color: #0b1120;
   }
@@ -2310,6 +2322,16 @@
   @supports (color: color-mix(in lab, red, red)) {
     .bg-black\/5 {
       background-color: color-mix(in oklab, var(--color-black) 5%, transparent);
+    }
+  }
+
+  .bg-black\/10 {
+    background-color: #0000001a;
+  }
+
+  @supports (color: color-mix(in lab, red, red)) {
+    .bg-black\/10 {
+      background-color: color-mix(in oklab, var(--color-black) 10%, transparent);
     }
   }
 
@@ -3277,6 +3299,11 @@
     font-size: 28px;
   }
 
+  .leading-6 {
+    --tw-leading: calc(var(--spacing) * 6);
+    line-height: calc(var(--spacing) * 6);
+  }
+
   .leading-\[1\.1\] {
     --tw-leading: 1.1;
     line-height: 1.1;
@@ -3363,6 +3390,10 @@
 
   .whitespace-pre-wrap {
     white-space: pre-wrap;
+  }
+
+  .text-\(--text-secondary\) {
+    color: var(--text-secondary);
   }
 
   .text-\[\#0b1120\] {
@@ -4042,7 +4073,7 @@
   }
 
   @media (hover: hover) {
-    .hover\:border-\[var\(--border-gold\)\]:hover {
+    .hover\:border-\(--border-gold\):hover {
       border-color: var(--border-gold);
     }
   }
