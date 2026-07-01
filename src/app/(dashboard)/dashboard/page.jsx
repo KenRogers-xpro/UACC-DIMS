@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import { useSession } from 'next-auth/react'
 import {
   FolderOpen,
   ClipboardList,
@@ -30,6 +31,7 @@ import PageHeader from '@/components/ui/PageHeader'
 import StatCard from '@/components/ui/StatCard'
 import Badge from '@/components/ui/Badge'
 import Button from '@/components/ui/Button'
+import PADashboard from '@/components/dashboard/PADashboard'
 
 // MOCK DATA
 const MOCK_STATS = {
@@ -159,7 +161,7 @@ const CustomTooltip = ({ active, payload, label }) => {
         {payload.map((pld, index) => (
           <p key={index} className="flex items-center gap-2" style={{ color: pld.color }}>
             <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: pld.color }} />
-            <span className="font-semibold text-[var(--text-secondary)]">{pld.name}:</span>
+            <span className="font-semibold text-(--text-secondary)">{pld.name}:</span>
             <span className="font-bold">{pld.value}</span>
           </p>
         ))}
@@ -170,11 +172,24 @@ const CustomTooltip = ({ active, payload, label }) => {
 }
 
 export default function DashboardHome() {
+  const { data: session, status } = useSession()
   const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
     setMounted(true)
   }, [])
+
+  if (status === 'loading') {
+    return (
+      <div className="flex items-center justify-center min-h-80 text-sm" style={{ color: 'var(--text-muted)' }}>
+        Loading dashboard...
+      </div>
+    )
+  }
+
+  if (session?.user?.role === 'GM_PERSONAL_ASSISTANT') {
+    return <PADashboard />
+  }
 
   return (
     <div className="flex flex-col gap-6 w-full animate-fadeIn">
@@ -232,7 +247,7 @@ export default function DashboardHome() {
               Approved vs Rejected breakdown
             </p>
           </div>
-          <div className="h-[280px] w-full flex items-center justify-center">
+          <div className="h-70 w-full flex items-center justify-center">
             {mounted ? (
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart
@@ -296,7 +311,7 @@ export default function DashboardHome() {
             </p>
           </div>
 
-          <div className="relative h-[220px] flex items-center justify-center my-2">
+          <div className="relative h-55 flex items-center justify-center my-2">
             {mounted ? (
               <>
                 <ResponsiveContainer width="100%" height="100%">
@@ -334,11 +349,11 @@ export default function DashboardHome() {
           </div>
 
           {/* Custom Category Legend */}
-          <div className="grid grid-cols-3 gap-x-2 gap-y-3 mt-2 pt-3 border-t border-[var(--border-subtle)]">
+          <div className="grid grid-cols-3 gap-x-2 gap-y-3 mt-2 pt-3 border-t border-(--border-subtle)">
             {MOCK_DOCUMENTS_BY_CATEGORY.map((cat) => (
               <div key={cat.name} className="flex items-center gap-1.5 min-w-0">
                 <span
-                  className="w-2 h-2 rounded-full flex-shrink-0"
+                    className="w-2 h-2 rounded-full shrink-0"
                   style={{ backgroundColor: cat.color }}
                 />
                 <div className="min-w-0 flex flex-col">
@@ -359,7 +374,7 @@ export default function DashboardHome() {
       <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
         {/* Left Panel: Recent System Activity */}
         <div className="card rounded-xl p-6 md:col-span-7 flex flex-col justify-between">
-          <div className="flex items-center justify-between mb-4 flex-shrink-0">
+          <div className="flex items-center justify-between mb-4 shrink-0">
             <div>
               <h3 className="font-heading font-bold text-sm uppercase tracking-wider" style={{ color: 'var(--text-primary)' }}>
                 Recent System Activity
@@ -373,7 +388,7 @@ export default function DashboardHome() {
             </Link>
           </div>
 
-          <div className="flex-1 max-h-[380px] overflow-y-auto pr-1 flex flex-col gap-3">
+          <div className="flex-1 max-h-95 overflow-y-auto pr-1 flex flex-col gap-3">
             {MOCK_RECENT_ACTIVITY.map((item, index) => {
               const act = getActionDetails(item.action)
               const Icon = act.icon
@@ -383,12 +398,12 @@ export default function DashboardHome() {
                 <div
                   key={item.id}
                   className={`flex items-start gap-3 pb-3 ${
-                    !isLast ? 'border-b border-[var(--border-subtle)]' : ''
+                    !isLast ? 'border-b border-(--border-subtle)' : ''
                   }`}
                 >
                   {/* Left: icon circle */}
                   <div
-                    className="p-2 rounded-lg flex-shrink-0 border"
+                    className="p-2 rounded-lg shrink-0 border"
                     style={{
                       backgroundColor: act.bg,
                       borderColor: `rgba(${act.color === '#C9973A' ? '201,151,58' : act.color === '#4ade80' ? '34,197,94' : act.color === '#CC2200' ? '204,34,0' : '156,163,175'}, 0.2)`
@@ -441,7 +456,7 @@ export default function DashboardHome() {
             {MOCK_PENDING_PROCUREMENTS.map((req) => (
               <div
                 key={req.id}
-                className="border border-[var(--border-default)] rounded-lg p-4 bg-surface-low/30 hover:border-[var(--border-gold)] transition-all duration-200 flex flex-col gap-2.5"
+                className="border border-(--border-default) rounded-lg p-4 bg-surface-low/30 hover:border-(--border-gold) transition-all duration-200 flex flex-col gap-2.5"
               >
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-bold text-uacc-gold uppercase tracking-wider font-heading">
@@ -457,7 +472,7 @@ export default function DashboardHome() {
                     {formatDept(req.dept)}
                   </p>
                 </div>
-                <div className="flex items-center justify-between mt-1 pt-2 border-t border-[var(--border-subtle)]">
+                <div className="flex items-center justify-between mt-1 pt-2 border-t border-(--border-subtle)">
                   <span className="text-xs font-heading font-bold" style={{ color: 'var(--text-primary)' }}>
                     {formatUGX(req.cost)}
                   </span>
@@ -477,7 +492,7 @@ export default function DashboardHome() {
       <div className="card rounded-xl p-5 border-l-4 border-uacc-gold flex flex-col md:flex-row md:items-center justify-between gap-4">
         {/* Left */}
         <div className="flex items-center gap-3">
-          <div className="p-2.5 rounded-full bg-uacc-gold/10 text-uacc-gold border border-uacc-gold/20 flex-shrink-0">
+          <div className="p-2.5 rounded-full bg-uacc-gold/10 text-uacc-gold border border-uacc-gold/20 shrink-0">
             <Bot size={20} />
           </div>
           <div>
@@ -504,7 +519,7 @@ export default function DashboardHome() {
         </div>
 
         {/* Right */}
-        <div className="flex-shrink-0">
+        <div className="shrink-0">
           <Link href="/dashboard/ai-agent">
             <Button variant="ghost" size="sm">
               Open AI Agent &rarr;

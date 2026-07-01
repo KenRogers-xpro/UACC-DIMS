@@ -17,6 +17,9 @@ import {
   Bot,
   Settings2,
   BookOpen,
+  Inbox,
+  CalendarClock,
+  FileText,
 } from 'lucide-react'
 
 // Navigation items with role access control
@@ -92,9 +95,43 @@ const NAV_ITEMS = [
   },
 ]
 
+const PA_NAV_ITEMS = [
+  {
+    label: 'Dashboard',
+    href: '/dashboard',
+    icon: LayoutDashboard,
+  },
+  {
+    label: 'GM Inbox',
+    href: '/dashboard/pa-inbox',
+    icon: Inbox,
+  },
+  {
+    label: 'Schedule',
+    href: '/dashboard/schedule',
+    icon: CalendarClock,
+  },
+  {
+    label: 'Drafts',
+    href: '/dashboard/drafts',
+    icon: FileText,
+  },
+  {
+    label: 'Documents',
+    href: '/dashboard/documents',
+    icon: FolderOpen,
+  },
+  {
+    label: 'Settings',
+    href: '/dashboard/settings',
+    icon: Settings2,
+  },
+]
+
 // Role display labels and badge colors
 const ROLE_META = {
   GENERAL_MANAGER:  { label: 'General Manager',  color: 'bg-uacc-gold/20 text-uacc-gold' },
+  GM_PERSONAL_ASSISTANT: { label: 'GM Personal Assistant', color: 'bg-uacc-gold/20 text-uacc-gold' },
   DEPARTMENT_HEAD:  { label: 'Department Head',   color: 'bg-blue-500/20 text-blue-400' },
   STAFF:            { label: 'Staff',              color: 'bg-emerald-500/20 text-emerald-400' },
   IT_ADMINISTRATOR: { label: 'IT Administrator',  color: 'bg-purple-500/20 text-purple-400' },
@@ -112,9 +149,9 @@ export default function Sidebar({
   const roleMeta = ROLE_META[userRole] || ROLE_META.STAFF
 
   // Filter nav items based on user role
-  const visibleNav = NAV_ITEMS.filter(item =>
-    item.roles.includes(userRole)
-  )
+  const visibleNav = userRole === 'GM_PERSONAL_ASSISTANT'
+    ? PA_NAV_ITEMS
+    : NAV_ITEMS.filter(item => item.roles.includes(userRole))
 
   const handleSignOut = async () => {
     await signOut({ callbackUrl: '/login' })
