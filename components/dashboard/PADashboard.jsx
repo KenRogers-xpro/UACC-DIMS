@@ -2,15 +2,14 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
-import { useSession } from 'next-auth/react'
+import { useAuth } from '@/lib/auth-context'
+import api from '@/lib/api'
 import { CalendarClock, Inbox, FileText, Sparkles, Loader2, ArrowRight } from 'lucide-react'
 
 import PageHeader from '@/components/ui/PageHeader'
 import StatCard from '@/components/ui/StatCard'
 import Button from '@/components/ui/Button'
 import { searchKnowledgeBase } from '@/lib/ai'
-
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'
 
 function getTodayBounds() {
   const start = new Date()
@@ -30,19 +29,6 @@ function getWeekStart() {
   weekStart.setDate(diff)
   weekStart.setHours(0, 0, 0, 0)
   return weekStart
-}
-
-async function apiGet(path, accessToken) {
-  const res = await fetch(`${API_BASE}${path}`, {
-    headers: { Authorization: `Bearer ${accessToken}` },
-  })
-
-  const data = await res.json().catch(() => null)
-  if (!res.ok) {
-    throw new Error(data?.message || 'Request failed')
-  }
-
-  return data
 }
 
 function BriefingCard({ briefing, loading }) {
@@ -85,7 +71,7 @@ function BriefingCard({ briefing, loading }) {
 }
 
 export default function PADashboard() {
-  const { data: session } = useSession()
+  const { user } = useAuth()
   const [loading, setLoading] = useState(true)
   const [briefingLoading, setBriefingLoading] = useState(true)
   const [briefing, setBriefing] = useState('')
@@ -96,15 +82,12 @@ export default function PADashboard() {
     draftsRejectedThisWeek: 0,
   })
 
-  const accessToken = session?.user?.accessToken
-  const displayName = session?.user?.name || 'General Manager'
+  const displayName = user?.name || 'General Manager'
 
   useEffect(() => {
     let cancelled = false
 
     async function loadDashboard() {
-      if (!accessToken) return
-
       setLoading(true)
       setBriefingLoading(true)
 
@@ -113,9 +96,9 @@ export default function PADashboard() {
         const weekStart = getWeekStart()
 
         const [inboxData, scheduleData, draftsData] = await Promise.all([
-          apiGet('/pa/inbox', accessToken),
-          apiGet(`/schedule?startDate=${encodeURIComponent(start.toISOString())}&endDate=${encodeURIComponent(end.toISOString())}`, accessToken),
-          apiGet('/drafts/summary', accessToken),
+          api.get('/pa/inbox'),
+          api.get(`/schedule?startDate=${encodeURIComponent(start.toISOString())}&endDate=${encodeURIComponent(end.toISOString())}`),
+          api.get('/drafts/summary'),
         ])
 
         if (cancelled) return
@@ -130,7 +113,6 @@ export default function PADashboard() {
         setStats(nextStats)
 
         const briefingText = await searchKnowledgeBase({
-          accessToken,
           query: "summarize today's pending items, schedule, and flagged documents for the General Manager",
           context: {
             pendingTriage: nextStats.pendingTriage,
@@ -161,7 +143,7 @@ export default function PADashboard() {
     return () => {
       cancelled = true
     }
-  }, [accessToken])
+  }, [])
 
   const quickActions = useMemo(() => ([
     { href: '/dashboard/drafts/new', label: 'New Draft' },
@@ -169,7 +151,7 @@ export default function PADashboard() {
     { href: '/dashboard/pa-inbox', label: 'View Inbox' },
   ]), [])
 
-  if (!session) {
+  if (!user) {
     return (
       <div className="flex items-center justify-center text-sm" style={{ color: 'var(--text-muted)', minHeight: 320 }}>
         Loading dashboard...

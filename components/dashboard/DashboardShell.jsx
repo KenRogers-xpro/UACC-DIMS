@@ -4,7 +4,7 @@ import Sidebar from '@/components/dashboard/Sidebar'
 import TopBar from '@/components/dashboard/TopBar'
 import AIAgentWidget from '@/components/dashboard/AIAgentWidget'
 
-export default function DashboardShell({ children, session }) {
+export default function DashboardShell({ children, user }) {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false)
 
@@ -15,7 +15,7 @@ export default function DashboardShell({ children, session }) {
     >
       {/* Sidebar */}
       <Sidebar
-        session={session}
+        user={user}
         collapsed={sidebarCollapsed}
         mobileOpen={mobileSidebarOpen}
         onMobileClose={() => setMobileSidebarOpen(false)}
@@ -38,7 +38,7 @@ export default function DashboardShell({ children, session }) {
       >
         {/* Top bar */}
         <TopBar
-          session={session}
+          user={user}
           sidebarCollapsed={sidebarCollapsed}
           onToggleSidebar={() => setSidebarCollapsed(!sidebarCollapsed)}
           onMobileMenuOpen={() => setMobileSidebarOpen(true)}

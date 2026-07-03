@@ -2,7 +2,7 @@
 import { usePathname } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
-import { signOut } from 'next-auth/react'
+import { useAuth } from '@/lib/auth-context'
 import {
   LayoutDashboard,
   FolderOpen,
@@ -139,23 +139,20 @@ const ROLE_META = {
 }
 
 export default function Sidebar({
-  session,
+  user,
   collapsed,
   mobileOpen,
   onMobileClose,
 }) {
   const pathname = usePathname()
-  const userRole = session?.user?.role || 'STAFF'
+  const { logout } = useAuth()
+  const userRole = user?.role || 'STAFF'
   const roleMeta = ROLE_META[userRole] || ROLE_META.STAFF
 
   // Filter nav items based on user role
   const visibleNav = userRole === 'GM_PERSONAL_ASSISTANT'
     ? PA_NAV_ITEMS
     : NAV_ITEMS.filter(item => item.roles.includes(userRole))
-
-  const handleSignOut = async () => {
-    await signOut({ callbackUrl: '/login' })
-  }
 
   return (
     <>
@@ -169,12 +166,12 @@ export default function Sidebar({
         style={{ boxShadow: '2px 0 12px rgba(0,0,0,0.3)' }}
       >
         <SidebarContent
-          session={session}
+          user={user}
           roleMeta={roleMeta}
           visibleNav={visibleNav}
           pathname={pathname}
           collapsed={collapsed}
-          onSignOut={handleSignOut}
+          onSignOut={logout}
         />
       </aside>
 
@@ -188,12 +185,12 @@ export default function Sidebar({
         style={{ boxShadow: '4px 0 24px rgba(0,0,0,0.5)' }}
       >
         <SidebarContent
-          session={session}
+          user={user}
           roleMeta={roleMeta}
           visibleNav={visibleNav}
           pathname={pathname}
           collapsed={false}
-          onSignOut={handleSignOut}
+          onSignOut={logout}
           onMobileClose={onMobileClose}
           isMobile
         />
@@ -203,7 +200,7 @@ export default function Sidebar({
 }
 
 function SidebarContent({
-  session,
+  user,
   roleMeta,
   visibleNav,
   pathname,
@@ -266,14 +263,14 @@ function SidebarContent({
                          font-heading font-bold text-sm text-white flex-shrink-0"
               style={{ background: 'rgba(201,151,58,0.25)', border: '1px solid rgba(201,151,58,0.4)' }}
             >
-              {session?.user?.name?.charAt(0)?.toUpperCase() || 'U'}
+              {user?.name?.charAt(0)?.toUpperCase() || 'U'}
             </div>
             <div className="overflow-hidden flex-1 min-w-0">
               <p className="text-white text-xs font-semibold truncate font-heading">
-                {session?.user?.name || 'User'}
+                {user?.name || 'User'}
               </p>
               <p className="text-[10px] truncate" style={{ color: 'var(--sidebar-text)' }}>
-                {session?.user?.email}
+                {user?.email}
               </p>
             </div>
           </div>
@@ -294,9 +291,9 @@ function SidebarContent({
             className="w-9 h-9 rounded-full flex items-center justify-center
                        font-heading font-bold text-sm text-white"
             style={{ background: 'rgba(201,151,58,0.25)', border: '1px solid rgba(201,151,58,0.4)' }}
-            title={session?.user?.name}
+            title={user?.name}
           >
-            {session?.user?.name?.charAt(0)?.toUpperCase() || 'U'}
+            {user?.name?.charAt(0)?.toUpperCase() || 'U'}
           </div>
         </div>
       )}

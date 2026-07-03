@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { useSession } from 'next-auth/react'
+import { useAuth } from '@/lib/auth-context'
+import api from '@/lib/api'
 import {
   FolderOpen,
   ClipboardList,
@@ -32,51 +33,6 @@ import StatCard from '@/components/ui/StatCard'
 import Badge from '@/components/ui/Badge'
 import Button from '@/components/ui/Button'
 import PADashboard from '@/components/dashboard/PADashboard'
-
-// MOCK DATA
-const MOCK_STATS = {
-  totalDocuments: 847,
-  pendingApprovals: 12,
-  activityLogsToday: 34,
-  totalStaff: 67,
-  documentsThisMonth: 43,
-  procurementThisMonth: 28,
-}
-
-const MOCK_PROCUREMENT_CHART = [
-  { month: 'Jan', requests: 8,  approved: 6,  rejected: 2 },
-  { month: 'Feb', requests: 12, approved: 9,  rejected: 3 },
-  { month: 'Mar', requests: 7,  approved: 7,  rejected: 0 },
-  { month: 'Apr', requests: 15, approved: 11, rejected: 4 },
-  { month: 'May', requests: 10, approved: 8,  rejected: 2 },
-  { month: 'Jun', requests: 18, approved: 14, rejected: 4 },
-]
-
-const MOCK_DOCUMENTS_BY_CATEGORY = [
-  { name: 'Policy',   value: 124, color: '#C9973A' },
-  { name: 'Report',   value: 289, color: '#CC2200' },
-  { name: 'Memo',     value: 198, color: '#4ade80' },
-  { name: 'Contract', value: 87,  color: '#a5b4fc' },
-  { name: 'Form',     value: 103, color: '#f4be5d' },
-  { name: 'Other',    value: 46,  color: '#94a3b8' },
-]
-
-const MOCK_RECENT_ACTIVITY = [
-  { id: 1, user: 'Patrick Katusabe',   role: 'IT_ADMINISTRATOR', action: 'DOCUMENT_UPLOAD',    module: 'Documents',   time: '2 min ago',  description: 'Uploaded "IT Policy 2026.pdf"' },
-  { id: 2, user: 'Head Engineering',   role: 'DEPARTMENT_HEAD',  action: 'PROCUREMENT_APPROVE', module: 'Procurement', time: '15 min ago', description: 'Approved request UACC-PROC-2026-0041' },
-  { id: 3, user: 'Staff Operations',   role: 'STAFF',            action: 'LOG_ENTRY',           module: 'Activity Logs', time: '1 hr ago', description: 'Submitted daily activity log' },
-  { id: 4, user: 'Internal Auditor',   role: 'AUDITOR',          action: 'LOGIN',               module: 'Auth',        time: '2 hr ago',  description: 'Logged into the system' },
-  { id: 5, user: 'Staff Operations',   role: 'STAFF',            action: 'PROCUREMENT_SUBMIT',  module: 'Procurement', time: '3 hr ago',  description: 'Submitted new procurement request' },
-  { id: 6, user: 'Patrick Katusabe',   role: 'IT_ADMINISTRATOR', action: 'USER_CREATED',        module: 'Users',       time: '5 hr ago',  description: 'Created new user account' },
-  { id: 7, user: 'Head Engineering',   role: 'DEPARTMENT_HEAD',  action: 'DOCUMENT_DOWNLOAD',   module: 'Documents',   time: 'Yesterday', description: 'Downloaded "Engineering Manual v3.pdf"' },
-  { id: 8, user: 'Lt. Gen. Lakara',    role: 'GENERAL_MANAGER',  action: 'PROCUREMENT_APPROVE', module: 'Procurement', time: 'Yesterday', description: 'Final approval on UACC-PROC-2026-0039' },
-]
-
-const MOCK_PENDING_PROCUREMENTS = [
-  { id: 'UACC-PROC-2026-0043', item: 'Network Switch (Cisco SG350)',    dept: 'FINANCE_AND_ADMINISTRATION', cost: 2850000, requestedBy: 'Patrick Katusabe',  status: 'PENDING' },
-  { id: 'UACC-PROC-2026-0042', item: 'Printer Toner Cartridges (x10)',  dept: 'OPERATIONS',                 cost: 450000,  requestedBy: 'Staff Operations',   status: 'DEPT_HEAD_APPROVED' },
-  { id: 'UACC-PROC-2026-0041', item: 'Office Chairs (x5)',              dept: 'ENGINEERING',                cost: 1250000, requestedBy: 'Head Engineering',   status: 'PENDING' },
-]
 
 // HELPER FUNCTIONS
 const formatDept = (dept) => {
@@ -172,14 +128,67 @@ const CustomTooltip = ({ active, payload, label }) => {
 }
 
 export default function DashboardHome() {
-  const { data: session, status } = useSession()
+  const { user } = useAuth()
   const [mounted, setMounted] = useState(false)
+  const [loading, setLoading] = useState(true)
+
+  const [stats, setStats] = useState({
+    totalDocuments: 0,
+    documentsThisMonth: 0,
+    pendingApprovals: 0,
+    activityLogsToday: 0,
+    totalStaff: 0
+  })
+  const [chartData, setChartData] = useState([])
+  const [categoryData, setCategoryData] = useState([])
+  const [recentActivity, setRecentActivity] = useState([])
+  const [pendingProcurement, setPendingProcurement] = useState([])
 
   useEffect(() => {
     setMounted(true)
+
+    async function fetchDashboardData() {
+      try {
+        const [
+          statsRes,
+          chartRes,
+          catRes,
+          activityRes,
+          procRes
+        ] = await Promise.all([
+          api.get('/dashboard/stats'),
+          api.get('/dashboard/procurement-chart'),
+          api.get('/dashboard/documents-by-category'),
+          api.get('/dashboard/recent-activity'),
+          api.get('/dashboard/pending-procurement')
+        ])
+
+        if (statsRes.success) {
+          setStats(statsRes.data || statsRes)
+        }
+        if (chartRes.success) {
+          setChartData(chartRes.data || [])
+        }
+        if (catRes.success) {
+          setCategoryData(catRes.data || [])
+        }
+        if (activityRes.success) {
+          setRecentActivity(activityRes.data || [])
+        }
+        if (procRes.success) {
+          setPendingProcurement(procRes.data || [])
+        }
+      } catch (err) {
+        console.error('Failed to load dashboard data', err)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchDashboardData()
   }, [])
 
-  if (status === 'loading') {
+  if (loading) {
     return (
       <div className="flex items-center justify-center min-h-80 text-sm" style={{ color: 'var(--text-muted)' }}>
         Loading dashboard...
@@ -187,7 +196,7 @@ export default function DashboardHome() {
     )
   }
 
-  if (session?.user?.role === 'GM_PERSONAL_ASSISTANT') {
+  if (user?.role === 'GM_PERSONAL_ASSISTANT') {
     return <PADashboard />
   }
 
@@ -195,43 +204,39 @@ export default function DashboardHome() {
     <div className="flex flex-col gap-6 w-full animate-fadeIn">
       {/* PAGE HEADER */}
       <PageHeader
-        title="Good morning, Lt. Gen. Lakara"
-        subtitle="Friday, 27 June 2026 · Here's what's happening at UACC today"
+        title={`Good morning, ${user?.name || 'User'}`}
+        subtitle={`${new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })} · Here's what's happening at UACC today`}
       />
 
       {/* ROW 1 — STAT CARDS */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
         <StatCard
           title="Total Documents"
-          value={MOCK_STATS.totalDocuments}
+          value={stats.totalDocuments}
           icon={FolderOpen}
           accentColor="gold"
-          subtitle="43 uploaded this month"
-          trend={12}
+          subtitle={`${stats.documentsThisMonth || 0} uploaded this month`}
         />
         <StatCard
           title="Pending Approvals"
-          value={MOCK_STATS.pendingApprovals}
+          value={stats.pendingApprovals}
           icon={ClipboardList}
           accentColor="red"
-          subtitle="3 awaiting GM sign-off"
-          trend={null}
+          subtitle="Awaiting GM sign-off"
         />
         <StatCard
           title="Activity Logs Today"
-          value={MOCK_STATS.activityLogsToday}
+          value={stats.activityLogsToday}
           icon={Clock}
           accentColor="green"
-          subtitle="Across 5 departments"
-          trend={8}
+          subtitle="Across all departments"
         />
         <StatCard
           title="Total Staff"
-          value={MOCK_STATS.totalStaff}
+          value={stats.totalStaff}
           icon={Users}
           accentColor="blue"
-          subtitle="5 active departments"
-          trend={null}
+          subtitle="System wide"
         />
       </div>
 
@@ -248,10 +253,10 @@ export default function DashboardHome() {
             </p>
           </div>
           <div className="h-70 w-full flex items-center justify-center">
-            {mounted ? (
+            {mounted && chartData.length > 0 ? (
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart
-                  data={MOCK_PROCUREMENT_CHART}
+                  data={chartData}
                   margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
                 >
                   <XAxis
@@ -294,7 +299,7 @@ export default function DashboardHome() {
               </ResponsiveContainer>
             ) : (
               <div className="text-xs text-muted" style={{ color: 'var(--text-muted)' }}>
-                Loading chart...
+                No chart data available
               </div>
             )}
           </div>
@@ -312,12 +317,12 @@ export default function DashboardHome() {
           </div>
 
           <div className="relative h-55 flex items-center justify-center my-2">
-            {mounted ? (
+            {mounted && categoryData.length > 0 ? (
               <>
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
                     <Pie
-                      data={MOCK_DOCUMENTS_BY_CATEGORY}
+                      data={categoryData}
                       cx="50%"
                       cy="50%"
                       innerRadius={60}
@@ -325,7 +330,7 @@ export default function DashboardHome() {
                       paddingAngle={3}
                       dataKey="value"
                     >
-                      {MOCK_DOCUMENTS_BY_CATEGORY.map((entry, index) => (
+                      {categoryData.map((entry, index) => (
                         <Cell key={`cell-${index}`} fill={entry.color} />
                       ))}
                     </Pie>
@@ -334,7 +339,7 @@ export default function DashboardHome() {
                 {/* Center Label */}
                 <div className="absolute flex flex-col items-center justify-center pointer-events-none">
                   <span className="text-2xl font-bold font-heading" style={{ color: 'var(--text-primary)' }}>
-                    {MOCK_STATS.totalDocuments}
+                    {stats.totalDocuments}
                   </span>
                   <span className="text-[9px] uppercase tracking-widest font-semibold" style={{ color: 'var(--text-muted)' }}>
                     Total Docs
@@ -343,17 +348,17 @@ export default function DashboardHome() {
               </>
             ) : (
               <div className="text-xs text-muted" style={{ color: 'var(--text-muted)' }}>
-                Loading chart...
+                No category data available
               </div>
             )}
           </div>
 
           {/* Custom Category Legend */}
           <div className="grid grid-cols-3 gap-x-2 gap-y-3 mt-2 pt-3 border-t border-(--border-subtle)">
-            {MOCK_DOCUMENTS_BY_CATEGORY.map((cat) => (
+            {categoryData.map((cat) => (
               <div key={cat.name} className="flex items-center gap-1.5 min-w-0">
                 <span
-                    className="w-2 h-2 rounded-full shrink-0"
+                  className="w-2 h-2 rounded-full shrink-0"
                   style={{ backgroundColor: cat.color }}
                 />
                 <div className="min-w-0 flex flex-col">
@@ -389,52 +394,58 @@ export default function DashboardHome() {
           </div>
 
           <div className="flex-1 max-h-95 overflow-y-auto pr-1 flex flex-col gap-3">
-            {MOCK_RECENT_ACTIVITY.map((item, index) => {
-              const act = getActionDetails(item.action)
-              const Icon = act.icon
-              const isLast = index === MOCK_RECENT_ACTIVITY.length - 1
+            {recentActivity.length > 0 ? (
+              recentActivity.map((item, index) => {
+                const act = getActionDetails(item.action)
+                const Icon = act.icon
+                const isLast = index === recentActivity.length - 1
 
-              return (
-                <div
-                  key={item.id}
-                  className={`flex items-start gap-3 pb-3 ${
-                    !isLast ? 'border-b border-(--border-subtle)' : ''
-                  }`}
-                >
-                  {/* Left: icon circle */}
+                return (
                   <div
-                    className="p-2 rounded-lg shrink-0 border"
-                    style={{
-                      backgroundColor: act.bg,
-                      borderColor: `rgba(${act.color === '#C9973A' ? '201,151,58' : act.color === '#4ade80' ? '34,197,94' : act.color === '#CC2200' ? '204,34,0' : '156,163,175'}, 0.2)`
-                    }}
+                    key={item.id}
+                    className={`flex items-start gap-3 pb-3 ${
+                      !isLast ? 'border-b border-(--border-subtle)' : ''
+                    }`}
                   >
-                    <Icon size={16} style={{ color: act.color }} />
-                  </div>
-
-                  {/* Center info */}
-                  <div className="flex-1 min-w-0 flex flex-col gap-0.5">
-                    <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-                      <span className="text-xs font-semibold" style={{ color: 'var(--text-primary)' }}>
-                        {item.user}
-                      </span>
-                      <span className="text-[10px] text-slate-400 font-medium">
-                        ({item.role.replace(/_/g, ' ')})
-                      </span>
-                      <Badge status={item.module.toUpperCase().replace(/\s+/g, '_')} label={item.module} />
+                    {/* Left: icon circle */}
+                    <div
+                      className="p-2 rounded-lg shrink-0 border"
+                      style={{
+                        backgroundColor: act.bg,
+                        borderColor: `rgba(${act.color === '#C9973A' ? '201,151,58' : act.color === '#4ade80' ? '34,197,94' : act.color === '#CC2200' ? '204,34,0' : '156,163,175'}, 0.2)`
+                      }}
+                    >
+                      <Icon size={16} style={{ color: act.color }} />
                     </div>
-                    <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
-                      {item.description}
-                    </p>
-                  </div>
 
-                  {/* Right time */}
-                  <span className="text-[10px] shrink-0 font-medium whitespace-nowrap self-start mt-0.5" style={{ color: 'var(--text-muted)' }}>
-                    {item.time}
-                  </span>
-                </div>
-              )
-            })}
+                    {/* Center info */}
+                    <div className="flex-1 min-w-0 flex flex-col gap-0.5">
+                      <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                        <span className="text-xs font-semibold" style={{ color: 'var(--text-primary)' }}>
+                          {item.user}
+                        </span>
+                        <span className="text-[10px] text-slate-400 font-medium">
+                          ({item.role?.replace(/_/g, ' ') || ''})
+                        </span>
+                        <Badge status={item.module?.toUpperCase()?.replace(/\s+/g, '_') || 'SYSTEM'} label={item.module} />
+                      </div>
+                      <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                        {item.description}
+                      </p>
+                    </div>
+
+                    {/* Right time */}
+                    <span className="text-[10px] shrink-0 font-medium whitespace-nowrap self-start mt-0.5" style={{ color: 'var(--text-muted)' }}>
+                      {item.time}
+                    </span>
+                  </div>
+                )
+              })
+            ) : (
+              <div className="text-xs text-muted text-center py-8" style={{ color: 'var(--text-muted)' }}>
+                No recent activity logs
+              </div>
+            )}
           </div>
         </div>
 
@@ -445,7 +456,7 @@ export default function DashboardHome() {
               <h3 className="font-heading font-bold text-sm uppercase tracking-wider" style={{ color: 'var(--text-primary)' }}>
                 Awaiting Approval
               </h3>
-              <Badge status="REJECTED" label="12" />
+              <Badge status="REJECTED" label={String(pendingProcurement.length)} />
             </div>
             <Link href="/dashboard/procurement" className="text-xs hover:underline uppercase tracking-wider font-semibold font-heading text-uacc-gold">
               View All &rarr;
@@ -453,37 +464,43 @@ export default function DashboardHome() {
           </div>
 
           <div className="flex-1 flex flex-col gap-3">
-            {MOCK_PENDING_PROCUREMENTS.map((req) => (
-              <div
-                key={req.id}
-                className="border border-(--border-default) rounded-lg p-4 bg-surface-low/30 hover:border-(--border-gold) transition-all duration-200 flex flex-col gap-2.5"
-              >
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold text-uacc-gold uppercase tracking-wider font-heading">
-                    {req.id}
-                  </span>
-                  <Badge status={req.status} />
+            {pendingProcurement.length > 0 ? (
+              pendingProcurement.map((req) => (
+                <div
+                  key={req.id}
+                  className="border border-(--border-default) rounded-lg p-4 bg-surface-low/30 hover:border-(--border-gold) transition-all duration-200 flex flex-col gap-2.5"
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-uacc-gold uppercase tracking-wider font-heading">
+                      {req.id}
+                    </span>
+                    <Badge status={req.status} />
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-bold text-white truncate" title={req.item}>
+                      {req.item}
+                    </h4>
+                    <p className="text-[11px]" style={{ color: 'var(--text-muted)' }}>
+                      {formatDept(req.dept)}
+                    </p>
+                  </div>
+                  <div className="flex items-center justify-between mt-1 pt-2 border-t border-(--border-subtle)">
+                    <span className="text-xs font-heading font-bold" style={{ color: 'var(--text-primary)' }}>
+                      {formatUGX(req.cost)}
+                    </span>
+                    <Link href="/dashboard/procurement">
+                      <Button variant="outline" size="sm">
+                        Review
+                      </Button>
+                    </Link>
+                  </div>
                 </div>
-                <div>
-                  <h4 className="text-sm font-bold text-white truncate" title={req.item}>
-                    {req.item}
-                  </h4>
-                  <p className="text-[11px]" style={{ color: 'var(--text-muted)' }}>
-                    {formatDept(req.dept)}
-                  </p>
-                </div>
-                <div className="flex items-center justify-between mt-1 pt-2 border-t border-(--border-subtle)">
-                  <span className="text-xs font-heading font-bold" style={{ color: 'var(--text-primary)' }}>
-                    {formatUGX(req.cost)}
-                  </span>
-                  <Link href="/dashboard/procurement">
-                    <Button variant="outline" size="sm">
-                      Review
-                    </Button>
-                  </Link>
-                </div>
+              ))
+            ) : (
+              <div className="text-xs text-muted text-center py-8" style={{ color: 'var(--text-muted)' }}>
+                No pending procurement approvals
               </div>
-            ))}
+            )}
           </div>
         </div>
       </div>
@@ -530,3 +547,4 @@ export default function DashboardHome() {
     </div>
   )
 }
+

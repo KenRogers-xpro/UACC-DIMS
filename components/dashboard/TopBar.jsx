@@ -16,7 +16,7 @@ const PAGE_TITLES = {
 }
 
 export default function TopBar({
-  session,
+  user,
   sidebarCollapsed,
   onToggleSidebar,
   onMobileMenuOpen,
@@ -97,7 +97,7 @@ export default function TopBar({
           {/* Notification dot */}
           <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full
                            bg-uacc-red border-2"
-               style={{ borderColor: 'var(--nav-bg)' }} />
+                style={{ borderColor: 'var(--nav-bg)' }} />
         </button>
 
         {/* Divider */}
@@ -112,16 +112,16 @@ export default function TopBar({
                        font-heading font-bold text-[10px] text-white flex-shrink-0"
             style={{ background: 'rgba(201,151,58,0.3)' }}
           >
-            {session?.user?.name?.charAt(0)?.toUpperCase() || 'U'}
+            {user?.name?.charAt(0)?.toUpperCase() || 'U'}
           </div>
           <div className="flex flex-col leading-none">
             <span className="text-xs font-semibold font-heading truncate max-w-[100px]"
                   style={{ color: 'var(--text-primary)' }}>
-              {session?.user?.name?.split(' ')[0] || 'User'}
+              {user?.name?.split(' ')[0] || 'User'}
             </span>
             <span className="text-[9px] uppercase tracking-wider"
                   style={{ color: 'var(--text-muted)' }}>
-              {session?.user?.role?.replace('_', ' ') || 'Staff'}
+              {user?.role?.replace('_', ' ') || 'Staff'}
             </span>
           </div>
         </div>

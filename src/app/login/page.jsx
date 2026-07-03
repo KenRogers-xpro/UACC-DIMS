@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
-import { signIn } from 'next-auth/react';
+import { useAuth } from '@/lib/auth-context';
 import {
   Eye,
   EyeOff,
@@ -23,6 +23,7 @@ const features = [
 
 export default function LoginPage() {
   const router = useRouter();
+  const { login } = useAuth();
 
   // ── Form state ──────────────────────────────────────────────────────────────
   const [email, setEmail] = useState('');
@@ -31,7 +32,7 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  // ── Submit handler (NextAuth credentials) ───────────────────────────────────
+  // ── Submit handler (Express backend) ─────────────────────────────────────────
   const handleSubmit = async () => {
     if (!email || !password) {
       setError('Please enter your email and password.');
@@ -40,14 +41,10 @@ export default function LoginPage() {
     setLoading(true);
     setError('');
 
-    const result = await signIn('credentials', {
-      email,
-      password,
-      redirect: false,
-    });
+    const result = await login(email, password);
 
-    if (result?.error) {
-      setError('Invalid email or password. Please try again.');
+    if (!result.success) {
+      setError(result.error || 'Invalid email or password. Please try again.');
       setLoading(false);
     } else {
       setLoading(false);

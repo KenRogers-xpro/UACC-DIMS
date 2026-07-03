@@ -1,10 +1,10 @@
 'use client'
 import { ThemeProvider } from 'next-themes'
-import { SessionProvider } from 'next-auth/react'
+import { AuthProvider } from '@/lib/auth-context'
 
-export default function Providers({ children, session }) {
+export default function Providers({ children }) {
   return (
-    <SessionProvider session={session}>
+    <AuthProvider>
       <ThemeProvider
         attribute="data-theme"
         defaultTheme="dark"
@@ -14,6 +14,6 @@ export default function Providers({ children, session }) {
       >
         {children}
       </ThemeProvider>
-    </SessionProvider>
+    </AuthProvider>
   )
 }
