@@ -33,6 +33,7 @@ import StatCard from '@/components/ui/StatCard'
 import Badge from '@/components/ui/Badge'
 import Button from '@/components/ui/Button'
 import PADashboard from '@/components/dashboard/PADashboard'
+import ProcurementOfficerDashboard from '@/components/dashboard/ProcurementOfficerDashboard'
 
 // HELPER FUNCTIONS
 const formatDept = (dept) => {
@@ -198,6 +199,10 @@ export default function DashboardHome() {
 
   if (user?.role === 'GM_PERSONAL_ASSISTANT') {
     return <PADashboard />
+  }
+
+  if (user?.role === 'PROCUREMENT_OFFICER') {
+    return <ProcurementOfficerDashboard />
   }
 
   return (

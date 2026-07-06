@@ -51,7 +51,7 @@ const NAV_ITEMS = [
     href: '/dashboard/procurement',
     icon: ClipboardList,
     roles: ['GENERAL_MANAGER', 'DEPARTMENT_HEAD', 'STAFF',
-            'IT_ADMINISTRATOR'],
+            'IT_ADMINISTRATOR', 'PROCUREMENT_OFFICER'],
   },
   {
     label: 'Activity Logs',
@@ -128,6 +128,29 @@ const PA_NAV_ITEMS = [
   },
 ]
 
+const PO_NAV_ITEMS = [
+  {
+    label: 'Dashboard',
+    href: '/dashboard',
+    icon: LayoutDashboard,
+  },
+  {
+    label: 'Procurement',
+    href: '/dashboard/procurement',
+    icon: ClipboardList,
+  },
+  {
+    label: 'Activity Logs',
+    href: '/dashboard/activity-logs',
+    icon: Clock,
+  },
+  {
+    label: 'Settings',
+    href: '/dashboard/settings',
+    icon: Settings2,
+  },
+]
+
 // Role display labels and badge colors
 const ROLE_META = {
   GENERAL_MANAGER:  { label: 'General Manager',  color: 'bg-uacc-gold/20 text-uacc-gold' },
@@ -136,6 +159,8 @@ const ROLE_META = {
   STAFF:            { label: 'Staff',              color: 'bg-emerald-500/20 text-emerald-400' },
   IT_ADMINISTRATOR: { label: 'IT Administrator',  color: 'bg-purple-500/20 text-purple-400' },
   AUDITOR:          { label: 'Auditor',            color: 'bg-rose-500/20 text-rose-400' },
+  RECORDS_EXECUTIVE:{ label: 'Records Executive',  color: 'bg-teal-500/20 text-teal-400' },
+  PROCUREMENT_OFFICER: { label: 'Procurement Officer', color: 'bg-amber-500/20 text-amber-400' },
 }
 
 export default function Sidebar({
@@ -152,6 +177,8 @@ export default function Sidebar({
   // Filter nav items based on user role
   const visibleNav = userRole === 'GM_PERSONAL_ASSISTANT'
     ? PA_NAV_ITEMS
+    : userRole === 'PROCUREMENT_OFFICER'
+    ? PO_NAV_ITEMS
     : NAV_ITEMS.filter(item => item.roles.includes(userRole))
 
   return (
