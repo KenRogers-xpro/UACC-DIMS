@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useRef, useEffect } from 'react'
-import { useSession } from 'next-auth/react'
+import { useAuth } from '@/lib/auth-context'
 import { usePathname } from 'next/navigation'
 import {
   Bot,
@@ -93,18 +93,13 @@ const ROLE_AGENT_META = {
 }
 
 export default function AIAgentWidget() {
-  const { data: session } = useSession()
+  const { user } = useAuth()
   const pathname = usePathname()
 
   // Do not show the floating widget on the full AI Agent chat page itself
   if (pathname === '/dashboard/ai-agent') return null
 
-  // Fallback to a mock GM user if auth session is not active (for easy testing)
-  const user = session?.user || {
-    name: 'Lt. Gen. Nakibus Lakara',
-    role: 'GENERAL_MANAGER',
-    department: 'GENERAL_MANAGER_OFFICE',
-  }
+  if (!user) return null
   const userRole = user.role || 'GENERAL_MANAGER'
   const meta = ROLE_AGENT_META[userRole] || ROLE_AGENT_META.STAFF
 
