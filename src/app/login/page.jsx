@@ -230,7 +230,7 @@ export default function LoginPage() {
               style={{
                 background: 'var(--card-bg)',
                 border: '1px solid var(--card-border)',
-                boxShadow: '0 24px 80px rgba(0,0,0,0.45)',
+                boxShadow: 'var(--shadow-card)',
               }}
             >
               {/* Card header */}

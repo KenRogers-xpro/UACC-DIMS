@@ -36,11 +36,13 @@ export default function StatCard({ title, value, subtitle, icon: Icon,
       {/* Subtitle / Trend */}
       <div className="flex items-center gap-2">
         {trend && (
-          <span className={`text-[10px] font-semibold font-heading px-1.5 py-0.5 rounded
-                            ${trend > 0
-                              ? 'text-emerald-400 bg-emerald-500/10'
-                              : 'text-red-400 bg-red-500/10'
-                            }`}>
+          <span
+            className="text-[10px] font-semibold font-heading px-1.5 py-0.5 rounded"
+            style={trend > 0
+              ? { color: 'var(--badge-approved-text)', background: 'var(--badge-approved-bg)' }
+              : { color: 'var(--badge-rejected-text)', background: 'var(--badge-rejected-bg)' }
+            }
+          >
             {trend > 0 ? '+' : ''}{trend}%
           </span>
         )}

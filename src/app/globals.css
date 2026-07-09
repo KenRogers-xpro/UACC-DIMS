@@ -31,7 +31,7 @@
   --bg-overlay:           rgba(6, 10, 17, 0.85);
 
   --text-primary:         #F0F2F8;
-  --text-secondary:       #C8CDD E;
+  --text-secondary:       #C8CDDE;
   --text-muted:           #8892A4;
   --text-faint:           rgba(136, 146, 164, 0.45);
 
@@ -399,6 +399,63 @@ a, button, input, [role="button"] {
 [data-theme="light"] ::-webkit-scrollbar-track  { background: var(--bg-surface-low); }
 [data-theme="light"] ::-webkit-scrollbar-thumb  { background: rgba(201,151,58,0.35); border-radius: 4px; }
 [data-theme="light"] ::-webkit-scrollbar-thumb:hover { background: rgba(201,151,58,0.60); }
+
+/* ─── LIGHT THEME OVERRIDES ──────────────────────────────────────── */
+/* btn-ghost needs a visible surface and dark text in light mode */
+[data-theme="light"] .btn-ghost {
+  background: rgba(10, 22, 40, 0.05);
+  border: 1px solid rgba(10, 22, 40, 0.18);
+  color: var(--text-primary);
+}
+
+[data-theme="light"] .btn-ghost:hover {
+  background: rgba(10, 22, 40, 0.09);
+  border-color: var(--border-gold-hover);
+  color: var(--color-uacc-gold-dim);
+  box-shadow: 0 0 16px rgba(201, 151, 58, 0.10);
+}
+
+/* glass-panel in light mode: white card with defined border */
+[data-theme="light"] .glass-panel {
+  background: rgba(255, 255, 255, 0.82);
+  border-color: rgba(10, 22, 40, 0.10);
+  box-shadow: 0 2px 12px rgba(10, 22, 40, 0.07), 0 1px 0 rgba(255,255,255,0.9) inset;
+}
+
+[data-theme="light"] .glass-panel:hover {
+  background: rgba(255, 255, 255, 0.96);
+  border-color: rgba(201, 151, 58, 0.40);
+  box-shadow: 0 4px 20px rgba(10, 22, 40, 0.10), 0 0 0 1px rgba(201, 151, 58, 0.20);
+}
+
+/* Nav hover states that work in both themes */
+.nav-hover:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+[data-theme="light"] .nav-hover:hover {
+  background: rgba(10, 22, 40, 0.06) !important;
+}
+
+/* Sidebar sign-out hover */
+.sidebar-signout:hover {
+  background: rgba(204, 34, 0, 0.08) !important;
+  color: #f07060 !important;
+}
+
+[data-theme="light"] .sidebar-signout:hover {
+  background: rgba(204, 34, 0, 0.06) !important;
+  color: #991a00 !important;
+}
+
+/* TopBar icon buttons */
+.topbar-icon-btn:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+[data-theme="light"] .topbar-icon-btn:hover {
+  background: rgba(10, 22, 40, 0.06);
+}
 
 /* ─── ANIMATIONS ─────────────────────────────────────────────────── */
 @keyframes fadeIn {

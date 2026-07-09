@@ -323,8 +323,7 @@ function SidebarContent({
         )}
         <button
           onClick={onSignOut}
-          className={`sidebar-item w-full flex items-center gap-3 px-3 py-2.5
-                      rounded-md text-sm hover:bg-uacc-red/8 hover:text-red-400`}
+          className="sidebar-item sidebar-signout w-full flex items-center gap-3 px-3 py-2.5 rounded-md text-sm"
           title={collapsed ? 'Sign Out' : undefined}
         >
           <LogOut size={16} className="flex-shrink-0" />

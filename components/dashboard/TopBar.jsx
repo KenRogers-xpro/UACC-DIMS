@@ -42,7 +42,7 @@ export default function TopBar({ user, sidebarCollapsed, onToggleSidebar, onMobi
         {/* Mobile hamburger */}
         <button
           onClick={onMobileMenuOpen}
-          className="md:hidden p-2 rounded-md hover:bg-white/5 transition-colors flex-shrink-0"
+          className="md:hidden p-2 rounded-md topbar-icon-btn transition-colors flex-shrink-0"
           style={{ color: 'var(--text-muted)' }}
           aria-label="Open navigation"
         >
@@ -52,7 +52,7 @@ export default function TopBar({ user, sidebarCollapsed, onToggleSidebar, onMobi
         {/* Desktop collapse toggle */}
         <button
           onClick={onToggleSidebar}
-          className="hidden md:flex p-2 rounded-md hover:bg-white/5 transition-colors flex-shrink-0"
+          className="hidden md:flex p-2 rounded-md topbar-icon-btn transition-colors flex-shrink-0"
           style={{ color: 'var(--text-muted)' }}
           title={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
         >
@@ -85,7 +85,7 @@ export default function TopBar({ user, sidebarCollapsed, onToggleSidebar, onMobi
 
         {/* Notification bell */}
         <button
-          className="relative p-2 rounded-md hover:bg-white/5 transition-colors"
+          className="relative p-2 rounded-md topbar-icon-btn transition-colors"
           style={{ color: 'var(--text-muted)' }}
           title="Notifications"
           aria-label="Notifications"

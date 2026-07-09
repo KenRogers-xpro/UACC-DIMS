@@ -117,10 +117,10 @@ export default function LandingPage() {
               <a
                 key={link.label}
                 href={link.href}
-                className={`font-heading text-sm uppercase tracking-wider px-3 py-1.5 rounded transition-all duration-300 relative ${
+                className={`font-heading text-sm uppercase tracking-wider px-3 py-1.5 rounded transition-all duration-300 relative nav-hover ${
                   activeSection === link.id
                     ? 'text-uacc-gold font-semibold'
-                    : 'hover:bg-white/5'
+                    : ''
                 }`}
                 style={activeSection !== link.id ? { color: 'var(--text-muted)' } : {}}
               >
@@ -234,8 +234,9 @@ export default function LandingPage() {
               </span>
             </div>
 
-            {/* H1 Heading — text-white stays white in both themes for hero impact */}
-            <h1 className="font-heading text-4xl sm:text-5xl md:text-[68px] font-bold text-white tracking-tight leading-[1.05]">
+            {/* H1 Heading — uses var(--text-primary) so it works in both themes */}
+            <h1 className="font-heading text-4xl sm:text-5xl md:text-[68px] font-bold tracking-tight leading-[1.05]"
+                style={{ color: 'var(--text-primary)' }}>
               The Future of <br className="hidden sm:inline" />
               Operations at <br />
               <span className="gradient-text-gold">Uganda Air Cargo Corporation</span>
@@ -329,7 +330,8 @@ export default function LandingPage() {
               </div>
 
               {/* AI Chat Bubble at Bottom */}
-              <div className="p-3.5 glass-panel border-uacc-red/20 rounded-lg bg-[rgba(204,34,0,0.15)]">
+              <div className="p-3.5 glass-panel border-uacc-red/20 rounded-lg"
+                   style={{ background: 'rgba(204,34,0,0.08)' }}>
                 <div className="flex items-start gap-3">
                   <div className="p-1.5 rounded-full bg-uacc-red/20 text-uacc-red shrink-0">
                     <Bot size={16} />
