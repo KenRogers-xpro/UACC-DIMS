@@ -5,12 +5,13 @@ import {
   BookOpen, ArrowLeftRight, BarChart2, Plus, Download,
   ArrowDownCircle, ArrowUpCircle, ArrowRightCircle, Lock,
   Search, FileText, Mail, MessageSquare, MapPin, Eye, Edit,
-  Printer, Check, X, Calendar
+  Printer, Check, X, Calendar, Inbox
 } from 'lucide-react'
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, Legend, ResponsiveContainer,
   PieChart, Pie, Cell
 } from 'recharts'
+import api from '@/lib/api'
 
 const MOCK_REGISTRY = [
   {
@@ -257,6 +258,7 @@ export default function RecordsExecutivePage() {
   const [annotationText, setAnnotationText] = useState('')
   const [currentPage, setCurrentPage] = useState(1)
   const [toast, setToast] = useState(null)
+  const [pendingCopiesCount, setPendingCopiesCount] = useState(0)
   
   const ROWS_PER_PAGE = 8
 
@@ -282,6 +284,20 @@ export default function RecordsExecutivePage() {
       return () => clearTimeout(timer)
     }
   }, [toast])
+
+  useEffect(() => {
+    const fetchPending = async () => {
+      try {
+        const res = await api.get('/records/circulation-copies?status=PENDING_FILING')
+        if (res.data && res.data.data) {
+          setPendingCopiesCount(res.data.data.length)
+        }
+      } catch (err) {
+        console.error('Failed to fetch pending copies', err)
+      }
+    }
+    fetchPending()
+  }, [])
 
   const showToast = (message) => {
     setToast({ type: 'success', message })
@@ -363,7 +379,14 @@ export default function RecordsExecutivePage() {
       </div>
 
       {/* STATS */}
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-8">
+        <div className="card rounded-xl p-4 border border-white/5 flex flex-col gap-2 relative overflow-hidden group">
+          <div className="flex justify-between items-start">
+            <span className="text-xs font-semibold text-white/50 uppercase tracking-wider">Pending Filing</span>
+            <Inbox size={16} className="text-purple-400" />
+          </div>
+          <div className="text-2xl font-bold text-white font-heading">{pendingCopiesCount}</div>
+        </div>
         <div className="card rounded-xl p-4 border border-white/5 flex flex-col gap-2 relative overflow-hidden group">
           <div className="flex justify-between items-start">
             <span className="text-xs font-semibold text-white/50 uppercase tracking-wider">Total Registered</span>
