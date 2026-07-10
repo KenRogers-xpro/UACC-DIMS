@@ -205,22 +205,29 @@ export default function DashboardHome() {
     return <ProcurementOfficerDashboard />
   }
 
+  const greeting = (() => {
+    const h = new Date().getHours()
+    if (h < 12) return 'Good morning'
+    if (h < 17) return 'Good afternoon'
+    return 'Good evening'
+  })()
+
   return (
-    <div className="flex flex-col gap-6 w-full animate-fadeIn">
+    <div className="flex flex-col gap-5 w-full animate-fadeIn">
       {/* PAGE HEADER */}
       <PageHeader
-        title={`Good morning, ${user?.name || 'User'}`}
-        subtitle={`${new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })} · Here's what's happening at UACC today`}
+        title={`${greeting}, ${user?.name?.split(' ')[0] || 'User'}`}
+        subtitle={`${new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })} · Here&apos;s what&apos;s happening at UACC today`}
       />
 
       {/* ROW 1 — STAT CARDS */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard
           title="Total Documents"
           value={stats.totalDocuments}
           icon={FolderOpen}
           accentColor="gold"
-          subtitle={`${stats.documentsThisMonth || 0} uploaded this month`}
+          subtitle={`${stats.documentsThisMonth || 0} this month`}
         />
         <StatCard
           title="Pending Approvals"
@@ -230,7 +237,7 @@ export default function DashboardHome() {
           subtitle="Awaiting GM sign-off"
         />
         <StatCard
-          title="Activity Logs Today"
+          title="Logs Today"
           value={stats.activityLogsToday}
           icon={Clock}
           accentColor="green"
@@ -246,82 +253,73 @@ export default function DashboardHome() {
       </div>
 
       {/* ROW 2 — CHARTS */}
-      <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
         {/* Left Chart: Procurement Requests */}
-        <div className="card rounded-xl p-6 md:col-span-7 flex flex-col justify-between">
-          <div className="mb-4">
-            <h3 className="font-heading font-bold text-sm uppercase tracking-wider" style={{ color: 'var(--text-primary)' }}>
-              Procurement Requests — Last 6 Months
-            </h3>
-            <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
-              Approved vs Rejected breakdown
-            </p>
+        <div className="card rounded-xl p-5 md:col-span-7 flex flex-col gap-4">
+          <div className="flex items-start justify-between">
+            <div>
+              <h3 className="font-heading font-bold text-sm tracking-tight" style={{ color: 'var(--text-primary)' }}>
+                Procurement Requests
+              </h3>
+              <p className="text-[11px] mt-0.5" style={{ color: 'var(--text-muted)' }}>
+                Approved vs Rejected — last 6 months
+              </p>
+            </div>
+            <div className="flex items-center gap-3 text-[10px] font-heading">
+              <span className="flex items-center gap-1.5" style={{ color: 'var(--text-muted)' }}>
+                <span className="w-2 h-2 rounded-sm inline-block" style={{ background: '#C9973A' }} />
+                Approved
+              </span>
+              <span className="flex items-center gap-1.5" style={{ color: 'var(--text-muted)' }}>
+                <span className="w-2 h-2 rounded-sm inline-block" style={{ background: '#CC2200' }} />
+                Rejected
+              </span>
+            </div>
           </div>
-          <div className="h-70 w-full flex items-center justify-center">
+          <div className="h-64 w-full flex items-center justify-center">
             {mounted && chartData.length > 0 ? (
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart
                   data={chartData}
-                  margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
+                  margin={{ top: 8, right: 4, left: -22, bottom: 0 }}
+                  barGap={4}
                 >
                   <XAxis
                     dataKey="month"
-                    tick={{ fill: 'var(--text-muted)', fontSize: 11 }}
+                    tick={{ fill: 'var(--text-muted)', fontSize: 10, fontFamily: 'var(--font-heading)' }}
                     axisLine={false}
                     tickLine={false}
                   />
                   <YAxis
-                    tick={{ fill: 'var(--text-muted)', fontSize: 11 }}
+                    tick={{ fill: 'var(--text-muted)', fontSize: 10, fontFamily: 'var(--font-heading)' }}
                     axisLine={false}
                     tickLine={false}
                   />
-                  <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(255, 255, 255, 0.03)' }} />
-                  <Legend
-                    verticalAlign="bottom"
-                    height={36}
-                    iconType="circle"
-                    iconSize={8}
-                    wrapperStyle={{
-                      fontSize: '11px',
-                      fontFamily: 'var(--font-heading)',
-                      color: 'var(--text-secondary)',
-                      paddingTop: '10px'
-                    }}
-                  />
-                  <Bar
-                    name="Approved"
-                    dataKey="approved"
-                    fill="#C9973A"
-                    radius={[4, 4, 0, 0]}
-                  />
-                  <Bar
-                    name="Rejected"
-                    dataKey="rejected"
-                    fill="#CC2200"
-                    radius={[4, 4, 0, 0]}
-                  />
+                  <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(255,255,255,0.025)' }} />
+                  <Bar name="Approved" dataKey="approved" fill="#C9973A" radius={[3, 3, 0, 0]} maxBarSize={28} />
+                  <Bar name="Rejected" dataKey="rejected" fill="#CC2200" radius={[3, 3, 0, 0]} maxBarSize={28} />
                 </BarChart>
               </ResponsiveContainer>
             ) : (
-              <div className="text-xs text-muted" style={{ color: 'var(--text-muted)' }}>
+              <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
                 No chart data available
-              </div>
+              </p>
             )}
           </div>
         </div>
 
         {/* Right Chart: Documents by Category */}
-        <div className="card rounded-xl p-6 md:col-span-5 flex flex-col justify-between">
+        <div className="card rounded-xl p-5 md:col-span-5 flex flex-col gap-4">
           <div>
-            <h3 className="font-heading font-bold text-sm uppercase tracking-wider" style={{ color: 'var(--text-primary)' }}>
+            <h3 className="font-heading font-bold text-sm tracking-tight" style={{ color: 'var(--text-primary)' }}>
               Documents by Category
             </h3>
-            <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
-              Category distribution of all files
+            <p className="text-[11px] mt-0.5" style={{ color: 'var(--text-muted)' }}>
+              Distribution across all files
             </p>
           </div>
 
-          <div className="relative h-55 flex items-center justify-center my-2">
+          <div className="relative h-52 flex items-center justify-center">
             {mounted && categoryData.length > 0 ? (
               <>
                 <ResponsiveContainer width="100%" height="100%">
@@ -381,19 +379,19 @@ export default function DashboardHome() {
       </div>
 
       {/* ROW 3 — TWO PANELS */}
-      <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
         {/* Left Panel: Recent System Activity */}
-        <div className="card rounded-xl p-6 md:col-span-7 flex flex-col justify-between">
-          <div className="flex items-center justify-between mb-4 shrink-0">
+        <div className="card rounded-xl p-5 md:col-span-7 flex flex-col gap-4">
+          <div className="flex items-start justify-between shrink-0">
             <div>
-              <h3 className="font-heading font-bold text-sm uppercase tracking-wider" style={{ color: 'var(--text-primary)' }}>
+              <h3 className="font-heading font-bold text-sm tracking-tight" style={{ color: 'var(--text-primary)' }}>
                 Recent System Activity
               </h3>
-              <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
+              <p className="text-[11px] mt-0.5" style={{ color: 'var(--text-muted)' }}>
                 Live operational actions
               </p>
             </div>
-            <Link href="/dashboard/audit-trail" className="text-xs hover:underline uppercase tracking-wider font-semibold font-heading text-uacc-gold">
+            <Link href="/dashboard/audit-trail" className="text-[10px] hover:underline uppercase tracking-wider font-semibold font-heading text-uacc-gold flex-shrink-0">
               View All &rarr;
             </Link>
           </div>
@@ -455,15 +453,25 @@ export default function DashboardHome() {
         </div>
 
         {/* Right Panel: Pending Procurement Requests */}
-        <div className="card rounded-xl p-6 md:col-span-5 flex flex-col justify-between">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-2">
-              <h3 className="font-heading font-bold text-sm uppercase tracking-wider" style={{ color: 'var(--text-primary)' }}>
-                Awaiting Approval
-              </h3>
-              <Badge status="REJECTED" label={String(pendingProcurement.length)} />
+        <div className="card rounded-xl p-5 md:col-span-5 flex flex-col gap-4">
+          <div className="flex items-start justify-between">
+            <div>
+              <div className="flex items-center gap-2">
+                <h3 className="font-heading font-bold text-sm tracking-tight" style={{ color: 'var(--text-primary)' }}>
+                  Awaiting Approval
+                </h3>
+                {pendingProcurement.length > 0 && (
+                  <span className="text-[9px] font-bold px-1.5 py-0.5 rounded font-heading
+                                   bg-uacc-red/12 text-uacc-red border border-uacc-red/20">
+                    {pendingProcurement.length}
+                  </span>
+                )}
+              </div>
+              <p className="text-[11px] mt-0.5" style={{ color: 'var(--text-muted)' }}>
+                Procurement requests pending
+              </p>
             </div>
-            <Link href="/dashboard/procurement" className="text-xs hover:underline uppercase tracking-wider font-semibold font-heading text-uacc-gold">
+            <Link href="/dashboard/procurement" className="text-[10px] hover:underline uppercase tracking-wider font-semibold font-heading text-uacc-gold flex-shrink-0">
               View All &rarr;
             </Link>
           </div>
@@ -511,33 +519,54 @@ export default function DashboardHome() {
       </div>
 
       {/* ROW 4 — AI AGENT QUICK PANEL */}
-      <div className="card rounded-xl p-5 border-l-4 border-uacc-gold flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div
+        className="rounded-xl p-5 flex flex-col md:flex-row md:items-center justify-between gap-4"
+        style={{
+          background: 'linear-gradient(to right, rgba(201,151,58,0.06), transparent)',
+          border: '1px solid rgba(201,151,58,0.20)',
+          boxShadow: 'var(--shadow-card)',
+        }}
+      >
         {/* Left */}
-        <div className="flex items-center gap-3">
-          <div className="p-2.5 rounded-full bg-uacc-gold/10 text-uacc-gold border border-uacc-gold/20 shrink-0">
-            <Bot size={20} />
+        <div className="flex items-center gap-3.5">
+          <div
+            className="p-2.5 rounded-xl shrink-0"
+            style={{
+              background: 'rgba(201,151,58,0.10)',
+              border: '1px solid rgba(201,151,58,0.22)',
+            }}
+          >
+            <Bot size={18} className="text-uacc-gold" />
           </div>
           <div>
-            <h3 className="text-sm font-bold font-heading" style={{ color: 'var(--text-primary)' }}>
+            <h3 className="text-sm font-bold font-heading tracking-tight" style={{ color: 'var(--text-primary)' }}>
               DIMS AI Agent
             </h3>
-            <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
+            <p className="text-[11px] mt-0.5" style={{ color: 'var(--text-muted)' }}>
               Your intelligent operational assistant is ready
             </p>
           </div>
         </div>
 
-        {/* Center */}
+        {/* Center: quick prompts */}
         <div className="flex flex-wrap items-center gap-2">
-          <button className="glass-panel px-3 py-1.5 rounded-full text-xs font-medium cursor-pointer" style={{ color: 'var(--text-secondary)' }}>
-            📊 Summarize today's activity
-          </button>
-          <button className="glass-panel px-3 py-1.5 rounded-full text-xs font-medium cursor-pointer" style={{ color: 'var(--text-secondary)' }}>
-            📋 Show pending approvals
-          </button>
-          <button className="glass-panel px-3 py-1.5 rounded-full text-xs font-medium cursor-pointer" style={{ color: 'var(--text-secondary)' }}>
-            📁 Recent document uploads
-          </button>
+          {[
+            "Summarize today's activity",
+            "Show pending approvals",
+            "Recent document uploads",
+          ].map((prompt) => (
+            <button
+              key={prompt}
+              className="px-3 py-1.5 rounded-lg text-[11px] font-medium cursor-pointer"
+              style={{
+                background: 'var(--glass-bg)',
+                border: '1px solid var(--border-default)',
+                color: 'var(--text-secondary)',
+              }}
+            >
+              {prompt}
+            </button>
+          ))}
         </div>
 
         {/* Right */}
