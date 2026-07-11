@@ -15,6 +15,8 @@ import {
   CheckCircle,
   FileText
 } from 'lucide-react'
+import { useAuth } from '@/lib/auth-context'
+import { useCirculation } from '@/lib/useCirculation'
 
 import PageHeader from '@/components/ui/PageHeader'
 import Badge from '@/components/ui/Badge'
@@ -80,6 +82,9 @@ const getCategoryColor = (category) => {
 }
 
 export default function DocumentsPage() {
+  const { user } = useAuth()
+  const { initiateCirculation } = useCirculation()
+
   // STATE MANAGEMENT
   const [searchTerm, setSearchTerm] = useState('')
   const [categoryFilter, setCategoryFilter] = useState('All')
@@ -152,26 +157,39 @@ export default function DocumentsPage() {
     }
   }
 
-  const handleUploadSubmit = (e) => {
+  const handleUploadSubmit = async (e) => {
     e.preventDefault()
     if (!newTitle.trim()) {
       alert('Document Title is required.')
       return
     }
 
-    // Trigger Success Toast
-    setToastMessage('Document uploaded successfully')
-    setToastVisible(true)
+    try {
+      // Initiate real circulation
+      await initiateCirculation({
+        title: newTitle,
+        sourceType: 'DOCUMENT',
+        sourceId: null, // Should be actual document ID after upload
+        toRole: 'GENERAL_MANAGER', // Defaulting for demo purposes
+        instruction: newDescription || 'Please review this new document.'
+      })
 
-    // Close Modal
-    setUploadModalOpen(false)
+      // Trigger Success Toast
+      setToastMessage('Document uploaded and circulation initiated!')
+      setToastVisible(true)
 
-    // Reset Form Fields
-    setNewTitle('')
-    setNewCategory('POLICY')
-    setNewDepartment('GENERAL_MANAGER_OFFICE')
-    setNewDescription('')
-    setSelectedFileName('')
+      // Close Modal
+      setUploadModalOpen(false)
+
+      // Reset Form Fields
+      setNewTitle('')
+      setNewCategory('POLICY')
+      setNewDepartment('GENERAL_MANAGER_OFFICE')
+      setNewDescription('')
+      setSelectedFileName('')
+    } catch (err) {
+      alert('Failed to initiate circulation: ' + err.message)
+    }
   }
 
   const triggerActionMessage = (actionName, docTitle) => {
