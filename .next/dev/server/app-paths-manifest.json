@@ -1,4 +1,9 @@
 {
+  "/(dashboard)/dashboard/audit-trail/page": "app/(dashboard)/dashboard/audit-trail/page.js",
+  "/(dashboard)/dashboard/documents/page": "app/(dashboard)/dashboard/documents/page.js",
+  "/(dashboard)/dashboard/page": "app/(dashboard)/dashboard/page.js",
+  "/(dashboard)/dashboard/records/page": "app/(dashboard)/dashboard/records/page.js",
+  "/_not-found/page": "app/_not-found/page.js",
   "/login/page": "app/login/page.js",
   "/page": "app/page.js"
 }

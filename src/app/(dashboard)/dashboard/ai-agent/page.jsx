@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useRef, useEffect } from 'react'
-import { useSession } from 'next-auth/react'
+import { useAuth } from '@/lib/auth-context'
 import {
   Bot,
   User,
@@ -159,10 +159,10 @@ const getColorClass = (color) => {
 // ─── MAIN COMPONENT ──────────────────────────────────────────────────────────
 
 export default function AIAgentPage() {
-  const { data: session } = useSession()
+  const { user: authUser } = useAuth()
 
   // Fallback to a mock GM user if auth session is not active (for easy testing)
-  const user = session?.user || {
+  const user = authUser || {
     name: 'Lt. Gen. Nakibus Lakara',
     role: 'GENERAL_MANAGER',
     department: 'GENERAL_MANAGER_OFFICE',
