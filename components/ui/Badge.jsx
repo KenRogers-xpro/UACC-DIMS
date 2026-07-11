@@ -3,8 +3,8 @@ export default function Badge({ status, label }) {
     PENDING:             'badge badge-pending',
     DEPT_HEAD_APPROVED:  'badge badge-draft',
     APPROVED:            'badge badge-approved',
-    REJECTED:            'badge badge-rejected',
     ACTIVE:              'badge badge-approved',
+    REJECTED:            'badge badge-rejected',
     INACTIVE:            'badge badge-rejected',
     POLICY:              'badge badge-draft',
     REPORT:              'badge badge-approved',
@@ -12,6 +12,7 @@ export default function Badge({ status, label }) {
     CONTRACT:            'badge badge-rejected',
     FORM:                'badge badge-draft',
     OTHER:               'badge badge-pending',
+    SYSTEM:              'badge badge-draft',
   }
 
   const display = label || status?.replace(/_/g, ' ')

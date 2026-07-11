@@ -3,6 +3,7 @@ import { useState } from 'react'
 import Sidebar from '@/components/dashboard/Sidebar'
 import TopBar from '@/components/dashboard/TopBar'
 import AIAgentWidget from '@/components/dashboard/AIAgentWidget'
+import DocumentsAwaitingAction from '@/components/circulation/DocumentsAwaitingAction'
 
 export default function DashboardShell({ children, user }) {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
@@ -49,6 +50,7 @@ export default function DashboardShell({ children, user }) {
           className="flex-1 p-4 md:p-6 lg:p-8 overflow-y-auto"
           style={{ color: 'var(--text-secondary)' }}
         >
+          <DocumentsAwaitingAction />
           {children}
         </main>
 

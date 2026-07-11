@@ -159,14 +159,9 @@ const getColorClass = (color) => {
 // ─── MAIN COMPONENT ──────────────────────────────────────────────────────────
 
 export default function AIAgentPage() {
-  const { user: authUser } = useAuth()
+  const { user } = useAuth()
 
-  // Fallback to a mock GM user if auth session is not active (for easy testing)
-  const user = authUser || {
-    name: 'Lt. Gen. Nakibus Lakara',
-    role: 'GENERAL_MANAGER',
-    department: 'GENERAL_MANAGER_OFFICE',
-  }
+  if (!user) return null
   const userRole = user.role || 'GENERAL_MANAGER'
   const meta = ROLE_AGENT_META[userRole] || ROLE_AGENT_META.STAFF
 

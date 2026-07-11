@@ -12,22 +12,21 @@ export default function Button({
   icon: Icon,
 }) {
   const base = `inline-flex items-center justify-center gap-2 font-heading
-                font-bold uppercase tracking-wider rounded-lg transition-all
-                duration-200 cursor-pointer disabled:opacity-50
-                disabled:cursor-not-allowed`
+                font-bold uppercase tracking-wider rounded-lg cursor-pointer
+                disabled:opacity-50 disabled:cursor-not-allowed`
 
   const variants = {
     primary: 'btn-primary',
     ghost:   'btn-ghost',
-    danger:  `bg-uacc-red/10 text-uacc-red border border-uacc-red/30
-              hover:bg-uacc-red hover:text-white`,
-    outline: `border text-[var(--text-secondary)] hover:bg-white/5`,
+    danger: `bg-uacc-red/8 text-uacc-red border border-uacc-red/25
+             hover:bg-uacc-red hover:text-white hover:border-uacc-red`,
+    outline: `border hover:bg-white/5`,
   }
 
   const sizes = {
-    sm: 'px-3 py-1.5 text-[10px]',
-    md: 'px-5 py-2.5 text-[11px]',
-    lg: 'px-7 py-3.5 text-xs',
+    sm: 'px-3 py-1.5 text-[9px]',
+    md: 'px-4 py-2 text-[10px]',
+    lg: 'px-6 py-3 text-[11px]',
   }
 
   return (
@@ -36,11 +35,15 @@ export default function Button({
       onClick={onClick}
       disabled={disabled || loading}
       className={`${base} ${variants[variant]} ${sizes[size]} ${className}`}
-      style={variant === 'outline' ? { borderColor: 'var(--border-default)' } : {}}
+      style={
+        variant === 'outline'
+          ? { borderColor: 'var(--border-default)', color: 'var(--text-secondary)' }
+          : undefined
+      }
     >
       {loading
-        ? <Loader2 size={14} className="animate-spin" />
-        : Icon && <Icon size={14} />
+        ? <Loader2 size={13} className="animate-spin" />
+        : Icon && <Icon size={13} />
       }
       {loading ? 'Loading...' : children}
     </button>
