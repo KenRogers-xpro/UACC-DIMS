@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useAuth } from '@/lib/auth-context';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   Eye,
   EyeOff,
@@ -225,13 +226,16 @@ export default function LoginPage() {
             </div>
 
             {/* Form card */}
-            <div
+            <motion.div
               className="rounded-2xl p-8 sm:p-10"
               style={{
                 background: 'var(--card-bg)',
                 border: '1px solid var(--card-border)',
                 boxShadow: 'var(--shadow-card)',
               }}
+              initial={{ opacity: 0, y: 20, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              transition={{ duration: 0.6, delay: 0.1, ease: "easeOut" }}
             >
               {/* Card header */}
               <div className="flex flex-col gap-1.5 mb-8">
@@ -322,19 +326,25 @@ export default function LoginPage() {
                 </div>
 
                 {/* Error */}
-                {error && (
-                  <div
-                    role="alert"
-                    className="flex items-start gap-3 rounded-lg px-4 py-3 border animate-fadeIn"
-                    style={{
-                      backgroundColor: 'rgba(204,34,0,0.08)',
-                      borderColor: 'rgba(204,34,0,0.25)',
-                    }}
-                  >
-                    <AlertCircle size={14} className="text-uacc-red shrink-0 mt-0.5" />
-                    <p className="text-xs leading-snug" style={{ color: '#f07060' }}>{error}</p>
-                  </div>
-                )}
+                <AnimatePresence>
+                  {error && (
+                    <motion.div
+                      role="alert"
+                      className="flex items-start gap-3 rounded-lg px-4 py-3 border"
+                      style={{
+                        backgroundColor: 'rgba(204,34,0,0.08)',
+                        borderColor: 'rgba(204,34,0,0.25)',
+                      }}
+                      initial={{ opacity: 0, y: -8, scale: 0.95 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: -8, scale: 0.95 }}
+                      transition={{ duration: 0.3, ease: "easeOut" }}
+                    >
+                      <AlertCircle size={14} className="text-uacc-red shrink-0 mt-0.5" />
+                      <p className="text-xs leading-snug" style={{ color: '#f07060' }}>{error}</p>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
 
                 {/* Submit */}
                 <button
@@ -373,7 +383,7 @@ export default function LoginPage() {
                   DIMS v1.0 &nbsp;&middot;&nbsp; &copy; 2026 Uganda Air Cargo Corporation
                 </p>
               </div>
-            </div>
+            </motion.div>
           </div>
         </div>
       </div>

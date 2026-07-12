@@ -1,4 +1,7 @@
-import { Loader2 } from 'lucide-react'
+'use client';
+
+import { Loader2 } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 export default function Button({
   children,
@@ -30,7 +33,7 @@ export default function Button({
   }
 
   return (
-    <button
+    <motion.button
       type={type}
       onClick={onClick}
       disabled={disabled || loading}
@@ -40,12 +43,15 @@ export default function Button({
           ? { borderColor: 'var(--border-default)', color: 'var(--text-secondary)' }
           : undefined
       }
+      whileHover={disabled || loading ? {} : { y: -2 }}
+      whileTap={disabled || loading ? {} : { scale: 0.98 }}
+      transition={{ duration: 0.2, ease: "easeOut" }}
     >
       {loading
         ? <Loader2 size={13} className="animate-spin" />
         : Icon && <Icon size={13} />
       }
       {loading ? 'Loading...' : children}
-    </button>
+    </motion.button>
   )
 }

@@ -294,16 +294,24 @@ a, button, input, [role="button"] {
   font-size: 13px;
   width: 100%;
   outline: none;
+  transition: border-color 0.28s cubic-bezier(0.4, 0, 0.2, 1),
+              background-color 0.28s cubic-bezier(0.4, 0, 0.2, 1),
+              box-shadow 0.28s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .input-field::placeholder {
   color: var(--input-placeholder);
+  transition: color 0.28s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .input-field:focus {
   border-color: var(--input-border-focus);
-  box-shadow: 0 0 0 3px rgba(201, 151, 58, 0.08);
+  box-shadow: 0 0 0 3px rgba(201, 151, 58, 0.12), inset 0 0 0 1px rgba(201, 151, 58, 0.06);
   background: var(--input-bg);
+}
+
+.input-field:focus::placeholder {
+  color: transparent;
 }
 
 .input-field:disabled {
@@ -457,7 +465,7 @@ a, button, input, [role="button"] {
   background: rgba(10, 22, 40, 0.06);
 }
 
-/* ─── ANIMATIONS ─────────────────────────────────────────────────── */
+/* ─── ANIMATIONS ──────────────────────────��──────────────────────── */
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(-6px); }
   to   { opacity: 1; transform: translateY(0); }
@@ -465,6 +473,31 @@ a, button, input, [role="button"] {
 
 .animate-fadeIn {
   animation: fadeIn 0.25s ease forwards;
+}
+
+@keyframes slideInError {
+  from {
+    opacity: 0;
+    transform: translateY(-8px) scaleX(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scaleX(1);
+  }
+}
+
+.animate-error-slide {
+  animation: slideInError 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-2px); }
+  75% { transform: translateX(2px); }
+}
+
+.animate-shake {
+  animation: shake 0.3s ease-in-out;
 }
 
 /* ─── PRINT STYLES ───────────────────────────────────────────────── */
