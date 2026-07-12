@@ -25,6 +25,13 @@ import {
   Send,
   Briefcase,
   UserCheck,
+  FileArchive,
+  ShoppingCart,
+  Users,
+  TrendingUp,
+  DollarSign,
+  Megaphone,
+  Inbox,
 } from 'lucide-react';
 
 // Helper component for animated number counting
@@ -487,7 +494,7 @@ export default function LandingPage() {
                   Digital Form 5 &amp; Approval Chain
                 </h3>
                 <p className="text-sm md:text-base leading-relaxed" style={{ color: 'var(--text-muted)' }}>
-                  Submit procurement requests digitally. Automatic multi-stage routing to Department Head, Finance, and General Manager — with email notifications at every stage.
+                  Automatic multi-stage routing through Department Head, Procurement Officer, and General Manager, with vendor and budget verification at every stage.
                 </p>
                 <span className="text-xs text-uacc-red font-semibold uppercase tracking-wider mt-2 group-hover:translate-x-2 transition-transform duration-300 inline-flex items-center gap-1.5">
                   Hover Accent: Red <span>→</span>
@@ -547,7 +554,7 @@ export default function LandingPage() {
                   Real-Time Management Dashboard
                 </h3>
                 <p className="text-sm md:text-base leading-relaxed" style={{ color: 'var(--text-muted)' }}>
-                  Live metrics, interactive charts, and one-click PDF report generation — giving management instant operational visibility across all five departments.
+                  Live metrics, interactive charts, and one-click PDF report generation — giving management instant operational visibility across all departments.
                 </p>
                 <span className="text-xs text-uacc-red font-semibold uppercase tracking-wider mt-2 group-hover:translate-x-2 transition-transform duration-300 inline-flex items-center gap-1.5">
                   Hover Accent: Red <span>→</span>
@@ -739,6 +746,11 @@ export default function LandingPage() {
                 </button>
               </div>
             </div>
+
+            {/* Illustrative caption */}
+            <div className="mt-3 text-center text-[10px]" style={{ color: 'var(--text-faint)' }}>
+              Example conversation — illustrative
+            </div>
           </motion.div>
         </div>
       </section>
@@ -759,9 +771,9 @@ export default function LandingPage() {
           <div className="w-16 h-0.5 bg-linear-to-r from-uacc-gold to-uacc-red mt-2 rounded"></div>
         </div>
 
-        {/* 5 columns flex-wrap responsive layout */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
-          {/* Card 1 — GM */}
+        {/* 12 roles grid — 3 columns desktop, 2 mobile */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          {/* Card 1 — General Manager */}
           <div className="glass-panel rounded-lg p-6 hover:border-uacc-gold/40 hover:shadow-[inset_0_0_15px_rgba(201,151,58,0.05)] flex flex-col gap-4 text-left transition-all duration-300">
             <div className="p-3 rounded bg-uacc-gold/10 text-uacc-gold w-fit">
               <Briefcase size={20} />
@@ -806,7 +818,7 @@ export default function LandingPage() {
             </div>
           </div>
 
-          {/* Card 4 — IT Admin */}
+          {/* Card 4 — IT Administrator */}
           <div className="glass-panel rounded-lg p-6 hover:border-uacc-gold/40 hover:shadow-[inset_0_0_15px_rgba(201,151,58,0.05)] flex flex-col gap-4 text-left transition-all duration-300">
             <div className="p-3 rounded bg-uacc-gold/10 text-uacc-gold w-fit">
               <Settings size={20} />
@@ -821,17 +833,122 @@ export default function LandingPage() {
             </div>
           </div>
 
-          {/* Card 5 — Auditor */}
+          {/* Card 5 — Internal Auditor */}
           <div className="glass-panel rounded-lg p-6 hover:border-uacc-gold/40 hover:shadow-[inset_0_0_15px_rgba(201,151,58,0.05)] flex flex-col gap-4 text-left transition-all duration-300">
             <div className="p-3 rounded bg-uacc-gold/10 text-uacc-gold w-fit">
               <Shield size={20} />
             </div>
             <div className="flex flex-col gap-1">
               <h3 className="font-heading text-base font-bold flex items-center gap-1.5" style={{ color: 'var(--text-primary)' }}>
-                Auditor <span className="text-xs">🔍</span>
+                Internal Auditor <span className="text-xs">🔍</span>
               </h3>
               <p className="text-xs leading-relaxed" style={{ color: 'var(--text-muted)' }}>
-                Read-only access to the full audit trail
+                Verify requests, full audit trail access
+              </p>
+            </div>
+          </div>
+
+          {/* Card 6 — Records Executive */}
+          <div className="glass-panel rounded-lg p-6 hover:border-uacc-gold/40 hover:shadow-[inset_0_0_15px_rgba(201,151,58,0.05)] flex flex-col gap-4 text-left transition-all duration-300">
+            <div className="p-3 rounded bg-uacc-gold/10 text-uacc-gold w-fit">
+              <FileArchive size={20} />
+            </div>
+            <div className="flex flex-col gap-1">
+              <h3 className="font-heading text-base font-bold flex items-center gap-1.5" style={{ color: 'var(--text-primary)' }}>
+                Records Executive <span className="text-xs">📁</span>
+              </h3>
+              <p className="text-xs leading-relaxed" style={{ color: 'var(--text-muted)' }}>
+                Universal document registry and filing
+              </p>
+            </div>
+          </div>
+
+          {/* Card 7 — Procurement Officer */}
+          <div className="glass-panel rounded-lg p-6 hover:border-uacc-gold/40 hover:shadow-[inset_0_0_15px_rgba(201,151,58,0.05)] flex flex-col gap-4 text-left transition-all duration-300">
+            <div className="p-3 rounded bg-uacc-gold/10 text-uacc-gold w-fit">
+              <ShoppingCart size={20} />
+            </div>
+            <div className="flex flex-col gap-1">
+              <h3 className="font-heading text-base font-bold flex items-center gap-1.5" style={{ color: 'var(--text-primary)' }}>
+                Procurement Officer <span className="text-xs">🛒</span>
+              </h3>
+              <p className="text-xs leading-relaxed" style={{ color: 'var(--text-muted)' }}>
+                Vendor verification, procurement processing
+              </p>
+            </div>
+          </div>
+
+          {/* Card 8 — HR Manager */}
+          <div className="glass-panel rounded-lg p-6 hover:border-uacc-gold/40 hover:shadow-[inset_0_0_15px_rgba(201,151,58,0.05)] flex flex-col gap-4 text-left transition-all duration-300">
+            <div className="p-3 rounded bg-uacc-gold/10 text-uacc-gold w-fit">
+              <Users size={20} />
+            </div>
+            <div className="flex flex-col gap-1">
+              <h3 className="font-heading text-base font-bold flex items-center gap-1.5" style={{ color: 'var(--text-primary)' }}>
+                HR Manager <span className="text-xs">🧑‍💼</span>
+              </h3>
+              <p className="text-xs leading-relaxed" style={{ color: 'var(--text-muted)' }}>
+                Staff records and HR workflow management
+              </p>
+            </div>
+          </div>
+
+          {/* Card 9 — Finance Director */}
+          <div className="glass-panel rounded-lg p-6 hover:border-uacc-gold/40 hover:shadow-[inset_0_0_15px_rgba(201,151,58,0.05)] flex flex-col gap-4 text-left transition-all duration-300">
+            <div className="p-3 rounded bg-uacc-gold/10 text-uacc-gold w-fit">
+              <TrendingUp size={20} />
+            </div>
+            <div className="flex flex-col gap-1">
+              <h3 className="font-heading text-base font-bold flex items-center gap-1.5" style={{ color: 'var(--text-primary)' }}>
+                Finance Director <span className="text-xs">💰</span>
+              </h3>
+              <p className="text-xs leading-relaxed" style={{ color: 'var(--text-muted)' }}>
+                Financial oversight and spend visibility
+              </p>
+            </div>
+          </div>
+
+          {/* Card 10 — Accounts Officer */}
+          <div className="glass-panel rounded-lg p-6 hover:border-uacc-gold/40 hover:shadow-[inset_0_0_15px_rgba(201,151,58,0.05)] flex flex-col gap-4 text-left transition-all duration-300">
+            <div className="p-3 rounded bg-uacc-gold/10 text-uacc-gold w-fit">
+              <DollarSign size={20} />
+            </div>
+            <div className="flex flex-col gap-1">
+              <h3 className="font-heading text-base font-bold flex items-center gap-1.5" style={{ color: 'var(--text-primary)' }}>
+                Accounts Officer <span className="text-xs">🧾</span>
+              </h3>
+              <p className="text-xs leading-relaxed" style={{ color: 'var(--text-muted)' }}>
+                Payment processing and reconciliation
+              </p>
+            </div>
+          </div>
+
+          {/* Card 11 — Marketing Officer */}
+          <div className="glass-panel rounded-lg p-6 hover:border-uacc-gold/40 hover:shadow-[inset_0_0_15px_rgba(201,151,58,0.05)] flex flex-col gap-4 text-left transition-all duration-300">
+            <div className="p-3 rounded bg-uacc-gold/10 text-uacc-gold w-fit">
+              <Megaphone size={20} />
+            </div>
+            <div className="flex flex-col gap-1">
+              <h3 className="font-heading text-base font-bold flex items-center gap-1.5" style={{ color: 'var(--text-primary)' }}>
+                Marketing Officer <span className="text-xs">📣</span>
+              </h3>
+              <p className="text-xs leading-relaxed" style={{ color: 'var(--text-muted)' }}>
+                Campaign materials and company announcements
+              </p>
+            </div>
+          </div>
+
+          {/* Card 12 — GM Personal Assistant */}
+          <div className="glass-panel rounded-lg p-6 hover:border-uacc-gold/40 hover:shadow-[inset_0_0_15px_rgba(201,151,58,0.05)] flex flex-col gap-4 text-left transition-all duration-300">
+            <div className="p-3 rounded bg-uacc-gold/10 text-uacc-gold w-fit">
+              <Inbox size={20} />
+            </div>
+            <div className="flex flex-col gap-1">
+              <h3 className="font-heading text-base font-bold flex items-center gap-1.5" style={{ color: 'var(--text-primary)' }}>
+                GM Personal Assistant <span className="text-xs">🗂️</span>
+              </h3>
+              <p className="text-xs leading-relaxed" style={{ color: 'var(--text-muted)' }}>
+                Document triage, scheduling, GM communications
               </p>
             </div>
           </div>
@@ -856,7 +973,7 @@ export default function LandingPage() {
             Ready to go paperless?
           </h2>
           <p className="text-white/80 text-base md:text-lg max-w-2xl leading-relaxed">
-            DIMS is built specifically for UACC&apos;s operational structure, legal obligations, and five-department workflow.
+            DIMS is built specifically for UACC&apos;s operational structure, legal obligations, and multi-department workflow.
           </p>
           <div className="mt-4">
             <Link 
