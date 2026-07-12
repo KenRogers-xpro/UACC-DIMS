@@ -15,6 +15,8 @@ import {
   CheckCircle,
   FileText
 } from 'lucide-react'
+import { useAuth } from '@/lib/auth-context'
+import { useCirculation } from '@/lib/useCirculation'
 
 import PageHeader from '@/components/ui/PageHeader'
 import Badge from '@/components/ui/Badge'
@@ -80,6 +82,9 @@ const getCategoryColor = (category) => {
 }
 
 export default function DocumentsPage() {
+  const { user } = useAuth()
+  const { initiateCirculation } = useCirculation()
+
   // STATE MANAGEMENT
   const [searchTerm, setSearchTerm] = useState('')
   const [categoryFilter, setCategoryFilter] = useState('All')
@@ -152,26 +157,39 @@ export default function DocumentsPage() {
     }
   }
 
-  const handleUploadSubmit = (e) => {
+  const handleUploadSubmit = async (e) => {
     e.preventDefault()
     if (!newTitle.trim()) {
       alert('Document Title is required.')
       return
     }
 
-    // Trigger Success Toast
-    setToastMessage('Document uploaded successfully')
-    setToastVisible(true)
+    try {
+      // Initiate real circulation
+      await initiateCirculation({
+        title: newTitle,
+        sourceType: 'DOCUMENT',
+        sourceId: null, // Should be actual document ID after upload
+        toRole: 'GENERAL_MANAGER', // Defaulting for demo purposes
+        instruction: newDescription || 'Please review this new document.'
+      })
 
-    // Close Modal
-    setUploadModalOpen(false)
+      // Trigger Success Toast
+      setToastMessage('Document uploaded and circulation initiated!')
+      setToastVisible(true)
 
-    // Reset Form Fields
-    setNewTitle('')
-    setNewCategory('POLICY')
-    setNewDepartment('GENERAL_MANAGER_OFFICE')
-    setNewDescription('')
-    setSelectedFileName('')
+      // Close Modal
+      setUploadModalOpen(false)
+
+      // Reset Form Fields
+      setNewTitle('')
+      setNewCategory('POLICY')
+      setNewDepartment('GENERAL_MANAGER_OFFICE')
+      setNewDescription('')
+      setSelectedFileName('')
+    } catch (err) {
+      alert('Failed to initiate circulation: ' + err.message)
+    }
   }
 
   const triggerActionMessage = (actionName, docTitle) => {
@@ -196,8 +214,8 @@ export default function DocumentsPage() {
       </PageHeader>
 
       {/* FILTER BAR CARD */}
-      <div className="card rounded-xl p-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 flex-1">
+      <div className="card rounded-xl p-4 flex flex-col gap-3">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
           {/* Search Input */}
           <div className="relative flex-1">
             <Search
@@ -208,16 +226,16 @@ export default function DocumentsPage() {
             <input
               type="text"
               placeholder="Search documents..."
-              className="input-field pl-10 h-[42px]"
+              className="input-field pl-10 h-[42px] w-full"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
 
-          {/* Category Dropdown */}
-          <div className="w-full sm:w-[180px]">
+          <div className="flex gap-2 flex-wrap">
+            {/* Category Dropdown */}
             <select
-              className="input-field py-2 px-3 cursor-pointer h-[42px]"
+              className="input-field py-2 px-3 cursor-pointer h-[42px] flex-1 min-w-[130px]"
               value={categoryFilter}
               onChange={(e) => setCategoryFilter(e.target.value)}
             >
@@ -227,12 +245,10 @@ export default function DocumentsPage() {
                 </option>
               ))}
             </select>
-          </div>
 
-          {/* Department Dropdown */}
-          <div className="w-full sm:w-[220px]">
+            {/* Department Dropdown */}
             <select
-              className="input-field py-2 px-3 cursor-pointer h-[42px]"
+              className="input-field py-2 px-3 cursor-pointer h-[42px] flex-1 min-w-[160px]"
               value={departmentFilter}
               onChange={(e) => setDepartmentFilter(e.target.value)}
             >
@@ -242,176 +258,157 @@ export default function DocumentsPage() {
                 </option>
               ))}
             </select>
-          </div>
 
-          {/* Clear Filters Button */}
-          {(searchTerm || categoryFilter !== 'All' || departmentFilter !== 'All') && (
-            <Button
-              variant="outline"
-              onClick={() => {
-                setSearchTerm('')
-                setCategoryFilter('All')
-                setDepartmentFilter('All')
-              }}
-              className="h-[42px] px-4"
-            >
-              Clear Filters
-            </Button>
-          )}
+            {/* Clear Filters Button */}
+            {(searchTerm || categoryFilter !== 'All' || departmentFilter !== 'All') && (
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setSearchTerm('')
+                  setCategoryFilter('All')
+                  setDepartmentFilter('All')
+                }}
+                className="h-[42px] px-4 whitespace-nowrap"
+              >
+                Clear
+              </Button>
+            )}
+          </div>
         </div>
 
         {/* Result Count */}
-        <div className="text-xs text-right shrink-0" style={{ color: 'var(--text-muted)' }}>
+        <div className="text-xs" style={{ color: 'var(--text-muted)' }}>
           Showing <span className="font-bold text-[var(--text-primary)]">{filteredDocs.length}</span> of{' '}
           <span className="font-bold text-[var(--text-primary)]">{MOCK_DOCUMENTS.length}</span> documents
         </div>
       </div>
 
-      {/* DOCUMENTS TABLE CARD */}
+      {/* DOCUMENTS — mobile cards + desktop table */}
       <div className="card rounded-xl overflow-hidden flex flex-col justify-between min-h-[400px]">
-        <div className="overflow-x-auto w-full">
-          {paginatedDocs.length > 0 ? (
-            <table className="data-table">
-              <thead>
-                <tr>
-                  <th>Document</th>
-                  <th>Category</th>
-                  <th>Department</th>
-                  <th>Uploaded By</th>
-                  <th>Date</th>
-                  <th className="text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {paginatedDocs.map((doc) => {
-                  const catColor = getCategoryColor(doc.category)
-                  return (
-                    <tr key={doc.id}>
-                      {/* Document details */}
-                      <td>
-                        <div className="flex items-center gap-3">
-                          <div
-                            className="p-2 rounded-lg flex-shrink-0 border"
-                            style={{
-                              backgroundColor: `${catColor}15`,
-                              borderColor: `${catColor}30`
-                            }}
-                          >
-                            <FileText size={18} style={{ color: catColor }} />
-                          </div>
-                          <div className="min-w-0 flex flex-col">
-                            <span
-                              className="block font-bold text-white truncate max-w-[200px] md:max-w-[300px]"
-                              title={doc.title}
+
+        {paginatedDocs.length > 0 ? (
+          <>
+            {/* ── DESKTOP TABLE (hidden on mobile) ── */}
+            <div className="hidden md:block overflow-x-auto w-full">
+              <table className="data-table">
+                <thead>
+                  <tr>
+                    <th>Document</th>
+                    <th>Category</th>
+                    <th>Department</th>
+                    <th>Uploaded By</th>
+                    <th>Date</th>
+                    <th className="text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {paginatedDocs.map((doc) => {
+                    const catColor = getCategoryColor(doc.category)
+                    return (
+                      <tr key={doc.id}>
+                        <td>
+                          <div className="flex items-center gap-3">
+                            <div
+                              className="p-2 rounded-lg flex-shrink-0 border"
+                              style={{ backgroundColor: `${catColor}15`, borderColor: `${catColor}30` }}
                             >
-                              {doc.title}
-                            </span>
-                            <span className="text-[10px]" style={{ color: 'var(--text-muted)' }}>
-                              {doc.fileSize}
-                            </span>
+                              <FileText size={18} style={{ color: catColor }} />
+                            </div>
+                            <div className="min-w-0 flex flex-col">
+                              <span className="block font-bold text-white truncate max-w-[260px]" title={doc.title}>
+                                {doc.title}
+                              </span>
+                              <span className="text-[10px]" style={{ color: 'var(--text-muted)' }}>{doc.fileSize}</span>
+                            </div>
                           </div>
-                        </div>
-                      </td>
-
-                      {/* Category Badge */}
-                      <td>
-                        <Badge status={doc.category} />
-                      </td>
-
-                      {/* Department */}
-                      <td>
-                        <span className="text-xs" style={{ color: 'var(--text-muted)' }}>
-                          {formatDept(doc.department)}
-                        </span>
-                      </td>
-
-                      {/* Uploaded By */}
-                      <td>
-                        <div className="flex items-center gap-2">
-                          <div className="w-6 h-6 rounded-full flex-shrink-0 flex items-center justify-center text-[10px] font-bold text-uacc-gold bg-uacc-gold/10 border border-uacc-gold/20">
-                            {doc.uploadedBy.charAt(0)}
+                        </td>
+                        <td><Badge status={doc.category} /></td>
+                        <td><span className="text-xs" style={{ color: 'var(--text-muted)' }}>{formatDept(doc.department)}</span></td>
+                        <td>
+                          <div className="flex items-center gap-2">
+                            <div className="w-6 h-6 rounded-full flex-shrink-0 flex items-center justify-center text-[10px] font-bold text-uacc-gold bg-uacc-gold/10 border border-uacc-gold/20">
+                              {doc.uploadedBy.charAt(0)}
+                            </div>
+                            <span className="text-xs truncate max-w-[120px]" title={doc.uploadedBy}>{doc.uploadedBy}</span>
                           </div>
-                          <span className="text-xs truncate max-w-[120px]" title={doc.uploadedBy}>
-                            {doc.uploadedBy}
-                          </span>
-                        </div>
-                      </td>
-
-                      {/* Date */}
-                      <td>
-                        <span className="text-xs" style={{ color: 'var(--text-secondary)' }}>
-                          {formatDate(doc.createdAt)}
-                        </span>
-                      </td>
-
-                      {/* Actions */}
-                      <td>
-                        <div className="flex items-center justify-end gap-1.5">
-                          <button
-                            className="p-1.5 hover:text-uacc-gold text-[var(--text-muted)] transition-colors cursor-pointer"
-                            title="View Document"
-                            onClick={() => triggerActionMessage('View', doc.title)}
-                          >
-                            <Eye size={16} />
-                          </button>
-                          <button
-                            className="p-1.5 hover:text-blue-400 text-[var(--text-muted)] transition-colors cursor-pointer"
-                            title="Download Document"
-                            onClick={() => triggerActionMessage('Download', doc.title)}
-                          >
-                            <Download size={16} />
-                          </button>
-                          <button
-                            className="p-1.5 hover:text-uacc-red text-[var(--text-muted)] transition-colors cursor-pointer"
-                            title="Delete Document"
-                            onClick={() => triggerActionMessage('Delete', doc.title)}
-                          >
-                            <Trash2 size={16} />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  )
-                })}
-              </tbody>
-            </table>
-          ) : (
-            <div className="py-12">
-              <EmptyState
-                icon={FolderOpen}
-                title="No documents found"
-                message="Try adjusting your search or filter criteria"
-              />
+                        </td>
+                        <td><span className="text-xs" style={{ color: 'var(--text-secondary)' }}>{formatDate(doc.createdAt)}</span></td>
+                        <td>
+                          <div className="flex items-center justify-end gap-1.5">
+                            <button className="p-1.5 hover:text-uacc-gold text-[var(--text-muted)] transition-colors cursor-pointer" title="View" onClick={() => triggerActionMessage('View', doc.title)}><Eye size={16} /></button>
+                            <button className="p-1.5 hover:text-blue-400 text-[var(--text-muted)] transition-colors cursor-pointer" title="Download" onClick={() => triggerActionMessage('Download', doc.title)}><Download size={16} /></button>
+                            <button className="p-1.5 hover:text-uacc-red text-[var(--text-muted)] transition-colors cursor-pointer" title="Delete" onClick={() => triggerActionMessage('Delete', doc.title)}><Trash2 size={16} /></button>
+                          </div>
+                        </td>
+                      </tr>
+                    )
+                  })}
+                </tbody>
+              </table>
             </div>
-          )}
-        </div>
+
+            {/* ── MOBILE CARDS (visible only on mobile) ── */}
+            <div className="flex md:hidden flex-col divide-y divide-white/5">
+              {paginatedDocs.map((doc) => {
+                const catColor = getCategoryColor(doc.category)
+                return (
+                  <div key={doc.id} className="p-4 flex flex-col gap-3">
+                    <div className="flex items-start gap-3">
+                      <div
+                        className="p-2 rounded-lg flex-shrink-0 border mt-0.5"
+                        style={{ backgroundColor: `${catColor}15`, borderColor: `${catColor}30` }}
+                      >
+                        <FileText size={18} style={{ color: catColor }} />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-bold text-white text-sm leading-snug" title={doc.title}>{doc.title}</p>
+                        <p className="text-[10px] mt-0.5" style={{ color: 'var(--text-muted)' }}>{doc.fileSize} · {formatDate(doc.createdAt)}</p>
+                      </div>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <Badge status={doc.category} />
+                      <span className="text-[10px] px-2 py-0.5 rounded bg-white/5 border border-white/10" style={{ color: 'var(--text-muted)' }}>
+                        {formatDept(doc.department)}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <div className="w-5 h-5 rounded-full flex-shrink-0 flex items-center justify-center text-[9px] font-bold text-uacc-gold bg-uacc-gold/10 border border-uacc-gold/20">
+                          {doc.uploadedBy.charAt(0)}
+                        </div>
+                        <span className="text-xs" style={{ color: 'var(--text-muted)' }}>{doc.uploadedBy}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <button className="p-2 hover:text-uacc-gold text-[var(--text-muted)] transition-colors cursor-pointer rounded-lg hover:bg-white/5" onClick={() => triggerActionMessage('View', doc.title)}><Eye size={15} /></button>
+                        <button className="p-2 hover:text-blue-400 text-[var(--text-muted)] transition-colors cursor-pointer rounded-lg hover:bg-white/5" onClick={() => triggerActionMessage('Download', doc.title)}><Download size={15} /></button>
+                        <button className="p-2 hover:text-uacc-red text-[var(--text-muted)] transition-colors cursor-pointer rounded-lg hover:bg-white/5" onClick={() => triggerActionMessage('Delete', doc.title)}><Trash2 size={15} /></button>
+                      </div>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          </>
+        ) : (
+          <div className="py-12">
+            <EmptyState
+              icon={FolderOpen}
+              title="No documents found"
+              message="Try adjusting your search or filter criteria"
+            />
+          </div>
+        )}
 
         {/* Pagination Bar */}
         {filteredDocs.length > 0 && (
-          <div className="px-6 py-4 flex items-center justify-between border-t border-[var(--border-subtle)] flex-shrink-0">
+          <div className="px-4 md:px-6 py-4 flex flex-wrap items-center justify-between gap-3 border-t border-[var(--border-subtle)] flex-shrink-0">
             <div className="text-xs" style={{ color: 'var(--text-muted)' }}>
               Page <span className="font-bold text-[var(--text-primary)]">{currentPage}</span> of{' '}
               <span className="font-bold text-[var(--text-primary)]">{totalPages}</span>
             </div>
             <div className="flex items-center gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                disabled={currentPage === 1}
-                onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
-                icon={ChevronLeft}
-              >
-                Previous
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                disabled={currentPage === totalPages}
-                onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
-                icon={ChevronRight}
-              >
-                Next
-              </Button>
+              <Button variant="outline" size="sm" disabled={currentPage === 1} onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))} icon={ChevronLeft}>Prev</Button>
+              <Button variant="outline" size="sm" disabled={currentPage === totalPages} onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))} icon={ChevronRight}>Next</Button>
             </div>
           </div>
         )}
@@ -419,9 +416,9 @@ export default function DocumentsPage() {
 
       {/* UPLOAD DOCUMENT MODAL */}
       {uploadModalOpen && (
-        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center backdrop-blur-sm">
+        <div className="fixed inset-0 bg-black/60 z-50 flex items-end sm:items-center justify-center backdrop-blur-sm p-0 sm:p-6">
           <div
-            className="card rounded-2xl p-6 md:p-8 w-full max-w-lg mx-4 flex flex-col gap-4 max-h-[90vh] overflow-y-auto"
+            className="card w-full sm:max-w-2xl sm:mx-auto sm:rounded-2xl rounded-t-2xl rounded-b-none flex flex-col gap-5 max-h-[92vh] overflow-y-auto p-5 sm:p-8"
             style={{ background: 'var(--bg-surface)' }}
           >
             {/* Modal Header */}
