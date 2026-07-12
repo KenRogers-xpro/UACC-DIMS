@@ -1,5 +1,32 @@
+'use client';
+
+import { motion } from 'framer-motion';
+import { useState, useEffect } from 'react';
+import { useInView } from 'framer-motion';
+import { useRef } from 'react';
+
 export default function StatCard({ title, value, subtitle, icon: Icon,
                                    accentColor = 'gold', trend }) {
+  const [displayValue, setDisplayValue] = useState(0);
+  const ref = useRef(null);
+  const isInView = useInView(ref, { once: true });
+
+  useEffect(() => {
+    if (!isInView) return;
+    
+    let start = 0;
+    const increment = value / 60; // Count up over ~60 frames at 60fps
+    const interval = setInterval(() => {
+      start += increment;
+      if (start >= value) {
+        setDisplayValue(value);
+        clearInterval(interval);
+      } else {
+        setDisplayValue(Math.floor(start));
+      }
+    }, 1000 / 60);
+    return () => clearInterval(interval);
+  }, [isInView, value]);
   const colors = {
     gold:  { bg: 'rgba(201,151,58,0.08)',   text: '#C9973A',  border: 'rgba(201,151,58,0.18)',  bar: '#C9973A' },
     red:   { bg: 'rgba(204,34,0,0.08)',     text: '#CC2200',  border: 'rgba(204,34,0,0.18)',    bar: '#CC2200' },
@@ -9,9 +36,14 @@ export default function StatCard({ title, value, subtitle, icon: Icon,
   const c = colors[accentColor] || colors.gold
 
   return (
-    <div
+    <motion.div
+      ref={ref}
       className="card rounded-xl p-5 flex flex-col gap-3 relative overflow-hidden"
       style={{ borderLeft: `3px solid ${c.bar}` }}
+      initial={{ opacity: 0, y: 20 }}
+      animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
+      transition={{ duration: 0.6, ease: "easeOut" }}
+      whileHover={{ y: -2, boxShadow: 'var(--shadow-card-hover)' }}
     >
       {/* Top row: icon + title */}
       <div className="flex items-start justify-between gap-3">
@@ -30,7 +62,7 @@ export default function StatCard({ title, value, subtitle, icon: Icon,
       {/* Value */}
       <p className="font-heading font-bold text-3xl leading-none tracking-tight"
          style={{ color: 'var(--text-primary)' }}>
-        {value}
+        {displayValue}
       </p>
 
       {/* Subtitle / Trend */}
@@ -52,6 +84,6 @@ export default function StatCard({ title, value, subtitle, icon: Icon,
           </p>
         )}
       </div>
-    </div>
+    </motion.div>
   )
 }

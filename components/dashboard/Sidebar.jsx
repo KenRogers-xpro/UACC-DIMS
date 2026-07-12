@@ -3,6 +3,7 @@ import { usePathname } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
 import { useAuth } from '@/lib/auth-context'
+import { motion } from 'framer-motion'
 import {
   LayoutDashboard,
   FolderOpen,
@@ -260,20 +261,46 @@ function SidebarContent({
 
       {/* ── Nav Items ── */}
       <nav className="flex-1 px-2 overflow-y-auto overflow-x-hidden">
-        <ul className="flex flex-col gap-0.5">
+        <motion.ul 
+          className="flex flex-col gap-0.5"
+          initial="hidden"
+          animate="visible"
+          variants={{
+            hidden: { opacity: 0 },
+            visible: {
+              opacity: 1,
+              transition: { staggerChildren: 0.05, delayChildren: 0 }
+            }
+          }}
+        >
           {mainNav.map((item) => {
             const Icon = item.icon
             const isActive = pathname === item.href ||
               (item.href !== '/dashboard' && pathname.startsWith(item.href))
 
             return (
-              <li key={item.href}>
+              <motion.li 
+                key={item.href}
+                variants={{
+                  hidden: { opacity: 0, x: -10 },
+                  visible: { opacity: 1, x: 0, transition: { duration: 0.3 } }
+                }}
+              >
                 <Link
                   href={item.href}
                   className={`sidebar-item flex items-center gap-3 px-3 py-2.5 rounded-md
-                              text-sm ${isActive ? 'active' : ''}`}
+                              text-sm relative group ${isActive ? 'active' : ''}`}
                   title={collapsed ? item.label : undefined}
                 >
+                  {/* Animated active indicator */}
+                  {isActive && (
+                    <motion.div
+                      layoutId="active-nav-indicator"
+                      className="absolute left-0 top-0 bottom-0 w-0.5 bg-uacc-gold rounded-full"
+                      transition={{ type: "spring", stiffness: 400, damping: 60 }}
+                    />
+                  )}
+                
                   <Icon
                     size={16}
                     className={`flex-shrink-0 ${isActive ? 'text-uacc-gold' : ''}`}
@@ -297,10 +324,10 @@ function SidebarContent({
                     </>
                   )}
                 </Link>
-              </li>
+              </motion.li>
             )
           })}
-        </ul>
+        </motion.ul>
       </nav>
 
       {/* ── Bottom Items: Settings + Sign Out ── */}

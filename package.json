@@ -12,6 +12,7 @@
     "@anthropic-ai/sdk": "^0.106.0",
     "ai": "^7.0.4",
     "bcryptjs": "^3.0.3",
+    "framer-motion": "^12.42.2",
     "lucide-react": "^1.21.0",
     "multer": "^2.2.0",
     "next": "16.2.9",

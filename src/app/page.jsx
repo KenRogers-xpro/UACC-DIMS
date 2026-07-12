@@ -4,6 +4,8 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import ThemeToggle from '@/components/ui/ThemeToggle';
 import { useTheme } from 'next-themes';
+import { motion } from 'framer-motion';
+import { useInView } from 'framer-motion';
 // using standard <img> for external logo URL
 import { 
   FileText, 
@@ -24,6 +26,32 @@ import {
   Briefcase,
   UserCheck,
 } from 'lucide-react';
+
+// Helper component for animated number counting
+function CountingNumber({ value, duration = 2 }) {
+  const [count, setCount] = useState(0);
+  const ref = React.useRef(null);
+  const isInView = useInView(ref, { once: true });
+
+  useEffect(() => {
+    if (!isInView) return;
+    
+    let start = 0;
+    const increment = value / (duration * 60); // 60fps
+    const interval = setInterval(() => {
+      start += increment;
+      if (start >= value) {
+        setCount(value);
+        clearInterval(interval);
+      } else {
+        setCount(Math.floor(start));
+      }
+    }, 1000 / 60);
+    return () => clearInterval(interval);
+  }, [isInView, value, duration]);
+
+  return <span ref={ref}>{count}</span>;
+}
 
 export default function LandingPage() {
   const [activeSection, setActiveSection] = useState('home');
@@ -225,7 +253,13 @@ export default function LandingPage() {
 
         <div className="grid grid-cols-1 md:grid-cols-12 gap-12 items-center relative z-10">
           {/* Left Column (60% desktop) */}
-          <div className="md:col-span-7 flex flex-col items-start gap-6">
+          <motion.div 
+            className="md:col-span-7 flex flex-col items-start gap-6"
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.7, ease: "easeOut" }}
+            viewport={{ once: true, margin: "-100px" }}
+          >
             {/* AI Platform Badge */}
             <div className="inline-flex items-center gap-2 px-3 py-1 glass-panel rounded-full border-uacc-gold/30 bg-white/5">
               <span className="text-uacc-gold text-xs">✦</span>
@@ -273,15 +307,26 @@ export default function LandingPage() {
                 <span className="text-uacc-gold font-bold animate-pulse">AI-Powered</span> Insights
               </p>
             </div>
-          </div>
+          </motion.div>
 
           {/* Right Column (40% desktop) */}
-          <div className="md:col-span-5 relative w-full">
+          <motion.div 
+            className="md:col-span-5 relative w-full"
+            initial={{ opacity: 0, scale: 0.95, y: 20 }}
+            whileInView={{ opacity: 1, scale: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.2, ease: "easeOut" }}
+            viewport={{ once: true, margin: "-100px" }}
+          >
             {/* Ambient decorative glowing card in background */}
             <div className="glass-panel rounded-xl p-6 absolute -top-6 -right-6 z-0 opacity-40 blur-sm w-48 h-48 border-uacc-gold/10 pointer-events-none"></div>
 
             {/* Main status glass card */}
-            <div className="glass-panel rounded-xl p-6 md:p-8 relative z-10 w-full backdrop-blur-2xl shadow-[0_0_40px_rgba(201,151,58,0.1)]" style={{ borderColor: 'var(--border-gold-hover)' }}>
+            <motion.div 
+              className="glass-panel rounded-xl p-6 md:p-8 relative z-10 w-full backdrop-blur-2xl shadow-[0_0_40px_rgba(201,151,58,0.1)]" 
+              style={{ borderColor: 'var(--border-gold-hover)' }}
+              whileHover={{ y: -8, boxShadow: '0 20px 60px rgba(201, 151, 58, 0.15)' }}
+              transition={{ duration: 0.3, ease: "easeOut" }}
+            >
               {/* Status Header */}
               <div className="flex justify-between items-center mb-6 pb-4" style={{ borderBottom: '1px solid var(--border-default)' }}>
                 <span className="font-heading text-xs uppercase tracking-wider" style={{ color: 'var(--text-primary)' }}>System Status</span>
@@ -346,8 +391,8 @@ export default function LandingPage() {
                   </div>
                 </div>
               </div>
-            </div>
-          </div>
+            </motion.div>
+          </motion.div>
         </div>
       </section>
 
@@ -378,9 +423,28 @@ export default function LandingPage() {
         </div>
 
         {/* 2x2 Grid / 1 column mobile */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <motion.div 
+          className="grid grid-cols-1 md:grid-cols-2 gap-8"
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, margin: "-100px" }}
+          variants={{
+            hidden: { opacity: 0 },
+            visible: {
+              opacity: 1,
+              transition: { staggerChildren: 0.15, delayChildren: 0 }
+            }
+          }}
+        >
           {/* Card 1 — Document Management */}
-          <div className="glass-panel rounded-xl p-8 hover:border-uacc-gold/40 hover:shadow-[inset_0_0_20px_rgba(201,151,58,0.05)] relative overflow-hidden group">
+          <motion.div 
+            className="glass-panel rounded-xl p-8 hover:border-uacc-gold/40 hover:shadow-[inset_0_0_20px_rgba(201,151,58,0.05)] relative overflow-hidden group"
+            variants={{
+              hidden: { opacity: 0, y: 30 },
+              visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: "easeOut" } }
+            }}
+            whileHover={{ translateY: -4 }}
+          >
             {/* Hover light indicator */}
             <div className="absolute top-0 left-0 w-2 h-full bg-uacc-gold opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
             
@@ -400,10 +464,17 @@ export default function LandingPage() {
                 </span>
               </div>
             </div>
-          </div>
+          </motion.div>
 
           {/* Card 2 — Procurement Workflow */}
-          <div className="glass-panel rounded-xl p-8 accent-red hover:border-uacc-red/40 hover:shadow-[inset_0_0_20px_rgba(204,34,0,0.05)] relative overflow-hidden group">
+          <motion.div 
+            className="glass-panel rounded-xl p-8 accent-red hover:border-uacc-red/40 hover:shadow-[inset_0_0_20px_rgba(204,34,0,0.05)] relative overflow-hidden group"
+            variants={{
+              hidden: { opacity: 0, y: 30 },
+              visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: "easeOut" } }
+            }}
+            whileHover={{ translateY: -4 }}
+          >
             {/* Hover light indicator */}
             <div className="absolute top-0 left-0 w-2 h-full bg-uacc-red opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
 
@@ -423,10 +494,17 @@ export default function LandingPage() {
                 </span>
               </div>
             </div>
-          </div>
+          </motion.div>
 
           {/* Card 3 — Activity Logs */}
-          <div className="glass-panel rounded-xl p-8 hover:border-uacc-gold/40 hover:shadow-[inset_0_0_20px_rgba(201,151,58,0.05)] relative overflow-hidden group">
+          <motion.div 
+            className="glass-panel rounded-xl p-8 hover:border-uacc-gold/40 hover:shadow-[inset_0_0_20px_rgba(201,151,58,0.05)] relative overflow-hidden group"
+            variants={{
+              hidden: { opacity: 0, y: 30 },
+              visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: "easeOut" } }
+            }}
+            whileHover={{ translateY: -4 }}
+          >
             {/* Hover light indicator */}
             <div className="absolute top-0 left-0 w-2 h-full bg-uacc-gold opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
 
@@ -446,10 +524,17 @@ export default function LandingPage() {
                 </span>
               </div>
             </div>
-          </div>
+          </motion.div>
 
           {/* Card 4 — Reports & Dashboard */}
-          <div className="glass-panel rounded-xl p-8 accent-red hover:border-uacc-red/40 hover:shadow-[inset_0_0_20px_rgba(204,34,0,0.05)] relative overflow-hidden group">
+          <motion.div 
+            className="glass-panel rounded-xl p-8 accent-red hover:border-uacc-red/40 hover:shadow-[inset_0_0_20px_rgba(204,34,0,0.05)] relative overflow-hidden group"
+            variants={{
+              hidden: { opacity: 0, y: 30 },
+              visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: "easeOut" } }
+            }}
+            whileHover={{ translateY: -4 }}
+          >
             {/* Hover light indicator */}
             <div className="absolute top-0 left-0 w-2 h-full bg-uacc-red opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
 
@@ -469,8 +554,8 @@ export default function LandingPage() {
                 </span>
               </div>
             </div>
-          </div>
-        </div>
+          </motion.div>
+        </motion.div>
       </section>
 
       {/* SECTION 5 — AI Agent Spotlight */}
@@ -484,7 +569,13 @@ export default function LandingPage() {
 
         <div className="max-w-7xl mx-auto px-margin-mobile md:px-margin-desktop grid grid-cols-1 md:grid-cols-12 gap-12 items-center relative z-10">
           {/* Left Column (text) */}
-          <div className="md:col-span-6 flex flex-col items-start gap-6">
+          <motion.div 
+            className="md:col-span-6 flex flex-col items-start gap-6"
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.7, ease: "easeOut" }}
+            viewport={{ once: true, margin: "-100px" }}
+          >
             <span className="font-heading text-xs tracking-[0.25em] text-uacc-gold uppercase font-semibold">
               ✦ Intelligent Core
             </span>
@@ -535,10 +626,16 @@ export default function LandingPage() {
                 Powered by Claude · Anthropic API · Data stays on your server
               </span>
             </div>
-          </div>
+          </motion.div>
 
           {/* Right Column (chat interface card) */}
-          <div className="md:col-span-6 w-full">
+          <motion.div 
+            className="md:col-span-6 w-full"
+            initial={{ opacity: 0, scale: 0.95, y: 20 }}
+            whileInView={{ opacity: 1, scale: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.15, ease: "easeOut" }}
+            viewport={{ once: true, margin: "-100px" }}
+          >
             {/* Chat Frame Container */}
             <div className="glass-panel border-t-2 border-t-uacc-gold rounded-xl overflow-hidden shadow-[0_12px_40px_rgba(0,0,0,0.5)]" style={{ backgroundColor: 'var(--bg-surface)' }}>
               {/* Header */}
@@ -583,11 +680,14 @@ export default function LandingPage() {
               {/* Message Log Body */}
               <div className="p-6 h-[300px] overflow-y-auto flex flex-col gap-4">
                 {chatMessages.map((msg, idx) => (
-                  <div 
+                  <motion.div 
                     key={idx} 
                     className={`flex flex-col max-w-[85%] ${
                       msg.role === 'user' ? 'self-end items-end' : 'self-start items-start'
                     }`}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.4, delay: idx * 0.1 }}
                   >
                     <span className="text-[9px] font-heading uppercase mb-1 tracking-wider" style={{ color: 'var(--text-muted)' }}>
                       {msg.role === 'user' ? 'You' : 'DIMS AI Agent'}
@@ -605,7 +705,7 @@ export default function LandingPage() {
                     >
                       {msg.text}
                     </div>
-                  </div>
+                  </motion.div>
                 ))}
 
                 {/* Animated Typing Indicator */}
@@ -639,7 +739,7 @@ export default function LandingPage() {
                 </button>
               </div>
             </div>
-          </div>
+          </motion.div>
         </div>
       </section>
 
