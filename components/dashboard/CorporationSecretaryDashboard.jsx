@@ -3,6 +3,7 @@
 import { useAuth } from '@/lib/auth-context'
 import PageHeader from '@/components/ui/PageHeader'
 import DocumentControlTool from '@/components/documents/DocumentControlTool'
+import SystemActivityWidget from '@/components/ui/SystemActivityWidget'
 
 export default function CorporationSecretaryDashboard() {
   const { user } = useAuth()
@@ -13,6 +14,8 @@ export default function CorporationSecretaryDashboard() {
         title={`Good morning, ${user?.name?.split(' ')[0] || 'Corporation Secretary'}`}
         subtitle="Board affairs, governance records, and executive correspondence"
       />
+
+      <SystemActivityWidget />
 
       <DocumentControlTool
         title="Governance Documents"

@@ -2,6 +2,8 @@
 import { usePathname } from 'next/navigation'
 import { Menu, Bell, ChevronLeft, ChevronRight, Search } from 'lucide-react'
 import ThemeToggle from '@/components/ui/ThemeToggle'
+import StatusDot from '@/components/ui/StatusDot'
+import { useOnlineStatus } from '@/lib/useOnlineStatus'
 
 const PAGE_TITLES = {
   '/dashboard':                 { title: 'Dashboard',       sub: 'Overview of operational activities' },
@@ -22,6 +24,7 @@ const PAGE_TITLES = {
 export default function TopBar({ user, sidebarCollapsed, onToggleSidebar, onMobileMenuOpen }) {
   const pathname = usePathname()
   const page = PAGE_TITLES[pathname] || { title: 'DIMS', sub: 'Uganda Air Cargo Corporation' }
+  const { isUserOnline } = useOnlineStatus()
 
   const userInitial = user?.name?.charAt(0)?.toUpperCase() || 'U'
   const firstName = user?.name?.split(' ')[0] || 'User'
@@ -107,10 +110,13 @@ export default function TopBar({ user, sidebarCollapsed, onToggleSidebar, onMobi
                background: 'var(--glass-bg)',
                border: '1px solid var(--border-default)',
              }}>
-          <div className="w-6 h-6 rounded-full flex items-center justify-center
-                          font-heading font-bold text-[10px] text-white flex-shrink-0"
-               style={{ background: 'rgba(201,151,58,0.25)', border: '1px solid rgba(201,151,58,0.35)' }}>
-            {userInitial}
+          <div className="relative flex-shrink-0">
+            <div className="w-6 h-6 rounded-full flex items-center justify-center
+                            font-heading font-bold text-[10px] text-white"
+                 style={{ background: 'rgba(201,151,58,0.25)', border: '1px solid rgba(201,151,58,0.35)' }}>
+              {userInitial}
+            </div>
+            <StatusDot online={isUserOnline(user?.id)} size={7} className="absolute -bottom-0.5 -right-0.5" />
           </div>
           <div className="flex flex-col leading-none">
             <span className="text-[11px] font-semibold font-heading truncate max-w-[90px]"

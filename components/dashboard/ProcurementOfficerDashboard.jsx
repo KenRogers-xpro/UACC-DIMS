@@ -10,6 +10,7 @@ import PageHeader from '@/components/ui/PageHeader'
 import StatCard from '@/components/ui/StatCard'
 import Button from '@/components/ui/Button'
 import DocumentControlTool from '@/components/documents/DocumentControlTool'
+import SystemActivityWidget from '@/components/ui/SystemActivityWidget'
 
 export default function ProcurementOfficerDashboard() {
   const { user } = useAuth()
@@ -50,6 +51,8 @@ export default function ProcurementOfficerDashboard() {
         title={`Good morning, ${user.name}`}
         subtitle="Your Procurement Command Center"
       />
+
+      <SystemActivityWidget />
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
         <StatCard

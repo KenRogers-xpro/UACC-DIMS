@@ -4,9 +4,11 @@ import { useState, useEffect, useMemo } from 'react'
 import { Send, Search, Plus, X, MessageSquare } from 'lucide-react'
 import { useAuth } from '@/lib/auth-context'
 import { useMessages } from '@/lib/useMessages'
+import { useOnlineStatus } from '@/lib/useOnlineStatus'
 import PageHeader from '@/components/ui/PageHeader'
 import Button from '@/components/ui/Button'
 import EmptyState from '@/components/ui/EmptyState'
+import StatusDot from '@/components/ui/StatusDot'
 import { SkeletonLine } from '@/components/ui/SkeletonLoader'
 
 function formatTime(dateStr) {
@@ -21,6 +23,7 @@ export default function MessagesPage() {
     directory, conversations, thread, loading,
     fetchDirectory, fetchConversations, openThread, sendMessage,
   } = useMessages()
+  const { isUserOnline } = useOnlineStatus()
 
   const [activePartnerId, setActivePartnerId] = useState(null)
   const [composeText, setComposeText] = useState('')
@@ -117,7 +120,10 @@ export default function MessagesPage() {
                   style={{ borderColor: 'var(--border-subtle)' }}
                 >
                   <div className="min-w-0">
-                    <p className="text-sm font-semibold truncate" style={{ color: 'var(--text-primary)' }}>{c.partner.name}</p>
+                    <p className="text-sm font-semibold truncate flex items-center gap-1.5" style={{ color: 'var(--text-primary)' }}>
+                      <StatusDot online={isUserOnline(c.partner.id)} size={6} />
+                      {c.partner.name}
+                    </p>
                     <p className="text-xs truncate" style={{ color: 'var(--text-muted)' }}>{c.lastMessage.content}</p>
                   </div>
                   {c.unreadCount > 0 && (
@@ -140,7 +146,8 @@ export default function MessagesPage() {
           ) : (
             <>
               <div className="p-4 border-b flex-shrink-0" style={{ borderColor: 'var(--border-subtle)' }}>
-                <h3 className="font-heading font-bold text-sm" style={{ color: 'var(--text-primary)' }}>
+                <h3 className="font-heading font-bold text-sm flex items-center gap-1.5" style={{ color: 'var(--text-primary)' }}>
+                  {activePartner && <StatusDot online={isUserOnline(activePartner.id)} size={7} />}
                   {activePartner?.name || '...'}
                 </h3>
                 <p className="text-xs" style={{ color: 'var(--text-muted)' }}>{activePartner?.role?.replace(/_/g, ' ')}</p>

@@ -9,6 +9,7 @@ import { CalendarClock, Inbox, FileText, Sparkles, Loader2, ArrowRight } from 'l
 import PageHeader from '@/components/ui/PageHeader'
 import StatCard from '@/components/ui/StatCard'
 import Button from '@/components/ui/Button'
+import SystemActivityWidget from '@/components/ui/SystemActivityWidget'
 import { searchKnowledgeBase } from '@/lib/ai'
 
 function getTodayBounds() {
@@ -165,6 +166,8 @@ export default function PADashboard() {
         title={`Good morning, ${displayName}`}
         subtitle="Your PA command center for the day"
       />
+
+      <SystemActivityWidget />
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
         <StatCard

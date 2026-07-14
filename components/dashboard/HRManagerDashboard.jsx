@@ -3,6 +3,7 @@
 import { useAuth } from '@/lib/auth-context'
 import PageHeader from '@/components/ui/PageHeader'
 import DocumentControlTool from '@/components/documents/DocumentControlTool'
+import SystemActivityWidget from '@/components/ui/SystemActivityWidget'
 
 export default function HRManagerDashboard() {
   const { user } = useAuth()
@@ -13,6 +14,8 @@ export default function HRManagerDashboard() {
         title={`Good morning, ${user?.name?.split(' ')[0] || 'HR Manager'}`}
         subtitle="Staff records and HR document management"
       />
+
+      <SystemActivityWidget />
 
       <DocumentControlTool
         title="HR Documents"

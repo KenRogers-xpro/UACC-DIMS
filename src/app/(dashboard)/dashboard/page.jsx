@@ -32,6 +32,7 @@ import PageHeader from '@/components/ui/PageHeader'
 import StatCard from '@/components/ui/StatCard'
 import Badge from '@/components/ui/Badge'
 import Button from '@/components/ui/Button'
+import SystemActivityWidget from '@/components/ui/SystemActivityWidget'
 import PADashboard from '@/components/dashboard/PADashboard'
 import ProcurementOfficerDashboard from '@/components/dashboard/ProcurementOfficerDashboard'
 import HRManagerDashboard from '@/components/dashboard/HRManagerDashboard'
@@ -244,6 +245,8 @@ export default function DashboardHome() {
         title={`${greeting}, ${user?.name?.split(' ')[0] || 'User'}`}
         subtitle={`${new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })} · Here&apos;s what&apos;s happening at UACC today`}
       />
+
+      <SystemActivityWidget />
 
       {/* ROW 1 — STAT CARDS */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">

@@ -3,6 +3,7 @@
 import { useAuth } from '@/lib/auth-context'
 import PageHeader from '@/components/ui/PageHeader'
 import DocumentControlTool from '@/components/documents/DocumentControlTool'
+import SystemActivityWidget from '@/components/ui/SystemActivityWidget'
 
 export default function InternalAuditorDashboard() {
   const { user } = useAuth()
@@ -13,6 +14,8 @@ export default function InternalAuditorDashboard() {
         title={`Good morning, ${user?.name?.split(' ')[0] || 'Internal Auditor'}`}
         subtitle="Compliance evidence, working papers, and audit findings"
       />
+
+      <SystemActivityWidget />
 
       <DocumentControlTool
         title="Audit Documents"

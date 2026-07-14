@@ -3,6 +3,7 @@
 import { useAuth } from '@/lib/auth-context'
 import PageHeader from '@/components/ui/PageHeader'
 import DocumentControlTool from '@/components/documents/DocumentControlTool'
+import SystemActivityWidget from '@/components/ui/SystemActivityWidget'
 
 export default function FinanceDirectorDashboard() {
   const { user } = useAuth()
@@ -13,6 +14,8 @@ export default function FinanceDirectorDashboard() {
         title={`Good morning, ${user?.name?.split(' ')[0] || 'Finance Director'}`}
         subtitle="Financial oversight and reporting documents"
       />
+
+      <SystemActivityWidget />
 
       <DocumentControlTool
         title="Finance Documents"
