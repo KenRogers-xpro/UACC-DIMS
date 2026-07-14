@@ -26,8 +26,15 @@ const TABS = [
   { key: 'signatures', label: 'Signatures', icon: History },
 ]
 
-function getFileKind(filePath = '') {
-  const ext = filePath.split('?')[0].split('.').pop()?.toLowerCase()
+function getFileKind(document) {
+  const mimeType = document?.mimeType || ''
+  if (mimeType === 'application/pdf') return 'pdf'
+  if (mimeType.startsWith('image/')) return 'image'
+  if (mimeType) return 'other'
+
+  // Fall back to the original filename's extension for older rows with no
+  // mimeType recorded (pre-migration documents).
+  const ext = (document?.filePath || '').split('?')[0].split('.').pop()?.toLowerCase()
   if (ext === 'pdf') return 'pdf'
   if (['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg'].includes(ext)) return 'image'
   return 'other'
@@ -69,6 +76,10 @@ export default function DocumentViewerModal({
   const [circulationLoading, setCirculationLoading] = useState(false)
   const [signingOpen, setSigningOpen] = useState(false)
 
+  const [previewUrl, setPreviewUrl] = useState(null)
+  const [previewLoading, setPreviewLoading] = useState(false)
+  const [downloading, setDownloading] = useState(false)
+
   useEffect(() => {
     if (document) {
       setForm({
@@ -84,6 +95,29 @@ export default function DocumentViewerModal({
       setCirculation(undefined)
     }
   }, [document])
+
+  // Files are served from our own auth-gated API, not a public URL, so we
+  // fetch as a blob and render via an object URL — revoked whenever the
+  // document changes or the modal closes, to avoid leaking them.
+  useEffect(() => {
+    if (!document || !isOpen) return
+    let cancelled = false
+    let objectUrl = null
+    setPreviewLoading(true)
+    api.getBlob(`/documents/${document.id}/file`)
+      .then((url) => {
+        if (cancelled) { URL.revokeObjectURL(url); return }
+        objectUrl = url
+        setPreviewUrl(url)
+      })
+      .catch(() => { if (!cancelled) setPreviewUrl(null) })
+      .finally(() => { if (!cancelled) setPreviewLoading(false) })
+
+    return () => {
+      cancelled = true
+      if (objectUrl) URL.revokeObjectURL(objectUrl)
+    }
+  }, [document, isOpen])
 
   const fetchAnnotations = useCallback(async () => {
     if (!document) return
@@ -122,8 +156,25 @@ export default function DocumentViewerModal({
   const isOwner = currentUserId != null && document.uploadedBy === currentUserId
   const isPrivate = document.status === 'PRIVATE'
   const canEdit = isOwner && isPrivate && document.isEditable !== false
-  const fileKind = getFileKind(document.filePath)
+  const fileKind = getFileKind(document)
   const canSign = circulation && circulation.status === 'IN_CIRCULATION' && circulation.currentHolderRole === currentUserRole
+
+  const handleDownload = async () => {
+    setDownloading(true)
+    try {
+      const url = previewUrl || await api.getBlob(`/documents/${document.id}/file`)
+      const link = window.document.createElement('a')
+      link.href = url
+      link.download = document.filePath || document.title
+      link.click()
+      if (!previewUrl) URL.revokeObjectURL(url)
+    } catch {
+      // no-op — download failing silently degrades to nothing happening,
+      // consistent with the rest of this component's error handling
+    } finally {
+      setDownloading(false)
+    }
+  }
 
   const handleSave = async () => {
     setSaving(true)
@@ -248,22 +299,29 @@ export default function DocumentViewerModal({
               {tab === 'preview' && (
                 <>
                   <div className="rounded-xl overflow-hidden border flex items-center justify-center bg-black/20" style={{ borderColor: 'var(--border-subtle)', minHeight: '340px' }}>
-                    {fileKind === 'pdf' && (
-                      <iframe src={document.filePath} title={document.title} className="w-full h-[60vh]" />
-                    )}
-                    {fileKind === 'image' && (
+                    {previewLoading ? (
+                      <div className="py-16"><SkeletonLine height="h-8" /></div>
+                    ) : !previewUrl ? (
+                      <div className="flex flex-col items-center gap-3 py-16 text-center px-6">
+                        <FileText size={40} style={{ color: 'var(--text-muted)' }} />
+                        <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
+                          Couldn&apos;t load this file.
+                        </p>
+                      </div>
+                    ) : fileKind === 'pdf' ? (
+                      <iframe src={previewUrl} title={document.title} className="w-full h-[60vh]" />
+                    ) : fileKind === 'image' ? (
                       // eslint-disable-next-line @next/next/no-img-element
-                      <img src={document.filePath} alt={document.title} className="max-w-full max-h-[60vh] object-contain" />
-                    )}
-                    {fileKind === 'other' && (
+                      <img src={previewUrl} alt={document.title} className="max-w-full max-h-[60vh] object-contain" />
+                    ) : (
                       <div className="flex flex-col items-center gap-3 py-16 text-center px-6">
                         <FileText size={40} style={{ color: 'var(--text-muted)' }} />
                         <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
                           This file type can&apos;t be previewed inline.
                         </p>
-                        <a href={document.filePath} target="_blank" rel="noopener noreferrer" download>
-                          <Button variant="outline" icon={Download}>Download to view</Button>
-                        </a>
+                        <Button variant="outline" icon={Download} onClick={handleDownload} loading={downloading}>
+                          Download to view
+                        </Button>
                       </div>
                     )}
                   </div>
@@ -439,9 +497,9 @@ export default function DocumentViewerModal({
                 </>
               )}
               {!canEdit && !editing && !showSubmitForm && (
-                <a href={document.filePath} target="_blank" rel="noopener noreferrer" download>
-                  <Button variant="outline" icon={Download}>Download</Button>
-                </a>
+                <Button variant="outline" icon={Download} onClick={handleDownload} loading={downloading}>
+                  Download
+                </Button>
               )}
             </div>
           </motion.div>

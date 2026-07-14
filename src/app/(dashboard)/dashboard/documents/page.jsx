@@ -19,6 +19,7 @@ import {
 } from 'lucide-react'
 import { useAuth } from '@/lib/auth-context'
 import { useDocuments } from '@/lib/useDocuments'
+import api from '@/lib/api'
 
 import PageHeader from '@/components/ui/PageHeader'
 import Badge from '@/components/ui/Badge'
@@ -240,6 +241,24 @@ export default function DocumentsPage() {
     setPreviewDoc(result?.document || null)
   }
 
+  const handleDownload = async (doc) => {
+    try {
+      // Files are served from our own auth-gated API, not a public URL —
+      // fetch as a blob (carrying the Authorization header) rather than
+      // linking straight to doc.filePath, which is just the original
+      // filename now, not a fetchable address.
+      const url = await api.getBlob(`/documents/${doc.id}/file`)
+      const link = window.document.createElement('a')
+      link.href = url
+      link.download = doc.filePath || doc.title
+      link.click()
+      URL.revokeObjectURL(url)
+    } catch (err) {
+      setToastMessage(err.message || 'Failed to download document')
+      setToastVisible(true)
+    }
+  }
+
   const handleDelete = async (doc) => {
     try {
       await deleteDocument(doc.id)
@@ -407,7 +426,7 @@ export default function DocumentsPage() {
                         <td>
                           <div className="flex items-center justify-end gap-1.5">
                             <button className="p-1.5 hover:text-uacc-gold text-[var(--text-muted)] transition-colors cursor-pointer" title="View" onClick={() => setPreviewDoc(doc)}><Eye size={16} /></button>
-                            <a href={doc.filePath} target="_blank" rel="noopener noreferrer" download className="p-1.5 hover:text-blue-400 text-[var(--text-muted)] transition-colors cursor-pointer" title="Download"><Download size={16} /></a>
+                            <button onClick={() => handleDownload(doc)} className="p-1.5 hover:text-blue-400 text-[var(--text-muted)] transition-colors cursor-pointer" title="Download"><Download size={16} /></button>
                             <button className="p-1.5 hover:text-uacc-red text-[var(--text-muted)] transition-colors cursor-pointer" title="Delete" onClick={() => handleDelete(doc)}><Trash2 size={16} /></button>
                           </div>
                         </td>
@@ -451,7 +470,7 @@ export default function DocumentsPage() {
                       </div>
                       <div className="flex items-center gap-2">
                         <button className="p-2 hover:text-uacc-gold text-[var(--text-muted)] transition-colors cursor-pointer rounded-lg hover:bg-white/5" onClick={() => setPreviewDoc(doc)}><Eye size={15} /></button>
-                        <a href={doc.filePath} target="_blank" rel="noopener noreferrer" download className="p-2 hover:text-blue-400 text-[var(--text-muted)] transition-colors cursor-pointer rounded-lg hover:bg-white/5" title="Download"><Download size={15} /></a>
+                        <button onClick={() => handleDownload(doc)} className="p-2 hover:text-blue-400 text-[var(--text-muted)] transition-colors cursor-pointer rounded-lg hover:bg-white/5" title="Download"><Download size={15} /></button>
                         <button className="p-2 hover:text-uacc-red text-[var(--text-muted)] transition-colors cursor-pointer rounded-lg hover:bg-white/5" onClick={() => handleDelete(doc)}><Trash2 size={15} /></button>
                       </div>
                     </div>
