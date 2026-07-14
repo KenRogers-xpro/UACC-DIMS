@@ -474,8 +474,8 @@ export default function ProcurementPage() {
 
       {/* REVIEW MODAL */}
       {reviewModalOpen && selectedRequest && (
-        <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4 backdrop-blur-sm overflow-y-auto">
-          <div className="card rounded-2xl w-full max-w-2xl bg-[var(--bg-surface)] flex flex-col my-8 shadow-2xl relative shadow-black/50">
+        <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4 backdrop-blur-sm pointer-events-auto" onClick={(e) => e.target === e.currentTarget && setReviewModalOpen(false)}>
+          <div className="card rounded-2xl w-full max-w-2xl bg-[var(--bg-surface)] flex flex-col my-8 shadow-2xl relative shadow-black/50 pointer-events-auto max-h-[90vh] overflow-y-auto">
             {/* Header */}
             <div className="p-6 pb-4 flex items-center justify-between sticky top-0 bg-[var(--bg-surface)] z-10 rounded-t-2xl">
               <div className="flex items-center gap-4">
@@ -687,15 +687,15 @@ export default function ProcurementPage() {
 
       {/* SUBMIT NEW REQUEST SLIDE-IN PANEL */}
       {submitFormOpen && (
-        <div className="fixed inset-0 z-40 flex justify-end">
+        <div className="fixed inset-0 z-40 flex justify-end pointer-events-auto">
           {/* Overlay */}
           <div 
-            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+            className="absolute inset-0 bg-black/60 backdrop-blur-sm pointer-events-auto"
             onClick={() => setSubmitFormOpen(false)}
           ></div>
           
           {/* Panel */}
-          <div className="relative z-50 w-full max-w-lg h-full bg-[var(--bg-surface)] shadow-2xl flex flex-col border-l border-[var(--border-subtle)] transform transition-transform animate-slideInRight overflow-hidden">
+          <div className="relative z-50 w-full max-w-lg h-full bg-[var(--bg-surface)] shadow-2xl flex flex-col border-l border-[var(--border-subtle)] transform transition-transform animate-slideInRight overflow-hidden pointer-events-auto">
             {/* Header */}
             <div className="p-6 border-b border-[var(--border-subtle)] flex items-start justify-between bg-[var(--bg-surface-low)]">
               <div>

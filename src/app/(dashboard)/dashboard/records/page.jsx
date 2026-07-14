@@ -790,9 +790,9 @@ export default function RecordsExecutivePage() {
 
       {/* DETAIL PANEL SLIDE-IN */}
       {detailPanelOpen && selectedEntry && (
-        <div className="fixed inset-0 z-50 flex justify-end">
-          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setDetailPanelOpen(false)}></div>
-          <div className="relative w-full max-w-2xl h-full bg-[#0b1120] shadow-2xl border-l border-white/10 flex flex-col animate-in slide-in-from-right duration-300">
+        <div className="fixed inset-0 z-50 flex justify-end pointer-events-auto">
+          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm pointer-events-auto" onClick={() => setDetailPanelOpen(false)}></div>
+          <div className="relative w-full max-w-2xl h-full bg-[#0b1120] shadow-2xl border-l border-white/10 flex flex-col animate-in slide-in-from-right duration-300 pointer-events-auto overflow-y-auto">
             {/* Panel Header */}
             <div className="p-6 border-b border-white/10 bg-white/[0.02] border-t-4 border-t-uacc-gold flex justify-between items-start flex-shrink-0">
               <div>

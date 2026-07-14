@@ -391,9 +391,9 @@ export default function UserManagementPage() {
 
       {/* ADD / EDIT MODAL */}
       {modalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setModalOpen(false)}></div>
-          <div className="relative w-full max-w-3xl card rounded-2xl p-8 border border-white/10 bg-[#121212] shadow-2xl overflow-y-auto max-h-[90vh] scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-auto" onClick={(e) => e.target === e.currentTarget && setModalOpen(false)}>
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm pointer-events-auto" onClick={() => setModalOpen(false)}></div>
+          <div className="relative w-full max-w-3xl card rounded-2xl p-8 border border-white/10 bg-[#121212] shadow-2xl overflow-y-auto max-h-[90vh] scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent pointer-events-auto">
             
             <button 
               onClick={() => setModalOpen(false)}
@@ -533,9 +533,9 @@ export default function UserManagementPage() {
 
       {/* DEACTIVATE CONFIRMATION DIALOG */}
       {deactivateConfirm && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setDeactivateConfirm(null)}></div>
-          <div className="relative w-full max-w-sm card rounded-2xl p-6 border border-white/10 bg-[#121212] shadow-2xl flex flex-col items-center text-center">
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 pointer-events-auto" onClick={(e) => e.target === e.currentTarget && setDeactivateConfirm(null)}>
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm pointer-events-auto" onClick={() => setDeactivateConfirm(null)}></div>
+          <div className="relative w-full max-w-sm card rounded-2xl p-6 border border-white/10 bg-[#121212] shadow-2xl flex flex-col items-center text-center pointer-events-auto">
             
             <div className="w-16 h-16 rounded-full bg-red-500/10 border border-red-500/20 flex items-center justify-center mb-4 text-red-500">
               <AlertTriangle size={32} />

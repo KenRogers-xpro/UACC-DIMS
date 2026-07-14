@@ -365,8 +365,8 @@ export default function ReportsPage() {
 
       {/* PREVIEW MODAL */}
       {previewOpen && (
-        <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4 backdrop-blur-sm overflow-y-auto">
-          <div className="card rounded-2xl w-full max-w-2xl bg-[var(--bg-surface)] flex flex-col my-8 shadow-2xl overflow-hidden relative shadow-black/50 animate-fadeIn">
+        <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4 backdrop-blur-sm pointer-events-auto" onClick={(e) => e.target === e.currentTarget && setPreviewOpen(false)}>
+          <div className="card rounded-2xl w-full max-w-2xl bg-[var(--bg-surface)] flex flex-col my-8 shadow-2xl overflow-hidden relative shadow-black/50 animate-fadeIn pointer-events-auto max-h-[90vh] overflow-y-auto">
             
             {/* Modal Actions */}
             <div className="absolute top-4 right-4 z-20 flex gap-2">

@@ -416,9 +416,9 @@ export default function DocumentsPage() {
 
       {/* UPLOAD DOCUMENT MODAL */}
       {uploadModalOpen && (
-        <div className="fixed inset-0 bg-black/60 z-50 flex items-end sm:items-center justify-center backdrop-blur-sm p-0 sm:p-6">
+        <div className="fixed inset-0 bg-black/60 z-50 flex items-end sm:items-center justify-center backdrop-blur-sm p-0 sm:p-6 pointer-events-auto" onClick={(e) => e.target === e.currentTarget && setUploadModalOpen(false)}>
           <div
-            className="card w-full sm:max-w-2xl sm:mx-auto sm:rounded-2xl rounded-t-2xl rounded-b-none flex flex-col gap-5 max-h-[92vh] overflow-y-auto p-5 sm:p-8"
+            className="card w-full sm:max-w-2xl sm:mx-auto sm:rounded-2xl rounded-t-2xl rounded-b-none flex flex-col gap-5 max-h-[92vh] overflow-y-auto p-5 sm:p-8 pointer-events-auto"
             style={{ background: 'var(--bg-surface)' }}
           >
             {/* Modal Header */}
