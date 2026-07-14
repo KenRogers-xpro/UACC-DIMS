@@ -6,7 +6,7 @@ import Link from 'next/link'
 import PageHeader from '@/components/ui/PageHeader'
 import Button from '@/components/ui/Button'
 import { useDrafts } from '@/lib/useDrafts'
-import { apiCall } from '@/lib/api'
+import api from '@/lib/api'
 import { AlertCircle, CheckCircle, Save, Send } from 'lucide-react'
 
 export default function DraftEditorPage() {
@@ -29,8 +29,11 @@ export default function DraftEditorPage() {
     }
     
     // Fetch draft
-    apiCall(`/api/drafts/mine`).then(drafts => {
-      const found = drafts.find(d => d.id === id)
+    api.get(`/drafts/mine`).then(drafts => {
+      // response might be { data: drafts } or just drafts depending on the api structure.
+      // let's assume it's like others and returns just the array or res.data
+      const draftList = drafts.data || drafts || []
+      const found = draftList.find(d => d.id === id)
       if (found) {
         setDraft(found)
         setTitle(found.title)
@@ -66,10 +69,7 @@ export default function DraftEditorPage() {
   const handleCreate = async () => {
     setSaving(true)
     try {
-      const res = await apiCall('/api/drafts', {
-        method: 'POST',
-        body: JSON.stringify({ title, content })
-      })
+      const res = await api.post('/drafts', { title, content })
       const newDraft = res.data || res
       router.push(`/dashboard/drafts/${newDraft.id}`)
     } catch (err) {
