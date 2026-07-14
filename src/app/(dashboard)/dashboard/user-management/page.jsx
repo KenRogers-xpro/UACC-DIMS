@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState, useMemo, useEffect } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
 import {
   UserPlus, Users, UserCheck, UserX, Building2, Search, Pencil, 
   MoreVertical, AlertTriangle, Eye, EyeOff, Check, X
@@ -390,10 +391,23 @@ export default function UserManagementPage() {
       </div>
 
       {/* ADD / EDIT MODAL */}
-      {modalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <AnimatePresence>
+        {modalOpen && (
+        <motion.div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.2, ease: 'easeOut' }}
+        >
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setModalOpen(false)}></div>
-          <div className="relative w-full max-w-3xl card rounded-2xl p-8 border border-white/10 bg-[#121212] shadow-2xl overflow-y-auto max-h-[90vh] scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
+          <motion.div
+            className="relative w-full max-w-3xl card rounded-2xl p-8 border border-white/10 bg-[#121212] shadow-2xl overflow-y-auto max-h-[90vh] scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent"
+            initial={{ opacity: 0, scale: 0.96, y: 12 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.96, y: 12 }}
+            transition={{ duration: 0.22, ease: 'easeOut' }}
+          >
             
             <button 
               onClick={() => setModalOpen(false)}
@@ -527,15 +541,29 @@ export default function UserManagementPage() {
                 {editingUser ? "Save User" : "Add User"}
               </button>
             </div>
-          </div>
-        </div>
-      )}
+          </motion.div>
+        </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* DEACTIVATE CONFIRMATION DIALOG */}
-      {deactivateConfirm && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
+      <AnimatePresence>
+        {deactivateConfirm && (
+        <motion.div
+          className="fixed inset-0 z-[60] flex items-center justify-center p-4"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.2, ease: 'easeOut' }}
+        >
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setDeactivateConfirm(null)}></div>
-          <div className="relative w-full max-w-sm card rounded-2xl p-6 border border-white/10 bg-[#121212] shadow-2xl flex flex-col items-center text-center">
+          <motion.div
+            className="relative w-full max-w-sm card rounded-2xl p-6 border border-white/10 bg-[#121212] shadow-2xl flex flex-col items-center text-center"
+            initial={{ opacity: 0, scale: 0.96, y: 12 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.96, y: 12 }}
+            transition={{ duration: 0.22, ease: 'easeOut' }}
+          >
             
             <div className="w-16 h-16 rounded-full bg-red-500/10 border border-red-500/20 flex items-center justify-center mb-4 text-red-500">
               <AlertTriangle size={32} />
@@ -560,9 +588,10 @@ export default function UserManagementPage() {
                 Deactivate
               </button>
             </div>
-          </div>
-        </div>
-      )}
+          </motion.div>
+        </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* TOAST NOTIFICATION */}
       {toast && (

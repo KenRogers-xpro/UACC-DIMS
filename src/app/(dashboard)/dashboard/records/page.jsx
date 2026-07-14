@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState, useMemo, useEffect } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
 import {
   BookOpen, ArrowLeftRight, BarChart2, Plus, Download,
   ArrowDownCircle, ArrowUpCircle, ArrowRightCircle, Lock,
@@ -1021,10 +1022,23 @@ export default function RecordsExecutivePage() {
       )}
 
       {/* REGISTER NEW DOCUMENT MODAL */}
-      {registerModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <AnimatePresence>
+        {registerModalOpen && (
+        <motion.div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.2, ease: 'easeOut' }}
+        >
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setRegisterModalOpen(false)}></div>
-          <div className="relative w-full max-w-2xl bg-[#0b1120] rounded-2xl shadow-2xl border border-white/10 flex flex-col max-h-[90vh] animate-in zoom-in-95 duration-200">
+          <motion.div
+            className="relative w-full max-w-2xl bg-[#0b1120] rounded-2xl shadow-2xl border border-white/10 flex flex-col max-h-[90vh]"
+            initial={{ opacity: 0, scale: 0.96, y: 12 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.96, y: 12 }}
+            transition={{ duration: 0.22, ease: 'easeOut' }}
+          >
             
             <div className="p-5 border-b border-white/10 bg-white/[0.02] rounded-t-2xl flex justify-between items-center">
               <div>
@@ -1201,9 +1215,10 @@ export default function RecordsExecutivePage() {
               </button>
             </div>
 
-          </div>
-        </div>
-      )}
+          </motion.div>
+        </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* TOAST NOTIFICATION */}
       {toast && (

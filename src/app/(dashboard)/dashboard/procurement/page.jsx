@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useMemo, useEffect, useRef } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
 import {
   Plus,
   ClipboardList,
@@ -473,9 +474,22 @@ export default function ProcurementPage() {
       </div>
 
       {/* REVIEW MODAL */}
-      {reviewModalOpen && selectedRequest && (
-        <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4 backdrop-blur-sm overflow-y-auto">
-          <div className="card rounded-2xl w-full max-w-2xl bg-[var(--bg-surface)] flex flex-col my-8 shadow-2xl relative shadow-black/50">
+      <AnimatePresence>
+        {reviewModalOpen && selectedRequest && (
+        <motion.div
+          className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4 backdrop-blur-sm overflow-y-auto"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.2, ease: 'easeOut' }}
+        >
+          <motion.div
+            className="card rounded-2xl w-full max-w-2xl bg-[var(--bg-surface)] flex flex-col my-8 shadow-2xl relative shadow-black/50"
+            initial={{ opacity: 0, scale: 0.96, y: 12 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.96, y: 12 }}
+            transition={{ duration: 0.22, ease: 'easeOut' }}
+          >
             {/* Header */}
             <div className="p-6 pb-4 flex items-center justify-between sticky top-0 bg-[var(--bg-surface)] z-10 rounded-t-2xl">
               <div className="flex items-center gap-4">
@@ -681,9 +695,10 @@ export default function ProcurementPage() {
                 </div>
               </div>
             )}
-          </div>
-        </div>
-      )}
+          </motion.div>
+        </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* SUBMIT NEW REQUEST SLIDE-IN PANEL */}
       {submitFormOpen && (

@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, useMemo, useEffect, useRef } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
 import {
   FolderOpen,
   Search,
@@ -13,34 +14,30 @@ import {
   ChevronLeft,
   ChevronRight,
   CheckCircle,
-  FileText
+  FileText,
+  Sparkles
 } from 'lucide-react'
 import { useAuth } from '@/lib/auth-context'
-import { useCirculation } from '@/lib/useCirculation'
+import { useDocuments } from '@/lib/useDocuments'
 
 import PageHeader from '@/components/ui/PageHeader'
 import Badge from '@/components/ui/Badge'
 import Button from '@/components/ui/Button'
 import EmptyState from '@/components/ui/EmptyState'
-
-// MOCK DATA
-const MOCK_DOCUMENTS = [
-  { id: 1,  title: 'UACC IT Policy 2026',              category: 'POLICY',   department: 'FINANCE_AND_ADMINISTRATION', uploadedBy: 'Patrick Katusabe',  fileSize: '2.4 MB', createdAt: '2026-06-20', filePath: '#' },
-  { id: 2,  title: 'Q1 2026 Operations Report',        category: 'REPORT',   department: 'OPERATIONS',                uploadedBy: 'Staff Operations',  fileSize: '5.1 MB', createdAt: '2026-06-18', filePath: '#' },
-  { id: 3,  title: 'Engineering Maintenance Manual v3', category: 'FORM',     department: 'ENGINEERING',               uploadedBy: 'Head Engineering',  fileSize: '8.7 MB', createdAt: '2026-06-15', filePath: '#' },
-  { id: 4,  title: 'Staff Code of Conduct',            category: 'POLICY',   department: 'GENERAL_MANAGER_OFFICE',    uploadedBy: 'Lt. Gen. Lakara',   fileSize: '1.2 MB', createdAt: '2026-06-10', filePath: '#' },
-  { id: 5,  title: 'Procurement Guidelines 2026',      category: 'POLICY',   department: 'FINANCE_AND_ADMINISTRATION', uploadedBy: 'Patrick Katusabe', fileSize: '0.9 MB', createdAt: '2026-06-08', filePath: '#' },
-  { id: 6,  title: 'NCNDA — UACC & ADS Agreement',    category: 'CONTRACT', department: 'GENERAL_MANAGER_OFFICE',    uploadedBy: 'Lt. Gen. Lakara',   fileSize: '3.3 MB', createdAt: '2025-05-19', filePath: '#' },
-  { id: 7,  title: 'Fleet Maintenance Schedule Q2',   category: 'REPORT',   department: 'ENGINEERING',               uploadedBy: 'Head Engineering',  fileSize: '2.1 MB', createdAt: '2026-05-14', filePath: '#' },
-  { id: 8,  title: 'Staff Meeting Minutes — May 2026', category: 'MEMO',     department: 'FINANCE_AND_ADMINISTRATION', uploadedBy: 'Patrick Katusabe', fileSize: '0.4 MB', createdAt: '2026-05-10', filePath: '#' },
-  { id: 9,  title: 'Cargo Operations SOP',            category: 'FORM',     department: 'OPERATIONS',                uploadedBy: 'Staff Operations',  fileSize: '4.6 MB', createdAt: '2026-05-05', filePath: '#' },
-  { id: 10, title: 'Annual Safety Audit Report 2025', category: 'REPORT',   department: 'GENERAL_MANAGER_OFFICE',    uploadedBy: 'Internal Auditor',  fileSize: '6.8 MB', createdAt: '2026-04-28', filePath: '#' },
-  { id: 11, title: 'Pilot Training Records — Q1',    category: 'FORM',     department: 'PILOTS',                    uploadedBy: 'Head Engineering',  fileSize: '3.2 MB', createdAt: '2026-04-20', filePath: '#' },
-  { id: 12, title: 'Board Resolution — April 2026',  category: 'MEMO',     department: 'GENERAL_MANAGER_OFFICE',    uploadedBy: 'Lt. Gen. Lakara',   fileSize: '0.7 MB', createdAt: '2026-04-15', filePath: '#' },
-]
+import DocumentViewerModal from '@/components/documents/DocumentViewerModal'
 
 const CATEGORIES = ['All', 'POLICY', 'REPORT', 'MEMO', 'CONTRACT', 'FORM', 'OTHER']
-const DEPARTMENTS = ['All', 'GENERAL_MANAGER_OFFICE', 'FINANCE_AND_ADMINISTRATION', 'ENGINEERING', 'PILOTS', 'OPERATIONS']
+const DEPARTMENTS = [
+  'All', 'GENERAL_MANAGER_OFFICE', 'FINANCE_AND_ADMINISTRATION', 'ENGINEERING', 'PILOTS',
+  'OPERATIONS', 'HUMAN_RESOURCES', 'FINANCE_AND_ACCOUNTS', 'MARKETING',
+]
+
+const formatFileSize = (bytes) => {
+  if (bytes === null || bytes === undefined) return ''
+  if (bytes < 1024) return `${bytes} B`
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
+}
 
 // FORMATTING HELPERS
 const formatDept = (dept) => {
@@ -83,7 +80,11 @@ const getCategoryColor = (category) => {
 
 export default function DocumentsPage() {
   const { user } = useAuth()
-  const { initiateCirculation } = useCirculation()
+  const {
+    documents, pagination, fetchDocuments, semanticSearch,
+    uploadDocument, updateDocument, submitDocument, deleteDocument,
+  } = useDocuments()
+  const [semanticActive, setSemanticActive] = useState(false)
 
   // STATE MANAGEMENT
   const [searchTerm, setSearchTerm] = useState('')
@@ -91,6 +92,7 @@ export default function DocumentsPage() {
   const [departmentFilter, setDepartmentFilter] = useState('All')
   const [currentPage, setCurrentPage] = useState(1)
   const [uploadModalOpen, setUploadModalOpen] = useState(false)
+  const [previewDoc, setPreviewDoc] = useState(null)
 
   // UPLOAD FORM STATE
   const [newTitle, setNewTitle] = useState('')
@@ -98,17 +100,52 @@ export default function DocumentsPage() {
   const [newDepartment, setNewDepartment] = useState('GENERAL_MANAGER_OFFICE')
   const [newDescription, setNewDescription] = useState('')
   const [selectedFileName, setSelectedFileName] = useState('')
+  const [uploading, setUploading] = useState(false)
+  const [uploadError, setUploadError] = useState('')
 
   // TOAST STATE
   const [toastVisible, setToastVisible] = useState(false)
   const [toastMessage, setToastMessage] = useState('')
 
   const fileInputRef = useRef(null)
+  const itemsPerPage = 8
 
   // Reset page when filters change
   useEffect(() => {
     setCurrentPage(1)
   }, [searchTerm, categoryFilter, departmentFilter])
+
+  // Fetch from the real API whenever filters/page change
+  const refresh = useCallback(async () => {
+    const noOtherFilters = categoryFilter === 'All' && departmentFilter === 'All'
+    // Semantic (RAG) search only applies to the free-text query, and only
+    // when no category/department filter narrows things further — those
+    // still go through the plain keyword fetch below. Falls back to
+    // keyword search if the embeddings/Gemini path errors for any reason.
+    if (searchTerm.trim() && noOtherFilters) {
+      try {
+        await semanticSearch(searchTerm.trim(), itemsPerPage)
+        setSemanticActive(true)
+        return
+      } catch {
+        setSemanticActive(false)
+      }
+    } else {
+      setSemanticActive(false)
+    }
+
+    fetchDocuments({
+      search: searchTerm || undefined,
+      category: categoryFilter !== 'All' ? categoryFilter : undefined,
+      department: departmentFilter !== 'All' ? departmentFilter : undefined,
+      page: currentPage,
+      limit: itemsPerPage,
+    }).catch(() => {})
+  }, [fetchDocuments, semanticSearch, searchTerm, categoryFilter, departmentFilter, currentPage])
+
+  useEffect(() => {
+    refresh()
+  }, [refresh])
 
   // Auto-dismiss toast
   useEffect(() => {
@@ -120,23 +157,9 @@ export default function DocumentsPage() {
     }
   }, [toastVisible])
 
-  // REAL-TIME FILTERING (useMemo)
-  const filteredDocs = useMemo(() => {
-    return MOCK_DOCUMENTS.filter((doc) => {
-      const matchesSearch = doc.title.toLowerCase().includes(searchTerm.toLowerCase())
-      const matchesCategory = categoryFilter === 'All' || doc.category === categoryFilter
-      const matchesDepartment = departmentFilter === 'All' || doc.department === departmentFilter
-      return matchesSearch && matchesCategory && matchesDepartment
-    })
-  }, [searchTerm, categoryFilter, departmentFilter])
-
-  // PAGINATION (8 items per page)
-  const itemsPerPage = 8
-  const totalPages = Math.ceil(filteredDocs.length / itemsPerPage) || 1
-  const paginatedDocs = useMemo(() => {
-    const start = (currentPage - 1) * itemsPerPage
-    return filteredDocs.slice(start, start + itemsPerPage)
-  }, [filteredDocs, currentPage])
+  const paginatedDocs = documents
+  const totalPages = pagination?.totalPages || 1
+  const totalCount = pagination?.total || 0
 
   // HANDLERS
   const handleUploadAreaClick = () => {
@@ -160,22 +183,28 @@ export default function DocumentsPage() {
   const handleUploadSubmit = async (e) => {
     e.preventDefault()
     if (!newTitle.trim()) {
-      alert('Document Title is required.')
+      setUploadError('Document Title is required.')
+      return
+    }
+    if (!fileInputRef.current?.files?.[0]) {
+      setUploadError('Please choose a file to upload.')
       return
     }
 
+    setUploading(true)
+    setUploadError('')
     try {
-      // Initiate real circulation
-      await initiateCirculation({
-        title: newTitle,
-        sourceType: 'DOCUMENT',
-        sourceId: null, // Should be actual document ID after upload
-        toRole: 'GENERAL_MANAGER', // Defaulting for demo purposes
-        instruction: newDescription || 'Please review this new document.'
-      })
+      const fd = new FormData()
+      fd.append('title', newTitle.trim())
+      fd.append('category', newCategory)
+      fd.append('department', newDepartment)
+      fd.append('description', newDescription)
+      fd.append('file', fileInputRef.current.files[0])
+
+      const created = await uploadDocument(fd)
 
       // Trigger Success Toast
-      setToastMessage('Document uploaded and circulation initiated!')
+      setToastMessage('Document uploaded — it stays private to you until you submit it.')
       setToastVisible(true)
 
       // Close Modal
@@ -187,8 +216,39 @@ export default function DocumentsPage() {
       setNewDepartment('GENERAL_MANAGER_OFFICE')
       setNewDescription('')
       setSelectedFileName('')
+      if (fileInputRef.current) fileInputRef.current.value = ''
+
+      refresh()
+      // Open the new document immediately so there's no dead end after upload
+      setPreviewDoc(created)
     } catch (err) {
-      alert('Failed to initiate circulation: ' + err.message)
+      setUploadError(err.message || 'Failed to upload document')
+    } finally {
+      setUploading(false)
+    }
+  }
+
+  const handleSaveEdit = async (id, data) => {
+    const updated = await updateDocument(id, data)
+    refresh()
+    setPreviewDoc(updated)
+  }
+
+  const handleSubmitDoc = async (id, toRole, instruction) => {
+    const result = await submitDocument(id, toRole, instruction)
+    refresh()
+    setPreviewDoc(result?.document || null)
+  }
+
+  const handleDelete = async (doc) => {
+    try {
+      await deleteDocument(doc.id)
+      setToastMessage(`Deleted: ${doc.title}`)
+      setToastVisible(true)
+      refresh()
+    } catch (err) {
+      setToastMessage(err.message || 'Failed to delete document')
+      setToastVisible(true)
     }
   }
 
@@ -277,9 +337,20 @@ export default function DocumentsPage() {
         </div>
 
         {/* Result Count */}
-        <div className="text-xs" style={{ color: 'var(--text-muted)' }}>
-          Showing <span className="font-bold text-[var(--text-primary)]">{filteredDocs.length}</span> of{' '}
-          <span className="font-bold text-[var(--text-primary)]">{MOCK_DOCUMENTS.length}</span> documents
+        <div className="text-xs flex items-center gap-2" style={{ color: 'var(--text-muted)' }}>
+          {semanticActive ? (
+            <>
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-uacc-gold/10 text-uacc-gold border border-uacc-gold/20">
+                <Sparkles size={10} /> AI Search
+              </span>
+              <span><span className="font-bold text-[var(--text-primary)]">{paginatedDocs.length}</span> semantically relevant results</span>
+            </>
+          ) : (
+            <span>
+              Showing <span className="font-bold text-[var(--text-primary)]">{paginatedDocs.length}</span> of{' '}
+              <span className="font-bold text-[var(--text-primary)]">{totalCount}</span> documents
+            </span>
+          )}
         </div>
       </div>
 
@@ -318,7 +389,7 @@ export default function DocumentsPage() {
                               <span className="block font-bold text-white truncate max-w-[260px]" title={doc.title}>
                                 {doc.title}
                               </span>
-                              <span className="text-[10px]" style={{ color: 'var(--text-muted)' }}>{doc.fileSize}</span>
+                              <span className="text-[10px]" style={{ color: 'var(--text-muted)' }}>{formatFileSize(doc.fileSize)}</span>
                             </div>
                           </div>
                         </td>
@@ -327,17 +398,17 @@ export default function DocumentsPage() {
                         <td>
                           <div className="flex items-center gap-2">
                             <div className="w-6 h-6 rounded-full flex-shrink-0 flex items-center justify-center text-[10px] font-bold text-uacc-gold bg-uacc-gold/10 border border-uacc-gold/20">
-                              {doc.uploadedBy.charAt(0)}
+                              {doc.uploader?.name?.charAt(0) || '?'}
                             </div>
-                            <span className="text-xs truncate max-w-[120px]" title={doc.uploadedBy}>{doc.uploadedBy}</span>
+                            <span className="text-xs truncate max-w-[120px]" title={doc.uploader?.name}>{doc.uploader?.name || 'Unknown'}</span>
                           </div>
                         </td>
                         <td><span className="text-xs" style={{ color: 'var(--text-secondary)' }}>{formatDate(doc.createdAt)}</span></td>
                         <td>
                           <div className="flex items-center justify-end gap-1.5">
-                            <button className="p-1.5 hover:text-uacc-gold text-[var(--text-muted)] transition-colors cursor-pointer" title="View" onClick={() => triggerActionMessage('View', doc.title)}><Eye size={16} /></button>
-                            <button className="p-1.5 hover:text-blue-400 text-[var(--text-muted)] transition-colors cursor-pointer" title="Download" onClick={() => triggerActionMessage('Download', doc.title)}><Download size={16} /></button>
-                            <button className="p-1.5 hover:text-uacc-red text-[var(--text-muted)] transition-colors cursor-pointer" title="Delete" onClick={() => triggerActionMessage('Delete', doc.title)}><Trash2 size={16} /></button>
+                            <button className="p-1.5 hover:text-uacc-gold text-[var(--text-muted)] transition-colors cursor-pointer" title="View" onClick={() => setPreviewDoc(doc)}><Eye size={16} /></button>
+                            <a href={doc.filePath} target="_blank" rel="noopener noreferrer" download className="p-1.5 hover:text-blue-400 text-[var(--text-muted)] transition-colors cursor-pointer" title="Download"><Download size={16} /></a>
+                            <button className="p-1.5 hover:text-uacc-red text-[var(--text-muted)] transition-colors cursor-pointer" title="Delete" onClick={() => handleDelete(doc)}><Trash2 size={16} /></button>
                           </div>
                         </td>
                       </tr>
@@ -362,7 +433,7 @@ export default function DocumentsPage() {
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="font-bold text-white text-sm leading-snug" title={doc.title}>{doc.title}</p>
-                        <p className="text-[10px] mt-0.5" style={{ color: 'var(--text-muted)' }}>{doc.fileSize} · {formatDate(doc.createdAt)}</p>
+                        <p className="text-[10px] mt-0.5" style={{ color: 'var(--text-muted)' }}>{formatFileSize(doc.fileSize)} · {formatDate(doc.createdAt)}</p>
                       </div>
                     </div>
                     <div className="flex flex-wrap items-center gap-2">
@@ -374,14 +445,14 @@ export default function DocumentsPage() {
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <div className="w-5 h-5 rounded-full flex-shrink-0 flex items-center justify-center text-[9px] font-bold text-uacc-gold bg-uacc-gold/10 border border-uacc-gold/20">
-                          {doc.uploadedBy.charAt(0)}
+                          {doc.uploader?.name?.charAt(0) || '?'}
                         </div>
-                        <span className="text-xs" style={{ color: 'var(--text-muted)' }}>{doc.uploadedBy}</span>
+                        <span className="text-xs" style={{ color: 'var(--text-muted)' }}>{doc.uploader?.name || 'Unknown'}</span>
                       </div>
                       <div className="flex items-center gap-2">
-                        <button className="p-2 hover:text-uacc-gold text-[var(--text-muted)] transition-colors cursor-pointer rounded-lg hover:bg-white/5" onClick={() => triggerActionMessage('View', doc.title)}><Eye size={15} /></button>
-                        <button className="p-2 hover:text-blue-400 text-[var(--text-muted)] transition-colors cursor-pointer rounded-lg hover:bg-white/5" onClick={() => triggerActionMessage('Download', doc.title)}><Download size={15} /></button>
-                        <button className="p-2 hover:text-uacc-red text-[var(--text-muted)] transition-colors cursor-pointer rounded-lg hover:bg-white/5" onClick={() => triggerActionMessage('Delete', doc.title)}><Trash2 size={15} /></button>
+                        <button className="p-2 hover:text-uacc-gold text-[var(--text-muted)] transition-colors cursor-pointer rounded-lg hover:bg-white/5" onClick={() => setPreviewDoc(doc)}><Eye size={15} /></button>
+                        <a href={doc.filePath} target="_blank" rel="noopener noreferrer" download className="p-2 hover:text-blue-400 text-[var(--text-muted)] transition-colors cursor-pointer rounded-lg hover:bg-white/5" title="Download"><Download size={15} /></a>
+                        <button className="p-2 hover:text-uacc-red text-[var(--text-muted)] transition-colors cursor-pointer rounded-lg hover:bg-white/5" onClick={() => handleDelete(doc)}><Trash2 size={15} /></button>
                       </div>
                     </div>
                   </div>
@@ -400,7 +471,7 @@ export default function DocumentsPage() {
         )}
 
         {/* Pagination Bar */}
-        {filteredDocs.length > 0 && (
+        {totalCount > 0 && (
           <div className="px-4 md:px-6 py-4 flex flex-wrap items-center justify-between gap-3 border-t border-[var(--border-subtle)] flex-shrink-0">
             <div className="text-xs" style={{ color: 'var(--text-muted)' }}>
               Page <span className="font-bold text-[var(--text-primary)]">{currentPage}</span> of{' '}
@@ -415,11 +486,22 @@ export default function DocumentsPage() {
       </div>
 
       {/* UPLOAD DOCUMENT MODAL */}
-      {uploadModalOpen && (
-        <div className="fixed inset-0 bg-black/60 z-50 flex items-end sm:items-center justify-center backdrop-blur-sm p-0 sm:p-6">
-          <div
+      <AnimatePresence>
+        {uploadModalOpen && (
+        <motion.div
+          className="fixed inset-0 bg-black/60 z-50 flex items-end sm:items-center justify-center backdrop-blur-sm p-0 sm:p-6"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.2, ease: 'easeOut' }}
+        >
+          <motion.div
             className="card w-full sm:max-w-2xl sm:mx-auto sm:rounded-2xl rounded-t-2xl rounded-b-none flex flex-col gap-5 max-h-[92vh] overflow-y-auto p-5 sm:p-8"
             style={{ background: 'var(--bg-surface)' }}
+            initial={{ opacity: 0, scale: 0.96, y: 12 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.96, y: 12 }}
+            transition={{ duration: 0.22, ease: 'easeOut' }}
           >
             {/* Modal Header */}
             <div className="flex items-center justify-between">
@@ -548,10 +630,13 @@ export default function DocumentsPage() {
                 />
               </div>
 
+              {uploadError && <p className="text-xs text-uacc-red">{uploadError}</p>}
+
               {/* Modal Actions */}
               <div className="flex justify-end gap-3 mt-2">
                 <Button
                   variant="outline"
+                  type="button"
                   onClick={() => setUploadModalOpen(false)}
                 >
                   Cancel
@@ -559,14 +644,26 @@ export default function DocumentsPage() {
                 <Button
                   type="submit"
                   variant="primary"
+                  loading={uploading}
                 >
                   Upload Document
                 </Button>
               </div>
             </form>
-          </div>
-        </div>
-      )}
+          </motion.div>
+        </motion.div>
+        )}
+      </AnimatePresence>
+
+      <DocumentViewerModal
+        document={previewDoc}
+        isOpen={!!previewDoc}
+        onClose={() => setPreviewDoc(null)}
+        currentUserId={user?.id}
+        currentUserRole={user?.role}
+        onSave={handleSaveEdit}
+        onSubmit={handleSubmitDoc}
+      />
 
       {/* SUCCESS TOAST ALERT */}
       <div

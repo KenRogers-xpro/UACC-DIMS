@@ -64,20 +64,38 @@ export default function LandingPage() {
   const [activeSection, setActiveSection] = useState('home');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [chatMessages, setChatMessages] = useState([
-    { 
-      role: 'user', 
-      text: 'Which department submitted the most procurement requests last quarter?' 
+    {
+      role: 'user',
+      text: 'Which department submitted the most procurement requests last quarter?'
     },
-    { 
-      role: 'ai', 
-      text: 'Engineering submitted 14 requests — the highest of all departments. 11 were approved, 2 rejected due to cost limits, and 1 is pending GM review.' 
+    {
+      role: 'ai',
+      text: 'Engineering submitted 14 requests — the highest of all departments. 11 were approved, 2 rejected due to cost limits, and 1 is pending GM review.'
     }
   ]);
   const [isTyping, setIsTyping] = useState(false);
   const { theme, resolvedTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
 
+  // Scripted "composing live" reveal for the two seed chat messages —
+  // purely presentational, independent of the real askAI interaction below
+  const chatPreviewRef = React.useRef(null);
+  const chatPreviewInView = useInView(chatPreviewRef, { once: true, margin: '-100px' });
+  const [seedRevealCount, setSeedRevealCount] = useState(0);
+  const [seedTyping, setSeedTyping] = useState(false);
+
   useEffect(() => setMounted(true), []);
+
+  useEffect(() => {
+    if (!chatPreviewInView) return;
+    const timers = [
+      setTimeout(() => setSeedTyping(true), 400),
+      setTimeout(() => { setSeedTyping(false); setSeedRevealCount(1); }, 1000),
+      setTimeout(() => setSeedTyping(true), 1500),
+      setTimeout(() => { setSeedTyping(false); setSeedRevealCount(2); }, 2400),
+    ];
+    return () => timers.forEach(clearTimeout);
+  }, [chatPreviewInView]);
 
   // Use resolvedTheme for rendering decisions (avoids hydration mismatch)
   const currentTheme = mounted ? (resolvedTheme || 'dark') : 'dark';
@@ -352,15 +370,15 @@ export default function LandingPage() {
               <div className="flex flex-col gap-3 mb-6">
                 <div className="flex justify-between items-center px-4 py-2.5 rounded transition-all duration-300" style={{ background: 'var(--glass-bg)', border: '1px solid var(--border-subtle)' }}>
                   <span className="text-xs font-medium" style={{ color: 'var(--text-muted)' }}>Total Documents</span>
-                  <span className="text-base font-bold font-heading text-uacc-gold-light">847</span>
+                  <span className="text-base font-bold font-heading text-uacc-gold-light"><CountingNumber value={847} duration={1.5} /></span>
                 </div>
                 <div className="flex justify-between items-center px-4 py-2.5 rounded transition-all duration-300" style={{ background: 'var(--glass-bg)', border: '1px solid var(--border-subtle)' }}>
                   <span className="text-xs font-medium" style={{ color: 'var(--text-muted)' }}>Pending Approvals</span>
-                  <span className="text-base font-bold font-heading text-uacc-red">12</span>
+                  <span className="text-base font-bold font-heading text-uacc-red"><CountingNumber value={12} duration={1.5} /></span>
                 </div>
                 <div className="flex justify-between items-center px-4 py-2.5 rounded transition-all duration-300" style={{ background: 'var(--glass-bg)', border: '1px solid var(--border-subtle)' }}>
                   <span className="text-xs font-medium" style={{ color: 'var(--text-muted)' }}>Logs Today</span>
-                  <span className="text-base font-bold font-heading text-uacc-gold-light">34</span>
+                  <span className="text-base font-bold font-heading text-uacc-gold-light"><CountingNumber value={34} duration={1.5} /></span>
                 </div>
               </div>
 
@@ -636,7 +654,8 @@ export default function LandingPage() {
           </motion.div>
 
           {/* Right Column (chat interface card) */}
-          <motion.div 
+          <motion.div
+            ref={chatPreviewRef}
             className="md:col-span-6 w-full"
             initial={{ opacity: 0, scale: 0.95, y: 20 }}
             whileInView={{ opacity: 1, scale: 1, y: 0 }}
@@ -686,15 +705,21 @@ export default function LandingPage() {
 
               {/* Message Log Body */}
               <div className="p-6 h-[300px] overflow-y-auto flex flex-col gap-4">
-                {chatMessages.map((msg, idx) => (
-                  <motion.div 
-                    key={idx} 
+                {chatMessages.map((msg, idx) => {
+                  // The first two seed messages are held back until this card
+                  // scrolls into view, then revealed in sequence — see the
+                  // seedRevealCount effect above. Messages appended by askAI
+                  // (idx >= 2) always render immediately as before.
+                  if (idx < 2 && idx >= seedRevealCount) return null;
+                  return (
+                  <motion.div
+                    key={idx}
                     className={`flex flex-col max-w-[85%] ${
                       msg.role === 'user' ? 'self-end items-end' : 'self-start items-start'
                     }`}
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.4, delay: idx * 0.1 }}
+                    transition={{ duration: 0.4, delay: idx < 2 ? 0 : idx * 0.1 }}
                   >
                     <span className="text-[9px] font-heading uppercase mb-1 tracking-wider" style={{ color: 'var(--text-muted)' }}>
                       {msg.role === 'user' ? 'You' : 'DIMS AI Agent'}
@@ -713,10 +738,11 @@ export default function LandingPage() {
                       {msg.text}
                     </div>
                   </motion.div>
-                ))}
+                  );
+                })}
 
                 {/* Animated Typing Indicator */}
-                {isTyping && (
+                {(isTyping || seedTyping) && (
                   <div className="self-start flex flex-col items-start max-w-[85%]">
                     <span className="text-[9px] font-heading uppercase mb-1 tracking-wider" style={{ color: 'var(--text-muted)' }}>
                       DIMS AI Agent
@@ -772,187 +798,56 @@ export default function LandingPage() {
         </div>
 
         {/* 12 roles grid — 3 columns desktop, 2 mobile */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {/* Card 1 — General Manager */}
-          <div className="glass-panel rounded-lg p-6 hover:border-uacc-gold/40 hover:shadow-[inset_0_0_15px_rgba(201,151,58,0.05)] flex flex-col gap-4 text-left transition-all duration-300">
-            <div className="p-3 rounded bg-uacc-gold/10 text-uacc-gold w-fit">
-              <Briefcase size={20} />
-            </div>
-            <div className="flex flex-col gap-1">
-              <h3 className="font-heading text-base font-bold flex items-center gap-1.5" style={{ color: 'var(--text-primary)' }}>
-                General Manager <span className="text-xs">👔</span>
-              </h3>
-              <p className="text-xs leading-relaxed" style={{ color: 'var(--text-muted)' }}>
-                Full visibility across all departments
-              </p>
-            </div>
-          </div>
-
-          {/* Card 2 — Department Head */}
-          <div className="glass-panel rounded-lg p-6 hover:border-uacc-gold/40 hover:shadow-[inset_0_0_15px_rgba(201,151,58,0.05)] flex flex-col gap-4 text-left transition-all duration-300">
-            <div className="p-3 rounded bg-uacc-gold/10 text-uacc-gold w-fit">
-              <UserCheck size={20} />
-            </div>
-            <div className="flex flex-col gap-1">
-              <h3 className="font-heading text-base font-bold flex items-center gap-1.5" style={{ color: 'var(--text-primary)' }}>
-                Department Head <span className="text-xs">🏢</span>
-              </h3>
-              <p className="text-xs leading-relaxed" style={{ color: 'var(--text-muted)' }}>
-                Approve requests, review team logs
-              </p>
-            </div>
-          </div>
-
-          {/* Card 3 — Staff */}
-          <div className="glass-panel rounded-lg p-6 hover:border-uacc-gold/40 hover:shadow-[inset_0_0_15px_rgba(201,151,58,0.05)] flex flex-col gap-4 text-left transition-all duration-300">
-            <div className="p-3 rounded bg-uacc-gold/10 text-uacc-gold w-fit">
-              <User size={20} />
-            </div>
-            <div className="flex flex-col gap-1">
-              <h3 className="font-heading text-base font-bold flex items-center gap-1.5" style={{ color: 'var(--text-primary)' }}>
-                Staff <span className="text-xs">👤</span>
-              </h3>
-              <p className="text-xs leading-relaxed" style={{ color: 'var(--text-muted)' }}>
-                Submit requests, log activity, access documents
-              </p>
-            </div>
-          </div>
-
-          {/* Card 4 — IT Administrator */}
-          <div className="glass-panel rounded-lg p-6 hover:border-uacc-gold/40 hover:shadow-[inset_0_0_15px_rgba(201,151,58,0.05)] flex flex-col gap-4 text-left transition-all duration-300">
-            <div className="p-3 rounded bg-uacc-gold/10 text-uacc-gold w-fit">
-              <Settings size={20} />
-            </div>
-            <div className="flex flex-col gap-1">
-              <h3 className="font-heading text-base font-bold flex items-center gap-1.5" style={{ color: 'var(--text-primary)' }}>
-                IT Administrator <span className="text-xs">🖥️</span>
-              </h3>
-              <p className="text-xs leading-relaxed" style={{ color: 'var(--text-muted)' }}>
-                Manage users, roles, system settings
-              </p>
-            </div>
-          </div>
-
-          {/* Card 5 — Internal Auditor */}
-          <div className="glass-panel rounded-lg p-6 hover:border-uacc-gold/40 hover:shadow-[inset_0_0_15px_rgba(201,151,58,0.05)] flex flex-col gap-4 text-left transition-all duration-300">
-            <div className="p-3 rounded bg-uacc-gold/10 text-uacc-gold w-fit">
-              <Shield size={20} />
-            </div>
-            <div className="flex flex-col gap-1">
-              <h3 className="font-heading text-base font-bold flex items-center gap-1.5" style={{ color: 'var(--text-primary)' }}>
-                Internal Auditor <span className="text-xs">🔍</span>
-              </h3>
-              <p className="text-xs leading-relaxed" style={{ color: 'var(--text-muted)' }}>
-                Verify requests, full audit trail access
-              </p>
-            </div>
-          </div>
-
-          {/* Card 6 — Records Executive */}
-          <div className="glass-panel rounded-lg p-6 hover:border-uacc-gold/40 hover:shadow-[inset_0_0_15px_rgba(201,151,58,0.05)] flex flex-col gap-4 text-left transition-all duration-300">
-            <div className="p-3 rounded bg-uacc-gold/10 text-uacc-gold w-fit">
-              <FileArchive size={20} />
-            </div>
-            <div className="flex flex-col gap-1">
-              <h3 className="font-heading text-base font-bold flex items-center gap-1.5" style={{ color: 'var(--text-primary)' }}>
-                Records Executive <span className="text-xs">📁</span>
-              </h3>
-              <p className="text-xs leading-relaxed" style={{ color: 'var(--text-muted)' }}>
-                Universal document registry and filing
-              </p>
-            </div>
-          </div>
-
-          {/* Card 7 — Procurement Officer */}
-          <div className="glass-panel rounded-lg p-6 hover:border-uacc-gold/40 hover:shadow-[inset_0_0_15px_rgba(201,151,58,0.05)] flex flex-col gap-4 text-left transition-all duration-300">
-            <div className="p-3 rounded bg-uacc-gold/10 text-uacc-gold w-fit">
-              <ShoppingCart size={20} />
-            </div>
-            <div className="flex flex-col gap-1">
-              <h3 className="font-heading text-base font-bold flex items-center gap-1.5" style={{ color: 'var(--text-primary)' }}>
-                Procurement Officer <span className="text-xs">🛒</span>
-              </h3>
-              <p className="text-xs leading-relaxed" style={{ color: 'var(--text-muted)' }}>
-                Vendor verification, procurement processing
-              </p>
-            </div>
-          </div>
-
-          {/* Card 8 — HR Manager */}
-          <div className="glass-panel rounded-lg p-6 hover:border-uacc-gold/40 hover:shadow-[inset_0_0_15px_rgba(201,151,58,0.05)] flex flex-col gap-4 text-left transition-all duration-300">
-            <div className="p-3 rounded bg-uacc-gold/10 text-uacc-gold w-fit">
-              <Users size={20} />
-            </div>
-            <div className="flex flex-col gap-1">
-              <h3 className="font-heading text-base font-bold flex items-center gap-1.5" style={{ color: 'var(--text-primary)' }}>
-                HR Manager <span className="text-xs">🧑‍💼</span>
-              </h3>
-              <p className="text-xs leading-relaxed" style={{ color: 'var(--text-muted)' }}>
-                Staff records and HR workflow management
-              </p>
-            </div>
-          </div>
-
-          {/* Card 9 — Finance Director */}
-          <div className="glass-panel rounded-lg p-6 hover:border-uacc-gold/40 hover:shadow-[inset_0_0_15px_rgba(201,151,58,0.05)] flex flex-col gap-4 text-left transition-all duration-300">
-            <div className="p-3 rounded bg-uacc-gold/10 text-uacc-gold w-fit">
-              <TrendingUp size={20} />
-            </div>
-            <div className="flex flex-col gap-1">
-              <h3 className="font-heading text-base font-bold flex items-center gap-1.5" style={{ color: 'var(--text-primary)' }}>
-                Finance Director <span className="text-xs">💰</span>
-              </h3>
-              <p className="text-xs leading-relaxed" style={{ color: 'var(--text-muted)' }}>
-                Financial oversight and spend visibility
-              </p>
-            </div>
-          </div>
-
-          {/* Card 10 — Accounts Officer */}
-          <div className="glass-panel rounded-lg p-6 hover:border-uacc-gold/40 hover:shadow-[inset_0_0_15px_rgba(201,151,58,0.05)] flex flex-col gap-4 text-left transition-all duration-300">
-            <div className="p-3 rounded bg-uacc-gold/10 text-uacc-gold w-fit">
-              <DollarSign size={20} />
-            </div>
-            <div className="flex flex-col gap-1">
-              <h3 className="font-heading text-base font-bold flex items-center gap-1.5" style={{ color: 'var(--text-primary)' }}>
-                Accounts Officer <span className="text-xs">🧾</span>
-              </h3>
-              <p className="text-xs leading-relaxed" style={{ color: 'var(--text-muted)' }}>
-                Payment processing and reconciliation
-              </p>
-            </div>
-          </div>
-
-          {/* Card 11 — Marketing Officer */}
-          <div className="glass-panel rounded-lg p-6 hover:border-uacc-gold/40 hover:shadow-[inset_0_0_15px_rgba(201,151,58,0.05)] flex flex-col gap-4 text-left transition-all duration-300">
-            <div className="p-3 rounded bg-uacc-gold/10 text-uacc-gold w-fit">
-              <Megaphone size={20} />
-            </div>
-            <div className="flex flex-col gap-1">
-              <h3 className="font-heading text-base font-bold flex items-center gap-1.5" style={{ color: 'var(--text-primary)' }}>
-                Marketing Officer <span className="text-xs">📣</span>
-              </h3>
-              <p className="text-xs leading-relaxed" style={{ color: 'var(--text-muted)' }}>
-                Campaign materials and company announcements
-              </p>
-            </div>
-          </div>
-
-          {/* Card 12 — GM Personal Assistant */}
-          <div className="glass-panel rounded-lg p-6 hover:border-uacc-gold/40 hover:shadow-[inset_0_0_15px_rgba(201,151,58,0.05)] flex flex-col gap-4 text-left transition-all duration-300">
-            <div className="p-3 rounded bg-uacc-gold/10 text-uacc-gold w-fit">
-              <Inbox size={20} />
-            </div>
-            <div className="flex flex-col gap-1">
-              <h3 className="font-heading text-base font-bold flex items-center gap-1.5" style={{ color: 'var(--text-primary)' }}>
-                GM Personal Assistant <span className="text-xs">🗂️</span>
-              </h3>
-              <p className="text-xs leading-relaxed" style={{ color: 'var(--text-muted)' }}>
-                Document triage, scheduling, GM communications
-              </p>
-            </div>
-          </div>
-        </div>
+        <motion.div
+          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, margin: "-100px" }}
+          variants={{
+            hidden: { opacity: 0 },
+            visible: {
+              opacity: 1,
+              transition: { staggerChildren: 0.08, delayChildren: 0 }
+            }
+          }}
+        >
+          {[
+            { Icon: Briefcase, emoji: '👔', title: 'General Manager', desc: 'Full visibility across all departments' },
+            { Icon: UserCheck, emoji: '🏢', title: 'Department Head', desc: 'Approve requests, review team logs' },
+            { Icon: User, emoji: '👤', title: 'Staff', desc: 'Submit requests, log activity, access documents' },
+            { Icon: Settings, emoji: '🖥️', title: 'IT Administrator', desc: 'Manage users, roles, system settings' },
+            { Icon: Shield, emoji: '🔍', title: 'Internal Auditor', desc: 'Verify requests, full audit trail access' },
+            { Icon: FileArchive, emoji: '📁', title: 'Records Executive', desc: 'Universal document registry and filing' },
+            { Icon: ShoppingCart, emoji: '🛒', title: 'Procurement Officer', desc: 'Vendor verification, procurement processing' },
+            { Icon: Users, emoji: '🧑‍💼', title: 'HR Manager', desc: 'Staff records and HR workflow management' },
+            { Icon: TrendingUp, emoji: '💰', title: 'Finance Director', desc: 'Financial oversight and spend visibility' },
+            { Icon: DollarSign, emoji: '🧾', title: 'Accounts Officer', desc: 'Payment processing and reconciliation' },
+            { Icon: Megaphone, emoji: '📣', title: 'Marketing Officer', desc: 'Campaign materials and company announcements' },
+            { Icon: Inbox, emoji: '🗂️', title: 'GM Personal Assistant', desc: 'Document triage, scheduling, GM communications' },
+          ].map((role) => (
+            <motion.div
+              key={role.title}
+              className="glass-panel rounded-lg p-6 hover:border-uacc-gold/40 hover:shadow-[inset_0_0_15px_rgba(201,151,58,0.05)] flex flex-col gap-4 text-left transition-all duration-300"
+              variants={{
+                hidden: { opacity: 0, y: 20 },
+                visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: "easeOut" } }
+              }}
+              whileHover={{ translateY: -4, boxShadow: '0 12px 30px rgba(0,0,0,0.25)' }}
+            >
+              <div className="p-3 rounded bg-uacc-gold/10 text-uacc-gold w-fit">
+                <role.Icon size={20} />
+              </div>
+              <div className="flex flex-col gap-1">
+                <h3 className="font-heading text-base font-bold flex items-center gap-1.5" style={{ color: 'var(--text-primary)' }}>
+                  {role.title} <span className="text-xs">{role.emoji}</span>
+                </h3>
+                <p className="text-xs leading-relaxed" style={{ color: 'var(--text-muted)' }}>
+                  {role.desc}
+                </p>
+              </div>
+            </motion.div>
+          ))}
+        </motion.div>
       </section>
 
       {/* SECTION 7 — CTA Banner — intentionally dark red in both themes */}

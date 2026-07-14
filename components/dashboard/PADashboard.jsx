@@ -168,6 +168,7 @@ export default function PADashboard() {
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
         <StatCard
+          index={0}
           title="Pending Triage"
           value={loading ? '—' : stats.pendingTriage}
           icon={Inbox}
@@ -175,6 +176,7 @@ export default function PADashboard() {
           subtitle="Items awaiting your review"
         />
         <StatCard
+          index={1}
           title="Today's Schedule"
           value={loading ? '—' : stats.todaysSchedule}
           icon={CalendarClock}
@@ -182,6 +184,7 @@ export default function PADashboard() {
           subtitle="Events on today's calendar"
         />
         <StatCard
+          index={2}
           title="Drafts Awaiting GM Review"
           value={loading ? '—' : stats.draftsAwaitingReview}
           icon={FileText}
@@ -189,6 +192,7 @@ export default function PADashboard() {
           subtitle="Ready for the General Manager"
         />
         <StatCard
+          index={3}
           title="Drafts Rejected This Week"
           value={loading ? '—' : stats.draftsRejectedThisWeek}
           icon={FileText}

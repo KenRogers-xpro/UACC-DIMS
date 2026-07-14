@@ -1,10 +1,14 @@
-import React, { useEffect } from 'react'
+import React, { useEffect, useState } from 'react'
 import { FileText, ArrowRight } from 'lucide-react'
 import { useCirculation } from '@/lib/useCirculation'
+import { useAuth } from '@/lib/auth-context'
 import Button from '@/components/ui/Button'
+import SigningModal from '@/components/circulation/SigningModal'
 
 export default function DocumentsAwaitingAction() {
   const { inbox, loading, fetchInbox } = useCirculation()
+  const { user } = useAuth()
+  const [signingCirculationId, setSigningCirculationId] = useState(null)
 
   useEffect(() => {
     fetchInbox()
@@ -37,12 +41,24 @@ export default function DocumentsAwaitingAction() {
                 From: {doc.originator?.name || 'Unknown'} · Status: {doc.status}
               </p>
             </div>
-            <Button size="sm" className="shrink-0 flex items-center gap-2 bg-uacc-gold/10 hover:bg-uacc-gold/20 text-uacc-gold border border-uacc-gold/30">
+            <Button
+              size="sm"
+              onClick={() => setSigningCirculationId(doc.id)}
+              className="shrink-0 flex items-center gap-2 bg-uacc-gold/10 hover:bg-uacc-gold/20 text-uacc-gold border border-uacc-gold/30"
+            >
               Take Action <ArrowRight size={14} />
             </Button>
           </div>
         ))}
       </div>
+
+      <SigningModal
+        circulationId={signingCirculationId}
+        currentUserRole={user?.role}
+        isOpen={!!signingCirculationId}
+        onClose={() => setSigningCirculationId(null)}
+        onSigned={() => fetchInbox()}
+      />
     </div>
   )
 }

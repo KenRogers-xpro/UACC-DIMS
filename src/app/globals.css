@@ -285,6 +285,13 @@ a, button, input, [role="button"] {
 }
 
 /* ─── INPUTS ─────────────────────────────────────────────────────── */
+/* Baseline smooth focus transition for plain inputs/selects/textareas
+   that don't use the .input-field class (ad-hoc Tailwind-styled fields
+   across the dashboard pages) so focus glow/border never snaps instantly. */
+input, select, textarea {
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+}
+
 .input-field {
   background: var(--input-bg);
   border: 1px solid var(--input-border);

@@ -9,6 +9,7 @@ import { ClipboardList, Clock, TrendingUp, AlertCircle, ArrowRight, TrendingDown
 import PageHeader from '@/components/ui/PageHeader'
 import StatCard from '@/components/ui/StatCard'
 import Button from '@/components/ui/Button'
+import DocumentControlTool from '@/components/documents/DocumentControlTool'
 
 export default function ProcurementOfficerDashboard() {
   const { user } = useAuth()
@@ -52,6 +53,7 @@ export default function ProcurementOfficerDashboard() {
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
         <StatCard
+          index={0}
           title="Pending Verification"
           value={loading ? '—' : stats.pendingVerification}
           icon={ClipboardList}
@@ -59,6 +61,7 @@ export default function ProcurementOfficerDashboard() {
           subtitle="Awaiting your review"
         />
         <StatCard
+          index={1}
           title="Avg Processing Time"
           value={loading ? '—' : stats.averageProcessingTime}
           icon={Clock}
@@ -66,6 +69,7 @@ export default function ProcurementOfficerDashboard() {
           subtitle="Last 30 days"
         />
         <StatCard
+          index={2}
           title="Requests This Month"
           value={loading ? '—' : stats.requestsThisMonth?.count || 0}
           icon={(stats.requestsThisMonth?.percentChange || 0) >= 0 ? TrendingUp : TrendingDown}
@@ -73,6 +77,7 @@ export default function ProcurementOfficerDashboard() {
           subtitle={`${(stats.requestsThisMonth?.percentChange || 0) > 0 ? '+' : ''}${stats.requestsThisMonth?.percentChange || 0}% vs last month`}
         />
         <StatCard
+          index={3}
           title="Flagged for Clarification"
           value={loading ? '—' : stats.flaggedForClarification}
           icon={AlertCircle}
@@ -141,6 +146,13 @@ export default function ProcurementOfficerDashboard() {
           </div>
         </div>
       </div>
+
+      <DocumentControlTool
+        title="Procurement Documents"
+        description="Vendor quotes and procurement paperwork — private to you until submitted"
+        defaultCategory="CONTRACT"
+        defaultDepartment="FINANCE_AND_ADMINISTRATION"
+      />
     </div>
   )
 }
