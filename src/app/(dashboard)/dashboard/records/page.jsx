@@ -482,28 +482,28 @@ export default function RecordsExecutivePage() {
                   </button>
                 ))}
               </div>
-              <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)} className="bg-white/5 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none appearance-none">
+              <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)} className="rounded-lg px-3 py-1.5 text-xs focus:outline-none appearance-none" style={{ background: 'var(--input-bg)', border: '1px solid var(--input-border)', color: 'var(--input-text)' }}>
                 {STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
               </select>
-              <select value={filterPriority} onChange={(e) => setFilterPriority(e.target.value)} className="bg-white/5 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none appearance-none">
+              <select value={filterPriority} onChange={(e) => setFilterPriority(e.target.value)} className="rounded-lg px-3 py-1.5 text-xs focus:outline-none appearance-none" style={{ background: 'var(--input-bg)', border: '1px solid var(--input-border)', color: 'var(--input-text)' }}>
                 {PRIORITIES.map(p => <option key={p} value={p}>{p}</option>)}
               </select>
-              <select value={filterType} onChange={(e) => setFilterType(e.target.value)} className="bg-white/5 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none appearance-none">
+              <select value={filterType} onChange={(e) => setFilterType(e.target.value)} className="rounded-lg px-3 py-1.5 text-xs focus:outline-none appearance-none" style={{ background: 'var(--input-bg)', border: '1px solid var(--input-border)', color: 'var(--input-text)' }}>
                 {DOC_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
               </select>
-              <select value={filterMedium} onChange={(e) => setFilterMedium(e.target.value)} className="bg-white/5 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none appearance-none">
+              <select value={filterMedium} onChange={(e) => setFilterMedium(e.target.value)} className="rounded-lg px-3 py-1.5 text-xs focus:outline-none appearance-none" style={{ background: 'var(--input-bg)', border: '1px solid var(--input-border)', color: 'var(--input-text)' }}>
                 {MEDIUMS.map(m => <option key={m} value={m}>{m}</option>)}
               </select>
             </div>
             
             <div className="flex flex-wrap items-center justify-between gap-4">
               <div className="flex items-center gap-2">
-                <input type="date" value={filterDateFrom} onChange={(e) => setFilterDateFrom(e.target.value)} className="bg-white/5 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white/70" />
-                <span className="text-white/30 text-xs">to</span>
-                <input type="date" value={filterDateTo} onChange={(e) => setFilterDateTo(e.target.value)} className="bg-white/5 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white/70" />
+                <input type="date" value={filterDateFrom} onChange={(e) => setFilterDateFrom(e.target.value)} className="rounded-lg px-3 py-1.5 text-xs" style={{ background: 'var(--input-bg)', border: '1px solid var(--input-border)', color: 'var(--input-text)' }} />
+                <span className="text-xs" style={{ color: 'var(--text-muted)' }}>to</span>
+                <input type="date" value={filterDateTo} onChange={(e) => setFilterDateTo(e.target.value)} className="rounded-lg px-3 py-1.5 text-xs" style={{ background: 'var(--input-bg)', border: '1px solid var(--input-border)', color: 'var(--input-text)' }} />
               </div>
               <div className="flex items-center gap-4">
-                <span className="text-xs text-white/50">{filteredData.length} records found</span>
+                <span className="text-xs" style={{ color: 'var(--text-muted)' }}>{filteredData.length} records found</span>
                 <button 
                   onClick={() => {
                     setSearchQuery(''); setFilterType('ALL'); setFilterDirection('ALL'); 
@@ -1086,12 +1086,12 @@ export default function RecordsExecutivePage() {
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-xs font-bold text-white/70 mb-1.5 uppercase tracking-wider">Source *</label>
-                    <input type="text" required value={formData.source} onChange={e => setFormData({...formData, source: e.target.value})} placeholder="e.g. Ministry of Transport" className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2.5 text-sm text-white focus:outline-none focus:border-uacc-gold/50" />
+                    <label className="block text-xs font-bold mb-1.5 uppercase tracking-wider" style={{ color: 'var(--text-secondary)' }}>Source *</label>
+                    <input type="text" required value={formData.source} onChange={e => setFormData({...formData, source: e.target.value})} placeholder="e.g. Ministry of Transport" className="w-full rounded-lg px-4 py-2.5 text-sm focus:outline-none" style={{ background: 'var(--input-bg)', border: '1px solid var(--input-border)', color: 'var(--input-text)' }} />
                   </div>
                   <div>
-                    <label className="block text-xs font-bold text-white/70 mb-1.5 uppercase tracking-wider">Destination *</label>
-                    <input type="text" required value={formData.destination} onChange={e => setFormData({...formData, destination: e.target.value})} placeholder="e.g. GM Office" className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2.5 text-sm text-white focus:outline-none focus:border-uacc-gold/50" />
+                    <label className="block text-xs font-bold mb-1.5 uppercase tracking-wider" style={{ color: 'var(--text-secondary)' }}>Destination *</label>
+                    <input type="text" required value={formData.destination} onChange={e => setFormData({...formData, destination: e.target.value})} placeholder="e.g. GM Office" className="w-full rounded-lg px-4 py-2.5 text-sm focus:outline-none" style={{ background: 'var(--input-bg)', border: '1px solid var(--input-border)', color: 'var(--input-text)' }} />
                   </div>
                 </div>
 
@@ -1099,38 +1099,38 @@ export default function RecordsExecutivePage() {
                   {formData.direction === 'INCOMING' && (
                     <>
                       <div>
-                        <label className="block text-xs font-bold text-white/70 mb-1.5 uppercase tracking-wider">Received From / Attention</label>
-                        <input type="text" value={formData.receivedFrom} onChange={e => setFormData({...formData, receivedFrom: e.target.value})} placeholder="Name of courier or contact" className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2.5 text-sm text-white focus:outline-none focus:border-uacc-gold/50" />
+                        <label className="block text-xs font-bold mb-1.5 uppercase tracking-wider" style={{ color: 'var(--text-secondary)' }}>Received From / Attention</label>
+                        <input type="text" value={formData.receivedFrom} onChange={e => setFormData({...formData, receivedFrom: e.target.value})} placeholder="Name of courier or contact" className="w-full rounded-lg px-4 py-2.5 text-sm focus:outline-none" style={{ background: 'var(--input-bg)', border: '1px solid var(--input-border)', color: 'var(--input-text)' }} />
                       </div>
                       <div>
-                        <label className="block text-xs font-bold text-white/70 mb-1.5 uppercase tracking-wider">Date Received</label>
-                        <input type="date" value={formData.dateRegistered} onChange={e => setFormData({...formData, dateRegistered: e.target.value})} className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2.5 text-sm text-white/80 focus:outline-none focus:border-uacc-gold/50" />
+                        <label className="block text-xs font-bold mb-1.5 uppercase tracking-wider" style={{ color: 'var(--text-secondary)' }}>Date Received</label>
+                        <input type="date" value={formData.dateRegistered} onChange={e => setFormData({...formData, dateRegistered: e.target.value})} className="w-full rounded-lg px-4 py-2.5 text-sm focus:outline-none" style={{ background: 'var(--input-bg)', border: '1px solid var(--input-border)', color: 'var(--input-text)' }} />
                       </div>
                     </>
                   )}
                   {formData.direction === 'OUTGOING' && (
                     <>
                       <div>
-                        <label className="block text-xs font-bold text-white/70 mb-1.5 uppercase tracking-wider">Dispatched To / Attention</label>
-                        <input type="text" value={formData.receivedFrom} onChange={e => setFormData({...formData, receivedFrom: e.target.value})} placeholder="Name of recipient" className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2.5 text-sm text-white focus:outline-none focus:border-uacc-gold/50" />
+                        <label className="block text-xs font-bold mb-1.5 uppercase tracking-wider" style={{ color: 'var(--text-secondary)' }}>Dispatched To / Attention</label>
+                        <input type="text" value={formData.receivedFrom} onChange={e => setFormData({...formData, receivedFrom: e.target.value})} placeholder="Name of recipient" className="w-full rounded-lg px-4 py-2.5 text-sm focus:outline-none" style={{ background: 'var(--input-bg)', border: '1px solid var(--input-border)', color: 'var(--input-text)' }} />
                       </div>
                       <div>
-                        <label className="block text-xs font-bold text-white/70 mb-1.5 uppercase tracking-wider">Date Dispatched</label>
-                        <input type="date" value={formData.dateRegistered} onChange={e => setFormData({...formData, dateRegistered: e.target.value})} className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2.5 text-sm text-white/80 focus:outline-none focus:border-uacc-gold/50" />
+                        <label className="block text-xs font-bold mb-1.5 uppercase tracking-wider" style={{ color: 'var(--text-secondary)' }}>Date Dispatched</label>
+                        <input type="date" value={formData.dateRegistered} onChange={e => setFormData({...formData, dateRegistered: e.target.value})} className="w-full rounded-lg px-4 py-2.5 text-sm focus:outline-none" style={{ background: 'var(--input-bg)', border: '1px solid var(--input-border)', color: 'var(--input-text)' }} />
                       </div>
                     </>
                   )}
                   {formData.direction === 'INTERNAL' && (
                     <>
                       <div>
-                        <label className="block text-xs font-bold text-white/70 mb-1.5 uppercase tracking-wider">From Department</label>
-                        <select className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2.5 text-sm text-white focus:outline-none appearance-none">
+                        <label className="block text-xs font-bold mb-1.5 uppercase tracking-wider" style={{ color: 'var(--text-secondary)' }}>From Department</label>
+                        <select className="w-full rounded-lg px-4 py-2.5 text-sm focus:outline-none appearance-none" style={{ background: 'var(--input-bg)', border: '1px solid var(--input-border)', color: 'var(--input-text)' }}>
                           <option>Operations</option><option>Engineering</option><option>Finance</option>
                         </select>
                       </div>
                       <div>
-                        <label className="block text-xs font-bold text-white/70 mb-1.5 uppercase tracking-wider">To Department</label>
-                        <select className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2.5 text-sm text-white focus:outline-none appearance-none">
+                        <label className="block text-xs font-bold mb-1.5 uppercase tracking-wider" style={{ color: 'var(--text-secondary)' }}>To Department</label>
+                        <select className="w-full rounded-lg px-4 py-2.5 text-sm focus:outline-none appearance-none" style={{ background: 'var(--input-bg)', border: '1px solid var(--input-border)', color: 'var(--input-text)' }}>
                           <option>Finance</option><option>Operations</option><option>Engineering</option>
                         </select>
                       </div>
@@ -1168,8 +1168,12 @@ export default function RecordsExecutivePage() {
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-xs font-bold text-white/70 mb-1.5 uppercase tracking-wider">File Reference</label>
-                    <input type="text" value={formData.fileRef} onChange={e => setFormData({...formData, fileRef: e.target.value})} placeholder="e.g. UACC/LEGAL/2026/005" className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2.5 text-sm text-white focus:outline-none focus:border-uacc-gold/50" />
+                    <label className="block text-xs font-bold mb-1.5 uppercase tracking-wider" style={{ color: 'var(--text-secondary)' }}>File Reference *</label>
+                    <input type="text" value={formData.fileRef} onChange={e => setFormData({...formData, fileRef: e.target.value})} placeholder="e.g. UACC/LEGAL/2026/005" className="w-full rounded-lg px-4 py-2.5 text-sm focus:outline-none" style={{ background: 'var(--input-bg)', border: '1px solid var(--input-border)', color: 'var(--input-text)' }} />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold mb-1.5 uppercase tracking-wider" style={{ color: 'var(--text-secondary)' }}>Physical Location *</label>
+                    <input type="text" value={formData.physicalLocation} onChange={e => setFormData({...formData, physicalLocation: e.target.value})} placeholder="e.g. Cabinet 3, Shelf B" className="w-full rounded-lg px-4 py-2.5 text-sm focus:outline-none" style={{ background: 'var(--input-bg)', border: '1px solid var(--input-border)', color: 'var(--input-text)' }} />
                   </div>
                   <div>
                     <label className="block text-xs font-bold text-white/70 mb-1.5 uppercase tracking-wider">Physical Location</label>
