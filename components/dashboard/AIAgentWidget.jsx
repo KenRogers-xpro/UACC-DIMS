@@ -214,6 +214,35 @@ export default function AIAgentWidget() {
   }
 
   const renderAIText = (text) => {
+    if (text.includes('DRAFT_CREATED_ID:')) {
+      const parts = text.split(/DRAFT_CREATED_ID:([a-zA-Z0-9_-]+)/);
+      return parts.map((part, i) => {
+        if (i % 2 === 1) {
+          return (
+            <div key={i} className="my-3 p-3 bg-uacc-gold/10 border border-uacc-gold/30 rounded-lg flex flex-col gap-2">
+              <div className="flex items-center gap-2 text-uacc-gold font-semibold text-xs">
+                <Sparkles size={14} />
+                Draft Created
+              </div>
+              <p className="text-[10px] text-white/80">
+                This AI-generated draft requires your review before it can be submitted.
+              </p>
+              <a 
+                href={`/dashboard/drafts/${part}`} 
+                className="mt-1 text-[11px] bg-uacc-gold text-slate-900 px-3 py-1.5 rounded font-bold hover:bg-uacc-gold/90 transition-colors inline-block w-max"
+              >
+                Open in My Drafts
+              </a>
+            </div>
+          )
+        }
+        return part.trim() ? <div key={i}>{renderStandardAIText(part.trim())}</div> : null
+      })
+    }
+    return renderStandardAIText(text)
+  }
+
+  const renderStandardAIText = (text) => {
     return text.split('\n').map((line, i) => {
       if (!line.trim()) return <br key={i} />
       
