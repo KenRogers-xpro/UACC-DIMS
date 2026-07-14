@@ -79,7 +79,7 @@ const ROLE_AGENT_META = {
       "Show me recent audit trail activity",
     ],
   },
-  AUDITOR: {
+  INTERNAL_AUDITOR: {
     name:     'DIMS Audit Assistant',
     subtitle: 'Compliance · Anomaly detection · Evidence',
     color:    'text-rose-400',
@@ -132,7 +132,7 @@ const ROLE_SUGGESTIONS_WITH_META = {
     { text: "List all active users and their roles", category: 'System', icon: ShieldCheck, color: 'purple' },
     { text: "Give me a system health check", category: 'System', icon: ShieldCheck, color: 'purple' },
   ],
-  AUDITOR: [
+  INTERNAL_AUDITOR: [
     { text: "Detect any anomalies in the audit trail", category: 'System', icon: ShieldCheck, color: 'purple' },
     { text: "Show me the activity log compliance report", category: 'Reports', icon: BarChart2, color: 'blue' },
     { text: "Audit the procurement approval patterns", category: 'Reports', icon: BarChart2, color: 'blue' },

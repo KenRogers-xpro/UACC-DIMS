@@ -9,15 +9,25 @@ import EmptyState from '@/components/ui/EmptyState'
 import { SkeletonLine } from '@/components/ui/SkeletonLoader'
 import CirculationTimeline from '@/components/circulation/CirculationTimeline'
 import SigningModal from '@/components/circulation/SigningModal'
+import { useCirculation } from '@/lib/useCirculation'
 import api from '@/lib/api'
 
 const CATEGORIES = ['POLICY', 'REPORT', 'MEMO', 'CONTRACT', 'FORM', 'OTHER']
 const ANNOTATION_TYPES = ['COMMENT', 'NOTE', 'ACTION', 'FLAG']
+// Every role a document can be sent to.
 const SUBMIT_ROLES = [
-  { value: 'GENERAL_MANAGER',   label: 'General Manager' },
-  { value: 'DEPARTMENT_HEAD',   label: 'Department Head' },
-  { value: 'RECORDS_EXECUTIVE', label: 'Records Executive' },
-  { value: 'IT_ADMINISTRATOR',  label: 'IT Administrator' },
+  { value: 'GENERAL_MANAGER',       label: 'General Manager' },
+  { value: 'GM_PERSONAL_ASSISTANT', label: 'GM Personal Assistant' },
+  { value: 'DEPARTMENT_HEAD',       label: 'Department Head' },
+  { value: 'STAFF',                 label: 'Staff' },
+  { value: 'IT_ADMINISTRATOR',      label: 'IT Administrator' },
+  { value: 'INTERNAL_AUDITOR',      label: 'Internal Auditor' },
+  { value: 'RECORDS_EXECUTIVE',     label: 'Records Executive' },
+  { value: 'PROCUREMENT_OFFICER',   label: 'Procurement Officer' },
+  { value: 'HR_MANAGER',            label: 'HR Manager' },
+  { value: 'FINANCE_DIRECTOR',      label: 'Finance Director' },
+  { value: 'MARKETING_OFFICER',     label: 'Marketing Officer' },
+  { value: 'CORPORATION_SECRETARY', label: 'Corporation Secretary' },
 ]
 
 const TABS = [
@@ -79,6 +89,12 @@ export default function DocumentViewerModal({
   const [previewUrl, setPreviewUrl] = useState(null)
   const [previewLoading, setPreviewLoading] = useState(false)
   const [downloading, setDownloading] = useState(false)
+
+  const [showForwardForm, setShowForwardForm] = useState(false)
+  const [forwardToRole, setForwardToRole] = useState(SUBMIT_ROLES[0].value)
+  const [forwardInstruction, setForwardInstruction] = useState('')
+  const [forwarding, setForwarding] = useState(false)
+  const { addStep } = useCirculation()
 
   useEffect(() => {
     if (document) {
@@ -148,8 +164,16 @@ export default function DocumentViewerModal({
   useEffect(() => {
     if (!document) return
     if (tab === 'annotations' && annotations.length === 0) fetchAnnotations()
-    if (tab === 'signatures' && circulation === undefined) fetchCirculation()
-  }, [tab, document, annotations.length, circulation, fetchAnnotations, fetchCirculation])
+  }, [tab, document, annotations.length, fetchAnnotations])
+
+  // Circulation is fetched eagerly (not gated on the Signatures tab) since
+  // the footer's Send/Circulate button needs to know the current holder
+  // regardless of which tab is open.
+  useEffect(() => {
+    if (!document || !isOpen) return
+    fetchCirculation()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [document, isOpen])
 
   if (!document) return null
 
@@ -199,6 +223,32 @@ export default function DocumentViewerModal({
       setSaveError(err.message || 'Failed to submit document')
     } finally {
       setSubmitting(false)
+    }
+  }
+
+  // Forwards a document that's already in circulation to another role —
+  // reuses useCirculation's addStep (POST /api/circulation/:id/step)
+  // directly, per the brief, rather than a new send mechanism. The initial
+  // PRIVATE -> circulation handoff stays on the existing onSubmit path
+  // (POST /api/documents/:id/submit), since that also bridges into the
+  // registry and kicks off embedding ingestion — a plain
+  // initiateCirculation() call here would silently skip both.
+  const handleForward = async () => {
+    setForwarding(true)
+    setSaveError('')
+    try {
+      await addStep(circulation.id, {
+        toRole: forwardToRole,
+        instruction: forwardInstruction || `Forwarded "${document.title}" for review.`,
+        stepType: 'FORWARD',
+      })
+      setShowForwardForm(false)
+      setForwardInstruction('')
+      await fetchCirculation()
+    } catch (err) {
+      setSaveError(err.message || 'Failed to forward document')
+    } finally {
+      setForwarding(false)
     }
   }
 
@@ -472,12 +522,51 @@ export default function DocumentViewerModal({
               )}
             </div>
 
+            {/* Forward dialog — shown regardless of active tab, unlike the
+                submit-for-circulation panel which lives inside the Preview
+                tab's body */}
+            {showForwardForm && (
+              <div className="px-5 pb-5 flex-shrink-0">
+                <div className="rounded-lg p-4 flex flex-col gap-3 border" style={{ borderColor: 'var(--border-gold)', background: 'rgba(201,151,58,0.05)' }}>
+                  <p className="text-xs font-semibold" style={{ color: 'var(--text-primary)' }}>
+                    Send / Circulate — currently with {currentUserRole?.replace(/_/g, ' ')}
+                  </p>
+                  <div>
+                    <label className="block text-[10px] uppercase tracking-wider font-semibold mb-1.5" style={{ color: 'var(--text-muted)' }}>
+                      Forward to
+                    </label>
+                    <select className="input-field w-full" value={forwardToRole} onChange={(e) => setForwardToRole(e.target.value)}>
+                      {SUBMIT_ROLES.map((r) => <option key={r.value} value={r.value}>{r.label}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-[10px] uppercase tracking-wider font-semibold mb-1.5" style={{ color: 'var(--text-muted)' }}>
+                      Instruction (optional)
+                    </label>
+                    <textarea
+                      className="input-field w-full"
+                      rows={2}
+                      value={forwardInstruction}
+                      onChange={(e) => setForwardInstruction(e.target.value)}
+                      placeholder="Please review and action."
+                    />
+                  </div>
+                  {saveError && <p className="text-xs text-uacc-red">{saveError}</p>}
+                </div>
+              </div>
+            )}
+
             {/* Footer actions */}
             <div className="p-5 border-t flex items-center justify-end gap-3 flex-shrink-0" style={{ borderColor: 'var(--border-subtle)' }}>
+              {!editing && !showSubmitForm && !showForwardForm && (
+                <Button variant="outline" icon={Download} onClick={handleDownload} loading={downloading}>
+                  Download
+                </Button>
+              )}
               {canEdit && !editing && !showSubmitForm && (
                 <>
                   <Button variant="outline" icon={Pencil} onClick={() => setEditing(true)}>Edit</Button>
-                  <Button variant="primary" icon={Send} onClick={() => setShowSubmitForm(true)}>Submit</Button>
+                  <Button variant="primary" icon={Send} onClick={() => setShowSubmitForm(true)}>Send / Circulate</Button>
                 </>
               )}
               {editing && (
@@ -496,10 +585,18 @@ export default function DocumentViewerModal({
                   </Button>
                 </>
               )}
-              {!canEdit && !editing && !showSubmitForm && (
-                <Button variant="outline" icon={Download} onClick={handleDownload} loading={downloading}>
-                  Download
+              {!canEdit && !editing && !showSubmitForm && canSign && !showForwardForm && (
+                <Button variant="primary" icon={Send} onClick={() => setShowForwardForm(true)}>
+                  Send / Circulate
                 </Button>
+              )}
+              {showForwardForm && (
+                <>
+                  <Button variant="outline" onClick={() => setShowForwardForm(false)}>Cancel</Button>
+                  <Button variant="primary" icon={Send} onClick={handleForward} loading={forwarding}>
+                    Confirm Forward
+                  </Button>
+                </>
               )}
             </div>
           </motion.div>

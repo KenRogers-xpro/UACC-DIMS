@@ -21,6 +21,8 @@ import {
   Inbox,
   CalendarClock,
   FileText,
+  MessageSquare,
+  Megaphone,
   X,
 } from 'lucide-react'
 
@@ -31,23 +33,23 @@ const NAV_ITEMS = [
     href: '/dashboard',
     icon: LayoutDashboard,
     roles: ['GENERAL_MANAGER', 'DEPARTMENT_HEAD', 'STAFF',
-            'IT_ADMINISTRATOR', 'AUDITOR', 'HR_MANAGER',
-            'FINANCE_DIRECTOR', 'ACCOUNTS_OFFICER', 'MARKETING_OFFICER'],
+            'IT_ADMINISTRATOR', 'INTERNAL_AUDITOR', 'HR_MANAGER',
+            'FINANCE_DIRECTOR', 'MARKETING_OFFICER'],
   },
   {
     label: 'Documents',
     href: '/dashboard/documents',
     icon: FolderOpen,
     roles: ['GENERAL_MANAGER', 'DEPARTMENT_HEAD', 'STAFF',
-            'IT_ADMINISTRATOR', 'AUDITOR', 'HR_MANAGER',
-            'FINANCE_DIRECTOR', 'ACCOUNTS_OFFICER', 'MARKETING_OFFICER'],
+            'IT_ADMINISTRATOR', 'INTERNAL_AUDITOR', 'HR_MANAGER',
+            'FINANCE_DIRECTOR', 'MARKETING_OFFICER'],
   },
   {
     label: 'Records',
     href: '/dashboard/records',
     icon: BookOpen,
     roles: ['GENERAL_MANAGER', 'DEPARTMENT_HEAD', 'STAFF',
-            'IT_ADMINISTRATOR', 'AUDITOR', 'RECORDS_EXECUTIVE'],
+            'IT_ADMINISTRATOR', 'INTERNAL_AUDITOR', 'RECORDS_EXECUTIVE'],
     badge: 'NEW',
   },
   {
@@ -62,15 +64,31 @@ const NAV_ITEMS = [
     href: '/dashboard/activity-logs',
     icon: Clock,
     roles: ['GENERAL_MANAGER', 'DEPARTMENT_HEAD', 'STAFF',
-            'IT_ADMINISTRATOR', 'AUDITOR', 'HR_MANAGER',
-            'FINANCE_DIRECTOR', 'ACCOUNTS_OFFICER', 'MARKETING_OFFICER'],
+            'IT_ADMINISTRATOR', 'INTERNAL_AUDITOR', 'HR_MANAGER',
+            'FINANCE_DIRECTOR', 'MARKETING_OFFICER'],
   },
   {
     label: 'Reports',
     href: '/dashboard/reports',
     icon: BarChart2,
     roles: ['GENERAL_MANAGER', 'DEPARTMENT_HEAD', 'IT_ADMINISTRATOR',
-            'AUDITOR'],
+            'INTERNAL_AUDITOR'],
+  },
+  {
+    label: 'Messages',
+    href: '/dashboard/messages',
+    icon: MessageSquare,
+    roles: ['GENERAL_MANAGER', 'DEPARTMENT_HEAD', 'STAFF',
+            'IT_ADMINISTRATOR', 'INTERNAL_AUDITOR', 'RECORDS_EXECUTIVE',
+            'HR_MANAGER', 'FINANCE_DIRECTOR', 'MARKETING_OFFICER'],
+  },
+  {
+    label: 'Announcements',
+    href: '/dashboard/announcements',
+    icon: Megaphone,
+    roles: ['GENERAL_MANAGER', 'DEPARTMENT_HEAD', 'STAFF',
+            'IT_ADMINISTRATOR', 'INTERNAL_AUDITOR', 'RECORDS_EXECUTIVE',
+            'HR_MANAGER', 'FINANCE_DIRECTOR', 'MARKETING_OFFICER'],
   },
   {
     label: 'User Management',
@@ -82,7 +100,7 @@ const NAV_ITEMS = [
     label: 'Audit Trail',
     href: '/dashboard/audit-trail',
     icon: ShieldCheck,
-    roles: ['AUDITOR', 'GENERAL_MANAGER', 'IT_ADMINISTRATOR'],
+    roles: ['INTERNAL_AUDITOR', 'GENERAL_MANAGER', 'IT_ADMINISTRATOR'],
   },
   {
     label: 'AI Agent',
@@ -94,20 +112,33 @@ const NAV_ITEMS = [
 ]
 
 const BOTTOM_NAV_ITEMS_ROLES = ['GENERAL_MANAGER', 'DEPARTMENT_HEAD', 'STAFF',
-                                 'IT_ADMINISTRATOR', 'AUDITOR']
+                                 'IT_ADMINISTRATOR', 'INTERNAL_AUDITOR']
 
 const PA_NAV_ITEMS = [
-  { label: 'Dashboard',  href: '/dashboard',            icon: LayoutDashboard },
-  { label: 'GM Inbox',   href: '/dashboard/pa-inbox',   icon: Inbox },
-  { label: 'Schedule',   href: '/dashboard/schedule',   icon: CalendarClock },
-  { label: 'Drafts',     href: '/dashboard/drafts',     icon: FileText },
-  { label: 'Documents',  href: '/dashboard/documents',  icon: FolderOpen },
+  { label: 'Dashboard',      href: '/dashboard',                icon: LayoutDashboard },
+  { label: 'GM Inbox',       href: '/dashboard/pa-inbox',        icon: Inbox },
+  { label: 'Schedule',       href: '/dashboard/schedule',        icon: CalendarClock },
+  { label: 'Drafts',         href: '/dashboard/drafts',          icon: FileText },
+  { label: 'Documents',      href: '/dashboard/documents',       icon: FolderOpen },
+  { label: 'Messages',       href: '/dashboard/messages',        icon: MessageSquare },
+  { label: 'Announcements',  href: '/dashboard/announcements',   icon: Megaphone },
 ]
 
 const PO_NAV_ITEMS = [
-  { label: 'Dashboard',     href: '/dashboard',                 icon: LayoutDashboard },
-  { label: 'Procurement',   href: '/dashboard/procurement',     icon: ClipboardList },
-  { label: 'Activity Logs', href: '/dashboard/activity-logs',   icon: Clock },
+  { label: 'Dashboard',      href: '/dashboard',                 icon: LayoutDashboard },
+  { label: 'Procurement',    href: '/dashboard/procurement',     icon: ClipboardList },
+  { label: 'Activity Logs',  href: '/dashboard/activity-logs',   icon: Clock },
+  { label: 'Messages',       href: '/dashboard/messages',        icon: MessageSquare },
+  { label: 'Announcements',  href: '/dashboard/announcements',   icon: Megaphone },
+]
+
+// Governance-scoped nav — deliberately no procurement/finance modules.
+const CS_NAV_ITEMS = [
+  { label: 'Dashboard',      href: '/dashboard',                 icon: LayoutDashboard },
+  { label: 'Documents',      href: '/dashboard/documents',       icon: FolderOpen },
+  { label: 'Records',        href: '/dashboard/records',         icon: BookOpen },
+  { label: 'Messages',       href: '/dashboard/messages',        icon: MessageSquare },
+  { label: 'Announcements',  href: '/dashboard/announcements',   icon: Megaphone },
 ]
 
 const ROLE_META = {
@@ -116,13 +147,13 @@ const ROLE_META = {
   DEPARTMENT_HEAD:       { label: 'Department Head',       color: 'text-blue-400',     dot: 'bg-blue-400' },
   STAFF:                 { label: 'Staff',                 color: 'text-emerald-400',  dot: 'bg-emerald-400' },
   IT_ADMINISTRATOR:      { label: 'IT Administrator',      color: 'text-purple-400',   dot: 'bg-purple-400' },
-  AUDITOR:               { label: 'Auditor',               color: 'text-rose-400',     dot: 'bg-rose-400' },
+  INTERNAL_AUDITOR:      { label: 'Internal Auditor',      color: 'text-rose-400',     dot: 'bg-rose-400' },
   RECORDS_EXECUTIVE:     { label: 'Records Executive',     color: 'text-amber-400',    dot: 'bg-amber-400' },
   PROCUREMENT_OFFICER:   { label: 'Procurement Officer',   color: 'text-orange-400',   dot: 'bg-orange-400' },
   HR_MANAGER:            { label: 'HR Manager',            color: 'text-pink-400',     dot: 'bg-pink-400' },
   FINANCE_DIRECTOR:      { label: 'Finance Director',       color: 'text-teal-400',     dot: 'bg-teal-400' },
-  ACCOUNTS_OFFICER:      { label: 'Accounts Officer',       color: 'text-cyan-400',     dot: 'bg-cyan-400' },
   MARKETING_OFFICER:     { label: 'Marketing Officer',      color: 'text-indigo-400',   dot: 'bg-indigo-400' },
+  CORPORATION_SECRETARY: { label: 'Corporation Secretary',  color: 'text-sky-400',      dot: 'bg-sky-400' },
 }
 
 export default function Sidebar({ user, collapsed, mobileOpen, onMobileClose }) {
@@ -135,6 +166,8 @@ export default function Sidebar({ user, collapsed, mobileOpen, onMobileClose }) 
     ? PA_NAV_ITEMS
     : userRole === 'PROCUREMENT_OFFICER'
     ? PO_NAV_ITEMS
+    : userRole === 'CORPORATION_SECRETARY'
+    ? CS_NAV_ITEMS
     : NAV_ITEMS.filter(item => item.roles.includes(userRole))
 
   const showSettings = userRole !== 'PROCUREMENT_OFFICER'

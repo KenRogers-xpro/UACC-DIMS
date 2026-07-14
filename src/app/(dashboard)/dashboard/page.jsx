@@ -36,8 +36,9 @@ import PADashboard from '@/components/dashboard/PADashboard'
 import ProcurementOfficerDashboard from '@/components/dashboard/ProcurementOfficerDashboard'
 import HRManagerDashboard from '@/components/dashboard/HRManagerDashboard'
 import FinanceDirectorDashboard from '@/components/dashboard/FinanceDirectorDashboard'
-import AccountsOfficerDashboard from '@/components/dashboard/AccountsOfficerDashboard'
+import CorporationSecretaryDashboard from '@/components/dashboard/CorporationSecretaryDashboard'
 import MarketingOfficerDashboard from '@/components/dashboard/MarketingOfficerDashboard'
+import InternalAuditorDashboard from '@/components/dashboard/InternalAuditorDashboard'
 
 // HELPER FUNCTIONS
 const formatDept = (dept) => {
@@ -217,8 +218,12 @@ export default function DashboardHome() {
     return <FinanceDirectorDashboard />
   }
 
-  if (user?.role === 'ACCOUNTS_OFFICER') {
-    return <AccountsOfficerDashboard />
+  if (user?.role === 'CORPORATION_SECRETARY') {
+    return <CorporationSecretaryDashboard />
+  }
+
+  if (user?.role === 'INTERNAL_AUDITOR') {
+    return <InternalAuditorDashboard />
   }
 
   if (user?.role === 'MARKETING_OFFICER') {

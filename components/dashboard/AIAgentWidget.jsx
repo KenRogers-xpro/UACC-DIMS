@@ -66,7 +66,7 @@ const ROLE_AGENT_META = {
       "Show me recent audit trail activity",
     ],
   },
-  AUDITOR: {
+  INTERNAL_AUDITOR: {
     name:     'Audit Assistant',
     subtitle: 'Compliance & Anomalies',
     color:    'text-rose-400',

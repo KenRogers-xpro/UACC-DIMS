@@ -29,9 +29,9 @@ import {
   ShoppingCart,
   Users,
   TrendingUp,
-  DollarSign,
   Megaphone,
   Inbox,
+  ScrollText,
 } from 'lucide-react';
 
 // Helper component for animated number counting
@@ -821,7 +821,7 @@ export default function LandingPage() {
             { Icon: ShoppingCart, emoji: '🛒', title: 'Procurement Officer', desc: 'Vendor verification, procurement processing' },
             { Icon: Users, emoji: '🧑‍💼', title: 'HR Manager', desc: 'Staff records and HR workflow management' },
             { Icon: TrendingUp, emoji: '💰', title: 'Finance Director', desc: 'Financial oversight and spend visibility' },
-            { Icon: DollarSign, emoji: '🧾', title: 'Accounts Officer', desc: 'Payment processing and reconciliation' },
+            { Icon: ScrollText, emoji: '📋', title: 'Corporation Secretary', desc: 'Board affairs, governance records, and executive correspondence' },
             { Icon: Megaphone, emoji: '📣', title: 'Marketing Officer', desc: 'Campaign materials and company announcements' },
             { Icon: Inbox, emoji: '🗂️', title: 'GM Personal Assistant', desc: 'Document triage, scheduling, GM communications' },
           ].map((role) => (
