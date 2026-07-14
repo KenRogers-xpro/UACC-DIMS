@@ -34,6 +34,10 @@ import Badge from '@/components/ui/Badge'
 import Button from '@/components/ui/Button'
 import PADashboard from '@/components/dashboard/PADashboard'
 import ProcurementOfficerDashboard from '@/components/dashboard/ProcurementOfficerDashboard'
+import HRManagerDashboard from '@/components/dashboard/HRManagerDashboard'
+import FinanceDirectorDashboard from '@/components/dashboard/FinanceDirectorDashboard'
+import AccountsOfficerDashboard from '@/components/dashboard/AccountsOfficerDashboard'
+import MarketingOfficerDashboard from '@/components/dashboard/MarketingOfficerDashboard'
 
 // HELPER FUNCTIONS
 const formatDept = (dept) => {
@@ -205,6 +209,22 @@ export default function DashboardHome() {
     return <ProcurementOfficerDashboard />
   }
 
+  if (user?.role === 'HR_MANAGER') {
+    return <HRManagerDashboard />
+  }
+
+  if (user?.role === 'FINANCE_DIRECTOR') {
+    return <FinanceDirectorDashboard />
+  }
+
+  if (user?.role === 'ACCOUNTS_OFFICER') {
+    return <AccountsOfficerDashboard />
+  }
+
+  if (user?.role === 'MARKETING_OFFICER') {
+    return <MarketingOfficerDashboard />
+  }
+
   const greeting = (() => {
     const h = new Date().getHours()
     if (h < 12) return 'Good morning'
@@ -223,6 +243,7 @@ export default function DashboardHome() {
       {/* ROW 1 — STAT CARDS */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard
+          index={0}
           title="Total Documents"
           value={stats.totalDocuments}
           icon={FolderOpen}
@@ -230,6 +251,7 @@ export default function DashboardHome() {
           subtitle={`${stats.documentsThisMonth || 0} this month`}
         />
         <StatCard
+          index={1}
           title="Pending Approvals"
           value={stats.pendingApprovals}
           icon={ClipboardList}
@@ -237,6 +259,7 @@ export default function DashboardHome() {
           subtitle="Awaiting GM sign-off"
         />
         <StatCard
+          index={2}
           title="Logs Today"
           value={stats.activityLogsToday}
           icon={Clock}
@@ -244,6 +267,7 @@ export default function DashboardHome() {
           subtitle="Across all departments"
         />
         <StatCard
+          index={3}
           title="Total Staff"
           value={stats.totalStaff}
           icon={Users}

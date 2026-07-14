@@ -1,6 +1,6 @@
 // Proxy AI requests to backend API so frontend does not access DB directly
 
-const BACKEND_API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'
+const BACKEND_API = process.env.NEXT_PUBLIC_API_URL || 'https://uacc-dims-backend.onrender.com/api'
 
 async function forward(request) {
   const url = new URL(request.url)

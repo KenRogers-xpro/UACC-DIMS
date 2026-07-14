@@ -6,7 +6,7 @@ import { useInView } from 'framer-motion';
 import { useRef } from 'react';
 
 export default function StatCard({ title, value, subtitle, icon: Icon,
-                                   accentColor = 'gold', trend }) {
+                                   accentColor = 'gold', trend, index = 0 }) {
   const [displayValue, setDisplayValue] = useState(0);
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true });
@@ -42,7 +42,7 @@ export default function StatCard({ title, value, subtitle, icon: Icon,
       style={{ borderLeft: `3px solid ${c.bar}` }}
       initial={{ opacity: 0, y: 20 }}
       animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
-      transition={{ duration: 0.6, ease: "easeOut" }}
+      transition={{ duration: 0.6, delay: index * 0.08, ease: "easeOut" }}
       whileHover={{ y: -2, boxShadow: 'var(--shadow-card-hover)' }}
     >
       {/* Top row: icon + title */}

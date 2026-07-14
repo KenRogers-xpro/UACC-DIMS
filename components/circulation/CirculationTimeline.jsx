@@ -1,4 +1,5 @@
 import React from 'react'
+import { motion } from 'framer-motion'
 import { ArrowRight, CheckCircle2 } from 'lucide-react'
 
 export default function CirculationTimeline({ circulation }) {
@@ -11,7 +12,14 @@ export default function CirculationTimeline({ circulation }) {
         const stepRoman = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X'][step.stepNumber - 1] || step.stepNumber
 
         return (
-          <div key={step.id} className="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group">
+          <motion.div
+            key={step.id}
+            className="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group"
+            initial={{ opacity: 0, y: 24 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-40px" }}
+            transition={{ duration: 0.5, delay: idx * 0.12, ease: "easeOut" }}
+          >
             {/* Step Number Badge */}
             <div className="flex items-center justify-center w-6 h-6 rounded-full border border-uacc-gold/50 bg-[#0b1120] text-uacc-gold text-xs font-bold shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 shadow-[0_0_10px_rgba(201,151,58,0.2)] z-10 absolute left-[-28px] top-4 md:static">
               {stepRoman}
@@ -60,7 +68,7 @@ export default function CirculationTimeline({ circulation }) {
                 </span>
               </div>
             </div>
-          </div>
+          </motion.div>
         )
       })}
     </div>

@@ -1,5 +1,7 @@
 'use client'
 import { useState } from 'react'
+import { usePathname } from 'next/navigation'
+import { motion, AnimatePresence } from 'framer-motion'
 import Sidebar from '@/components/dashboard/Sidebar'
 import TopBar from '@/components/dashboard/TopBar'
 import AIAgentWidget from '@/components/dashboard/AIAgentWidget'
@@ -8,6 +10,7 @@ import DocumentsAwaitingAction from '@/components/circulation/DocumentsAwaitingA
 export default function DashboardShell({ children, user }) {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false)
+  const pathname = usePathname()
 
   return (
     <div
@@ -51,7 +54,17 @@ export default function DashboardShell({ children, user }) {
           style={{ color: 'var(--text-secondary)' }}
         >
           <DocumentsAwaitingAction />
-          {children}
+          <AnimatePresence mode="popLayout" initial={false}>
+            <motion.div
+              key={pathname}
+              initial={{ opacity: 0, x: 8 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -8 }}
+              transition={{ duration: 0.2, ease: 'easeInOut' }}
+            >
+              {children}
+            </motion.div>
+          </AnimatePresence>
         </main>
 
         {/* Footer strip */}

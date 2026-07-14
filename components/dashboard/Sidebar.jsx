@@ -31,14 +31,16 @@ const NAV_ITEMS = [
     href: '/dashboard',
     icon: LayoutDashboard,
     roles: ['GENERAL_MANAGER', 'DEPARTMENT_HEAD', 'STAFF',
-            'IT_ADMINISTRATOR', 'AUDITOR'],
+            'IT_ADMINISTRATOR', 'AUDITOR', 'HR_MANAGER',
+            'FINANCE_DIRECTOR', 'ACCOUNTS_OFFICER', 'MARKETING_OFFICER'],
   },
   {
     label: 'Documents',
     href: '/dashboard/documents',
     icon: FolderOpen,
     roles: ['GENERAL_MANAGER', 'DEPARTMENT_HEAD', 'STAFF',
-            'IT_ADMINISTRATOR', 'AUDITOR'],
+            'IT_ADMINISTRATOR', 'AUDITOR', 'HR_MANAGER',
+            'FINANCE_DIRECTOR', 'ACCOUNTS_OFFICER', 'MARKETING_OFFICER'],
   },
   {
     label: 'Records',
@@ -60,7 +62,8 @@ const NAV_ITEMS = [
     href: '/dashboard/activity-logs',
     icon: Clock,
     roles: ['GENERAL_MANAGER', 'DEPARTMENT_HEAD', 'STAFF',
-            'IT_ADMINISTRATOR', 'AUDITOR'],
+            'IT_ADMINISTRATOR', 'AUDITOR', 'HR_MANAGER',
+            'FINANCE_DIRECTOR', 'ACCOUNTS_OFFICER', 'MARKETING_OFFICER'],
   },
   {
     label: 'Reports',
@@ -116,6 +119,10 @@ const ROLE_META = {
   AUDITOR:               { label: 'Auditor',               color: 'text-rose-400',     dot: 'bg-rose-400' },
   RECORDS_EXECUTIVE:     { label: 'Records Executive',     color: 'text-amber-400',    dot: 'bg-amber-400' },
   PROCUREMENT_OFFICER:   { label: 'Procurement Officer',   color: 'text-orange-400',   dot: 'bg-orange-400' },
+  HR_MANAGER:            { label: 'HR Manager',            color: 'text-pink-400',     dot: 'bg-pink-400' },
+  FINANCE_DIRECTOR:      { label: 'Finance Director',       color: 'text-teal-400',     dot: 'bg-teal-400' },
+  ACCOUNTS_OFFICER:      { label: 'Accounts Officer',       color: 'text-cyan-400',     dot: 'bg-cyan-400' },
+  MARKETING_OFFICER:     { label: 'Marketing Officer',      color: 'text-indigo-400',   dot: 'bg-indigo-400' },
 }
 
 export default function Sidebar({ user, collapsed, mobileOpen, onMobileClose }) {
