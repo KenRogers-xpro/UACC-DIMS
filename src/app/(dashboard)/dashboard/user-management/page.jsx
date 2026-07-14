@@ -273,7 +273,7 @@ export default function UserManagementPage() {
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2, ease: 'easeOut' }}
           >
             <motion.div
-              className="card rounded-2xl w-full max-w-lg p-6 flex flex-col gap-4"
+              className="card rounded-2xl w-full max-w-lg p-6 flex flex-col gap-4 max-h-[90vh] overflow-y-auto"
               style={{ background: 'var(--bg-surface)' }}
               initial={{ opacity: 0, scale: 0.96, y: 12 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.96, y: 12 }}
               transition={{ duration: 0.22, ease: 'easeOut' }}
@@ -286,7 +286,7 @@ export default function UserManagementPage() {
                 <input className="input-field w-full" placeholder="Full name" value={createForm.name} onChange={(e) => setCreateForm((f) => ({ ...f, name: e.target.value }))} />
                 <input className="input-field w-full" type="email" placeholder="Email" value={createForm.email} onChange={(e) => setCreateForm((f) => ({ ...f, email: e.target.value }))} />
                 <input className="input-field w-full" type="password" placeholder="Initial password (min 6 chars)" value={createForm.password} onChange={(e) => setCreateForm((f) => ({ ...f, password: e.target.value }))} />
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <select className="input-field w-full" value={createForm.role} onChange={(e) => setCreateForm((f) => ({ ...f, role: e.target.value }))}>
                     {ROLES.map((r) => <option key={r} value={r}>{formatEnum(r)}</option>)}
                   </select>
@@ -313,7 +313,7 @@ export default function UserManagementPage() {
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2, ease: 'easeOut' }}
           >
             <motion.div
-              className="card rounded-2xl w-full max-w-lg p-6 flex flex-col gap-4"
+              className="card rounded-2xl w-full max-w-lg p-6 flex flex-col gap-4 max-h-[90vh] overflow-y-auto"
               style={{ background: 'var(--bg-surface)' }}
               initial={{ opacity: 0, scale: 0.96, y: 12 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.96, y: 12 }}
               transition={{ duration: 0.22, ease: 'easeOut' }}
@@ -324,7 +324,7 @@ export default function UserManagementPage() {
               </div>
               <form onSubmit={handleSaveEdit} className="flex flex-col gap-3">
                 <input className="input-field w-full" placeholder="Full name" value={editForm.name} onChange={(e) => setEditForm((f) => ({ ...f, name: e.target.value }))} />
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <select className="input-field w-full" value={editForm.role} onChange={(e) => setEditForm((f) => ({ ...f, role: e.target.value }))}>
                     {ROLES.map((r) => <option key={r} value={r}>{formatEnum(r)}</option>)}
                   </select>

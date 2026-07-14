@@ -301,7 +301,7 @@ export default function AIAgentPage() {
         if (match.index > lastIndex) {
           parts.push(line.substring(lastIndex, match.index))
         }
-        parts.push(<strong key={match.index} className="font-bold text-white">{match[1]}</strong>)
+        parts.push(<strong key={match.index} className="font-bold text-[var(--text-primary)]">{match[1]}</strong>)
         lastIndex = boldRegex.lastIndex
       }
       if (lastIndex < line.length) {
@@ -315,11 +315,11 @@ export default function AIAgentPage() {
         return (
           <div key={i} className="flex items-start gap-2 my-1.5 pl-2">
             <span className={`${meta.color} mt-1.5 flex-shrink-0 text-xs`}>•</span>
-            <span className="text-white/90">{parts.length > 0 ? parts : cleanLine}</span>
+            <span className="text-[var(--text-primary)]">{parts.length > 0 ? parts : cleanLine}</span>
           </div>
         )
       }
-      return <p key={i} className="leading-relaxed mb-2 text-white/90">{lineContent}</p>
+      return <p key={i} className="leading-relaxed mb-2 text-[var(--text-primary)]">{lineContent}</p>
     })
   }
 
@@ -334,11 +334,11 @@ export default function AIAgentPage() {
               <Bot size={24} className={meta.color} />
             </div>
             <div>
-              <h2 className="text-white font-bold text-base leading-tight">{meta.name}</h2>
+              <h2 className="text-[var(--text-primary)] font-bold text-base leading-tight">{meta.name}</h2>
               <div className="flex items-center gap-2 mt-1">
-                <span className="text-[10px] text-white/50">Dynamic AI Agent</span>
+                <span className="text-[10px] text-[var(--text-muted)]">Dynamic AI Agent</span>
                 <span className={`w-1 h-1 rounded-full ${meta.bgColor} bg-white`}></span>
-                <span className="text-[10px] text-white/50">Claude SDK</span>
+                <span className="text-[10px] text-[var(--text-muted)]">Claude SDK</span>
               </div>
             </div>
           </div>
@@ -354,12 +354,12 @@ export default function AIAgentPage() {
           <div className="h-px w-full bg-white/5 mb-4"></div>
           
           <div className="space-y-3 mb-4">
-            <div className="flex items-center gap-2 text-xs text-white/60">
-              <ShieldCheck size={14} className="text-white/40" />
-              <span>User: <strong className="text-white font-medium">{user.name}</strong></span>
+            <div className="flex items-center gap-2 text-xs text-[var(--text-muted)]">
+              <ShieldCheck size={14} className="text-[var(--text-faint)]" />
+              <span>User: <strong className="text-[var(--text-primary)] font-medium">{user.name}</strong></span>
             </div>
-            <div className="flex items-center gap-2 text-xs text-white/60">
-              <Clock size={14} className="text-white/40" />
+            <div className="flex items-center gap-2 text-xs text-[var(--text-muted)]">
+              <Clock size={14} className="text-[var(--text-faint)]" />
               <span>Session Time: {getSessionTime()}</span>
             </div>
           </div>
@@ -374,7 +374,7 @@ export default function AIAgentPage() {
 
         {/* Dynamic Suggested Questions */}
         <div className="card rounded-xl p-5 mt-4 border border-white/5 bg-white/[0.02]">
-          <h3 className="text-[10px] uppercase tracking-wider text-white/40 font-bold mb-4">
+          <h3 className="text-[10px] uppercase tracking-wider text-[var(--text-faint)] font-bold mb-4">
             Suggested Tasks
           </h3>
           <div className="space-y-3">
@@ -390,7 +390,7 @@ export default function AIAgentPage() {
                     <Icon size={10} />
                     {q.category}
                   </div>
-                  <p className="text-xs text-white/80 leading-normal group-hover:text-white transition-colors">
+                  <p className="text-xs text-[var(--text-secondary)] leading-normal group-hover:text-[var(--text-primary)] transition-colors">
                     {q.text}
                   </p>
                 </button>
@@ -401,7 +401,7 @@ export default function AIAgentPage() {
 
         <button
           onClick={clearChat}
-          className="w-full mt-4 flex items-center justify-center gap-2 p-3 rounded-xl border border-white/10 text-white/60 hover:text-white hover:bg-white/5 transition-colors text-sm"
+          className="w-full mt-4 flex items-center justify-center gap-2 p-3 rounded-xl border border-white/10 text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-white/5 transition-colors text-sm"
         >
           <Trash2 size={16} />
           Clear Conversation
@@ -415,11 +415,11 @@ export default function AIAgentPage() {
       
       {/* Page Header */}
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-white mb-2 flex items-center gap-2">
+        <h1 className="text-2xl font-bold text-[var(--text-primary)] mb-2 flex items-center gap-2">
           <Bot className={meta.color} />
           AI Operational Agent
         </h1>
-        <p className="text-white/60 text-sm">
+        <p className="text-[var(--text-muted)] text-sm">
           Dynamic role-aware system intelligence tailored to your credentials.
         </p>
       </div>
@@ -442,7 +442,7 @@ export default function AIAgentPage() {
                   <Bot size={16} className={meta.color} />
                 </div>
                 <div>
-                  <h3 className="text-white font-bold text-sm">{meta.name}</h3>
+                  <h3 className="text-[var(--text-primary)] font-bold text-sm">{meta.name}</h3>
                   <div className="flex items-center gap-1.5 mt-0.5">
                     <span className="w-1.5 h-1.5 rounded-full bg-green-500"></span>
                     <span className="text-[10px] text-green-500 uppercase tracking-wider font-semibold">Active Session</span>
@@ -450,7 +450,7 @@ export default function AIAgentPage() {
                 </div>
               </div>
               <div className="flex items-center gap-4">
-                <span className="text-xs text-white/40">{messages.length} messages</span>
+                <span className="text-xs text-[var(--text-faint)]">{messages.length} messages</span>
               </div>
             </div>
 
@@ -466,15 +466,15 @@ export default function AIAgentPage() {
                         <Bot size={16} className={meta.color} />
                       </div>
                       <div className="flex flex-col gap-1.5">
-                        <span className="text-[9px] uppercase tracking-wider text-white/40 ml-1 font-semibold">
+                        <span className="text-[9px] uppercase tracking-wider text-[var(--text-faint)] ml-1 font-semibold">
                           {meta.name}
                         </span>
                         <div className={`bg-white/[0.03] border border-white/5 border-l-2 border-l-uacc-gold rounded-xl rounded-tl-sm px-4 py-3 shadow-sm backdrop-blur-sm`}>
-                          <div className="text-sm text-white/90 space-y-2">
+                          <div className="text-sm text-[var(--text-primary)] space-y-2">
                             {renderAIText(msg.text)}
                           </div>
                         </div>
-                        <span className="text-[10px] text-white/30 text-right mr-1">
+                        <span className="text-[10px] text-[var(--text-faint)] text-right mr-1">
                           {msg.timestamp}
                         </span>
                         
@@ -500,16 +500,16 @@ export default function AIAgentPage() {
                   {msg.role === 'user' && (
                     <div className="flex gap-3 max-w-[90%] md:max-w-[75%] flex-row-reverse">
                       <div className="w-8 h-8 rounded-full bg-white/10 flex-shrink-0 flex items-center justify-center mt-1 border border-white/15">
-                        <User size={16} className="text-white/60" />
+                        <User size={16} className="text-[var(--text-muted)]" />
                       </div>
                       <div className="flex flex-col gap-1.5 items-end">
-                        <span className="text-[9px] uppercase tracking-wider text-white/40 mr-1 font-semibold">
+                        <span className="text-[9px] uppercase tracking-wider text-[var(--text-faint)] mr-1 font-semibold">
                           You
                         </span>
                         <div className="bg-white/5 border border-white/10 rounded-xl rounded-tr-sm px-4 py-3 shadow-sm backdrop-blur-sm">
-                          <p className="text-sm text-white whitespace-pre-wrap">{msg.text}</p>
+                          <p className="text-sm text-[var(--text-primary)] whitespace-pre-wrap">{msg.text}</p>
                         </div>
-                        <span className="text-[10px] text-white/30 text-left ml-1">
+                        <span className="text-[10px] text-[var(--text-faint)] text-left ml-1">
                           {msg.timestamp}
                         </span>
                       </div>
@@ -525,7 +525,7 @@ export default function AIAgentPage() {
                     <Bot size={16} className={meta.color} />
                   </div>
                   <div className="flex flex-col gap-1.5">
-                    <span className="text-[9px] uppercase tracking-wider text-white/40 ml-1 font-semibold">
+                    <span className="text-[9px] uppercase tracking-wider text-[var(--text-faint)] ml-1 font-semibold">
                       {meta.name} is thinking...
                     </span>
                     <div className="bg-white/[0.03] border border-white/5 border-l-2 border-l-uacc-gold rounded-xl rounded-tl-sm px-5 py-4 w-fit">
@@ -551,7 +551,7 @@ export default function AIAgentPage() {
                   onKeyDown={handleKeyDown}
                   disabled={isTyping}
                   placeholder={`Ask about registry, procurement, activity logs, documents, etc...`}
-                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3.5 text-sm text-white placeholder:text-white/30 focus:outline-none focus:border-uacc-gold/50 focus:bg-white/10 transition-all resize-none overflow-hidden min-h-[48px]"
+                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3.5 text-sm text-[var(--text-primary)] placeholder:text-[var(--text-faint)] focus:outline-none focus:border-uacc-gold/50 focus:bg-white/10 transition-all resize-none overflow-hidden min-h-[48px]"
                   rows={1}
                 />
                 <button
@@ -563,7 +563,7 @@ export default function AIAgentPage() {
                 </button>
               </div>
               <div className="mt-3 text-center">
-                <p className="text-[9px] uppercase tracking-wider text-white/30 font-medium">
+                <p className="text-[9px] uppercase tracking-wider text-[var(--text-faint)] font-medium">
                   {meta.name} · Uganda Air Cargo Corporation · Confidential Internal Tool
                 </p>
               </div>

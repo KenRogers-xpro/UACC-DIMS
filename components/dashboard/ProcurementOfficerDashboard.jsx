@@ -111,9 +111,9 @@ export default function ProcurementOfficerDashboard() {
               <div className="text-xs text-muted py-4" style={{ color: 'var(--text-muted)' }}>Loading...</div>
             ) : stats.vendorBreakdown && stats.vendorBreakdown.length > 0 ? (
               stats.vendorBreakdown.map((v, i) => (
-                <div key={i} className="flex items-center justify-between p-3 rounded-lg border bg-black/10" style={{ borderColor: 'var(--border-subtle)' }}>
-                  <span className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>{v.vendor}</span>
-                  <span className="text-xs font-bold text-uacc-gold bg-uacc-gold/10 px-2 py-1 rounded-full">{v.count} requests</span>
+                <div key={i} className="flex items-center justify-between gap-3 p-3 rounded-lg border bg-black/10" style={{ borderColor: 'var(--border-subtle)' }}>
+                  <span className="text-sm font-semibold truncate min-w-0" style={{ color: 'var(--text-primary)' }}>{v.vendor}</span>
+                  <span className="text-xs font-bold text-uacc-gold bg-uacc-gold/10 px-2 py-1 rounded-full flex-shrink-0">{v.count} requests</span>
                 </div>
               ))
             ) : (

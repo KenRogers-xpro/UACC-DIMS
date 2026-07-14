@@ -175,17 +175,17 @@ export default function AuditTrailPage() {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
         <div>
           <div className="flex items-center gap-3 mb-1">
-            <h1 className="text-2xl font-bold text-white">System Audit Trail</h1>
+            <h1 className="text-2xl font-bold text-[var(--text-primary)]">System Audit Trail</h1>
             <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-red-500/20 text-red-400 border border-red-500/30 uppercase tracking-wider">
               Read Only
             </span>
           </div>
-          <p className="text-white/60 text-sm">Complete read-only record of all system actions — tamper-evident log</p>
+          <p className="text-[var(--text-muted)] text-sm">Complete read-only record of all system actions — tamper-evident log</p>
         </div>
         <button 
           onClick={handleExport}
           disabled={isExporting}
-          className="flex items-center justify-center gap-2 py-2 px-4 rounded-lg font-bold text-sm bg-white/5 border border-white/10 text-white hover:bg-white/10 transition-colors disabled:opacity-50"
+          className="flex items-center justify-center gap-2 py-2 px-4 rounded-lg font-bold text-sm bg-white/5 border border-white/10 text-[var(--text-primary)] hover:bg-white/10 transition-colors disabled:opacity-50"
         >
           <Download size={16} />
           {isExporting ? "Exporting..." : "Export PDF"}
@@ -203,19 +203,19 @@ export default function AuditTrailPage() {
       {/* STATS ROW */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         <div className="card rounded-xl p-4 border border-white/5 bg-white/[0.02]">
-          <p className="text-[10px] text-white/50 uppercase tracking-wider font-semibold mb-1">Total Actions</p>
+          <p className="text-[10px] text-[var(--text-muted)] uppercase tracking-wider font-semibold mb-1">Total Actions</p>
           <p className="text-2xl font-bold text-uacc-gold">{totalActions}</p>
         </div>
         <div className="card rounded-xl p-4 border border-white/5 bg-white/[0.02]">
-          <p className="text-[10px] text-white/50 uppercase tracking-wider font-semibold mb-1">Unique Users</p>
+          <p className="text-[10px] text-[var(--text-muted)] uppercase tracking-wider font-semibold mb-1">Unique Users</p>
           <p className="text-2xl font-bold text-blue-400">{uniqueUsersCount}</p>
         </div>
         <div className="card rounded-xl p-4 border border-white/5 bg-white/[0.02]">
-          <p className="text-[10px] text-white/50 uppercase tracking-wider font-semibold mb-1">Delete Actions</p>
-          <p className={`text-2xl font-bold ${deleteActions > 0 ? 'text-red-500' : 'text-white'}`}>{deleteActions}</p>
+          <p className="text-[10px] text-[var(--text-muted)] uppercase tracking-wider font-semibold mb-1">Delete Actions</p>
+          <p className={`text-2xl font-bold ${deleteActions > 0 ? 'text-red-500' : 'text-[var(--text-primary)]'}`}>{deleteActions}</p>
         </div>
         <div className="card rounded-xl p-4 border border-white/5 bg-white/[0.02]">
-          <p className="text-[10px] text-white/50 uppercase tracking-wider font-semibold mb-1">Today's Actions</p>
+          <p className="text-[10px] text-[var(--text-muted)] uppercase tracking-wider font-semibold mb-1">Today's Actions</p>
           <p className="text-2xl font-bold text-green-500">{todayActions}</p>
         </div>
       </div>
@@ -226,19 +226,19 @@ export default function AuditTrailPage() {
         {/* Row 1 */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-white/40" size={16} />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-faint)]" size={16} />
             <input 
               type="text" 
               placeholder="Search descriptions, users, modules..." 
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-white/5 border border-white/10 rounded-lg pl-10 pr-4 py-2 text-sm text-white placeholder:text-white/30 focus:outline-none focus:border-uacc-gold/50"
+              className="w-full bg-white/5 border border-white/10 rounded-lg pl-10 pr-4 py-2 text-sm text-[var(--text-primary)] placeholder:text-[var(--text-faint)] focus:outline-none focus:border-uacc-gold/50"
             />
           </div>
           <select
             value={filterUser}
             onChange={(e) => setFilterUser(e.target.value)}
-            className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-uacc-gold/50 appearance-none"
+            className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-sm text-[var(--text-primary)] focus:outline-none focus:border-uacc-gold/50 appearance-none"
           >
             <option value="ALL">All Users</option>
             {uniqueUsers.map(user => (
@@ -248,7 +248,7 @@ export default function AuditTrailPage() {
           <select
             value={filterModule}
             onChange={(e) => setFilterModule(e.target.value)}
-            className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-uacc-gold/50 appearance-none"
+            className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-sm text-[var(--text-primary)] focus:outline-none focus:border-uacc-gold/50 appearance-none"
           >
             <option value="ALL">All Modules</option>
             {uniqueModules.map(mod => (
@@ -262,7 +262,7 @@ export default function AuditTrailPage() {
           <select
             value={filterAction}
             onChange={(e) => setFilterAction(e.target.value)}
-            className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-uacc-gold/50 appearance-none"
+            className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-sm text-[var(--text-primary)] focus:outline-none focus:border-uacc-gold/50 appearance-none"
           >
             {ACTION_TYPES.map(action => (
               <option key={action} value={action}>{action === 'ALL' ? 'All Action Types' : formatString(action)}</option>
@@ -272,19 +272,19 @@ export default function AuditTrailPage() {
             type="date"
             value={filterDateFrom}
             onChange={(e) => setFilterDateFrom(e.target.value)}
-            className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-uacc-gold/50"
+            className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-sm text-[var(--text-primary)] focus:outline-none focus:border-uacc-gold/50"
             style={{ colorScheme: 'dark' }}
           />
           <input 
             type="date"
             value={filterDateTo}
             onChange={(e) => setFilterDateTo(e.target.value)}
-            className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-uacc-gold/50"
+            className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-sm text-[var(--text-primary)] focus:outline-none focus:border-uacc-gold/50"
             style={{ colorScheme: 'dark' }}
           />
           <button 
             onClick={clearFilters}
-            className="w-full flex items-center justify-center gap-2 py-2 px-4 rounded-lg font-bold text-sm border border-white/10 text-white/60 hover:text-white hover:bg-white/5 transition-colors"
+            className="w-full flex items-center justify-center gap-2 py-2 px-4 rounded-lg font-bold text-sm border border-white/10 text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-white/5 transition-colors"
           >
             <X size={14} />
             Clear All Filters
@@ -292,7 +292,7 @@ export default function AuditTrailPage() {
         </div>
         
         <div className="pt-2 flex items-center justify-between">
-          <span className="text-xs text-white/40">Showing {filteredLogs.length} of {totalActions} entries</span>
+          <span className="text-xs text-[var(--text-faint)]">Showing {filteredLogs.length} of {totalActions} entries</span>
         </div>
       </div>
 
@@ -302,25 +302,25 @@ export default function AuditTrailPage() {
           <table className="w-full text-left border-collapse min-w-[1000px]">
             <thead>
               <tr className="border-b border-white/10 bg-white/[0.02]">
-                <th className="px-4 py-3 text-xs font-bold text-white/50 uppercase tracking-wider w-16">#</th>
-                <th className="px-4 py-3 text-xs font-bold text-white/50 uppercase tracking-wider w-40">Timestamp</th>
-                <th className="px-4 py-3 text-xs font-bold text-white/50 uppercase tracking-wider w-64">User</th>
-                <th className="px-4 py-3 text-xs font-bold text-white/50 uppercase tracking-wider w-40">Action</th>
-                <th className="px-4 py-3 text-xs font-bold text-white/50 uppercase tracking-wider w-32">Module</th>
-                <th className="px-4 py-3 text-xs font-bold text-white/50 uppercase tracking-wider">Description</th>
-                <th className="px-4 py-3 text-xs font-bold text-white/50 uppercase tracking-wider w-32 text-right">IP Address</th>
+                <th className="px-4 py-3 text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider w-16">#</th>
+                <th className="px-4 py-3 text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider w-40">Timestamp</th>
+                <th className="px-4 py-3 text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider w-64">User</th>
+                <th className="px-4 py-3 text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider w-40">Action</th>
+                <th className="px-4 py-3 text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider w-32">Module</th>
+                <th className="px-4 py-3 text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider">Description</th>
+                <th className="px-4 py-3 text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider w-32 text-right">IP Address</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-white/5">
               {currentLogs.length === 0 ? (
                 <tr>
-                  <td colSpan="7" className="px-6 py-12 text-center text-white/50 text-sm">
+                  <td colSpan="7" className="px-6 py-12 text-center text-[var(--text-muted)] text-sm">
                     No audit logs found matching your filters.
                   </td>
                 </tr>
               ) : (
                 currentLogs.map(log => {
-                  const meta = ACTION_META[log.action] || { label: log.action, color: 'text-white', bg: 'bg-white/10', icon: Activity }
+                  const meta = ACTION_META[log.action] || { label: log.action, color: 'text-[var(--text-primary)]', bg: 'bg-white/10', icon: Activity }
                   const ActionIcon = meta.icon
                   
                   // Row tinting
@@ -345,11 +345,11 @@ export default function AuditTrailPage() {
                         className={`cursor-pointer transition-colors group ${rowTint} hover:bg-white/[0.04]`}
                       >
                         <td className="px-4 py-3 whitespace-nowrap">
-                          <span className="text-xs font-heading text-white/40">{log.id.toString().padStart(4, '0')}</span>
+                          <span className="text-xs font-heading text-[var(--text-faint)]">{log.id.toString().padStart(4, '0')}</span>
                         </td>
                         <td className="px-4 py-3 whitespace-nowrap">
-                          <div className="flex flex-col text-xs text-white/40">
-                            <span className="font-bold text-white/70">{formattedDate}</span>
+                          <div className="flex flex-col text-xs text-[var(--text-faint)]">
+                            <span className="font-bold text-[var(--text-secondary)]">{formattedDate}</span>
                             <span>{timePart}</span>
                           </div>
                         </td>
@@ -359,8 +359,8 @@ export default function AuditTrailPage() {
                               {getInitials(log.userName)}
                             </div>
                             <div className="flex flex-col">
-                              <span className="text-sm font-bold text-white">{log.userName}</span>
-                              <span className={`text-[9px] uppercase tracking-wider font-bold mt-0.5 ${ROLE_COLORS[log.userRole]?.split(' ')[1] || 'text-white/40'}`}>
+                              <span className="text-sm font-bold text-[var(--text-primary)]">{log.userName}</span>
+                              <span className={`text-[9px] uppercase tracking-wider font-bold mt-0.5 ${ROLE_COLORS[log.userRole]?.split(' ')[1] || 'text-[var(--text-faint)]'}`}>
                                 {formatString(log.userRole)}
                               </span>
                             </div>
@@ -377,17 +377,17 @@ export default function AuditTrailPage() {
                           </div>
                         </td>
                         <td className="px-4 py-3 whitespace-nowrap">
-                          <span className="px-2 py-1 rounded bg-white/5 border border-white/10 text-[10px] text-white/60 font-semibold uppercase tracking-wider">
+                          <span className="px-2 py-1 rounded bg-white/5 border border-white/10 text-[10px] text-[var(--text-muted)] font-semibold uppercase tracking-wider">
                             {log.module}
                           </span>
                         </td>
                         <td className="px-4 py-3">
-                          <p className="text-sm text-white/70 truncate max-w-[250px] lg:max-w-[400px]">
+                          <p className="text-sm text-[var(--text-secondary)] truncate max-w-[250px] lg:max-w-[400px]">
                             {log.description}
                           </p>
                         </td>
                         <td className="px-4 py-3 whitespace-nowrap text-right">
-                          <span className="font-mono text-xs text-white/40">{log.ipAddress}</span>
+                          <span className="font-mono text-xs text-[var(--text-faint)]">{log.ipAddress}</span>
                         </td>
                       </tr>
                       
@@ -396,12 +396,12 @@ export default function AuditTrailPage() {
                         <tr className="bg-white/[0.01] border-b border-white/5">
                           <td colSpan="7" className="px-4 py-4">
                             <div className="pl-[272px] pr-4">
-                              <h4 className="text-[10px] uppercase tracking-wider text-white/40 font-bold mb-1">Full Description</h4>
-                              <p className="text-sm text-white/90 leading-relaxed mb-4">
+                              <h4 className="text-[10px] uppercase tracking-wider text-[var(--text-faint)] font-bold mb-1">Full Description</h4>
+                              <p className="text-sm text-[var(--text-primary)] leading-relaxed mb-4">
                                 {log.description}
                               </p>
                               
-                              <div className="flex items-center gap-6 text-[10px] uppercase tracking-wider text-white/40 font-bold border-t border-white/5 pt-3">
+                              <div className="flex items-center gap-6 text-[10px] uppercase tracking-wider text-[var(--text-faint)] font-bold border-t border-white/5 pt-3">
                                 <span>Log ID: {log.id}</span>
                                 <span>User ID: {log.userId}</span>
                                 <span>Module: {log.module}</span>
@@ -422,14 +422,14 @@ export default function AuditTrailPage() {
         {/* PAGINATION */}
         {totalPages > 1 && (
           <div className="px-4 py-3 border-t border-white/10 bg-white/[0.02] flex items-center justify-between">
-            <span className="text-xs text-white/50">
+            <span className="text-xs text-[var(--text-muted)]">
               Entries {(currentPage - 1) * ROWS_PER_PAGE + 1}–{Math.min(currentPage * ROWS_PER_PAGE, filteredLogs.length)} of {filteredLogs.length}
             </span>
             <div className="flex items-center gap-2">
               <button 
                 onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
                 disabled={currentPage === 1}
-                className="w-8 h-8 rounded-lg flex items-center justify-center bg-white/5 border border-white/10 text-white/70 hover:text-white hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                className="w-8 h-8 rounded-lg flex items-center justify-center bg-white/5 border border-white/10 text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 <ChevronLeft size={16} />
               </button>
@@ -441,7 +441,7 @@ export default function AuditTrailPage() {
                     className={`w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold transition-colors ${
                       currentPage === page 
                         ? 'bg-uacc-gold/20 text-uacc-gold border border-uacc-gold/30' 
-                        : 'bg-white/5 border border-white/10 text-white/50 hover:text-white hover:bg-white/10'
+                        : 'bg-white/5 border border-white/10 text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-white/10'
                     }`}
                   >
                     {page}
@@ -451,7 +451,7 @@ export default function AuditTrailPage() {
               <button 
                 onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
                 disabled={currentPage === totalPages}
-                className="w-8 h-8 rounded-lg flex items-center justify-center bg-white/5 border border-white/10 text-white/70 hover:text-white hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                className="w-8 h-8 rounded-lg flex items-center justify-center bg-white/5 border border-white/10 text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 <ChevronRight size={16} />
               </button>

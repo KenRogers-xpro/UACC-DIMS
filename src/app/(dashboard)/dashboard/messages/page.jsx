@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useMemo } from 'react'
+import { useSearchParams } from 'next/navigation'
 import { Send, Search, Plus, X, MessageSquare } from 'lucide-react'
 import { useAuth } from '@/lib/auth-context'
 import { useMessages } from '@/lib/useMessages'
@@ -24,6 +25,7 @@ export default function MessagesPage() {
     fetchDirectory, fetchConversations, openThread, sendMessage,
   } = useMessages()
   const { isUserOnline } = useOnlineStatus()
+  const searchParams = useSearchParams()
 
   const [activePartnerId, setActivePartnerId] = useState(null)
   const [composeText, setComposeText] = useState('')
@@ -46,6 +48,14 @@ export default function MessagesPage() {
     setPickerOpen(false)
     await openThread(partnerId)
   }
+
+  // Deep link from the notification bell — ?thread=<userId> jumps straight
+  // into that conversation.
+  useEffect(() => {
+    const threadParam = searchParams.get('thread')
+    if (threadParam) handleOpenThread(parseInt(threadParam, 10))
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams])
 
   const handleSend = async (e) => {
     e.preventDefault()

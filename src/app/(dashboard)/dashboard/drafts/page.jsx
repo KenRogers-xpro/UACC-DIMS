@@ -31,7 +31,7 @@ export default function DraftsPage() {
       )
     }
     return (
-      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-medium bg-white/10 text-white/70 border border-white/10">
+      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-medium bg-white/10 text-(--text-secondary) border border-white/10">
         <Clock size={12} />
         Draft
       </span>
@@ -50,12 +50,12 @@ export default function DraftsPage() {
       </PageHeader>
 
       <div className="flex flex-col gap-4">
-        {loading && <p className="text-white/50 text-sm">Loading drafts...</p>}
+        {loading && <p className="text-(--text-muted) text-sm">Loading drafts...</p>}
         {!loading && drafts.length === 0 && (
           <div className="card rounded-xl p-8 text-center border-dashed border-white/10">
-            <FileText className="mx-auto h-8 w-8 text-white/20 mb-3" />
-            <p className="text-sm text-white/60">No drafts found.</p>
-            <p className="text-xs text-white/40 mt-1">Create a new draft or ask the AI Agent to draft one for you.</p>
+            <FileText className="mx-auto h-8 w-8 text-(--text-faint) mb-3" />
+            <p className="text-sm text-(--text-muted)">No drafts found.</p>
+            <p className="text-xs text-(--text-faint) mt-1">Create a new draft or ask the AI Agent to draft one for you.</p>
           </div>
         )}
         {!loading && drafts.map(draft => (
@@ -63,12 +63,12 @@ export default function DraftsPage() {
             <div className="card rounded-xl p-5 hover:bg-white/[0.02] transition-colors border border-transparent hover:border-white/5 cursor-pointer flex flex-col sm:flex-row sm:items-center justify-between gap-4 group">
               <div className="flex items-start gap-4">
                 <div className="w-10 h-10 rounded-lg bg-white/5 flex items-center justify-center flex-shrink-0 group-hover:bg-white/10 transition-colors">
-                  <FileText size={20} className="text-white/50 group-hover:text-white/80" />
+                  <FileText size={20} className="text-(--text-muted) group-hover:text-(--text-secondary)" />
                 </div>
                 <div>
-                  <h3 className="text-sm font-semibold text-white/90 group-hover:text-white transition-colors">{draft.title || 'Untitled Draft'}</h3>
+                  <h3 className="text-sm font-semibold text-(--text-primary) transition-colors">{draft.title || 'Untitled Draft'}</h3>
                   <div className="flex items-center gap-3 mt-1.5">
-                    <p className="text-xs text-white/40">
+                    <p className="text-xs text-(--text-faint)">
                       Last updated {new Date(draft.updatedAt).toLocaleDateString()}
                     </p>
                   </div>

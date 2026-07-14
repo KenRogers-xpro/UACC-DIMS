@@ -234,7 +234,7 @@ export default function ActivityLogsPage() {
           <div className="md:col-span-5 flex flex-col gap-4">
             <div className="card rounded-xl p-6">
               <div className="flex items-center justify-between mb-6">
-                <h3 className="font-heading text-lg font-bold text-white">Submit Today's Log</h3>
+                <h3 className="font-heading text-lg font-bold text-[var(--text-primary)]">Submit Today's Log</h3>
                 <span className="text-[10px] uppercase font-bold text-uacc-gold bg-uacc-gold/10 px-2 py-1 rounded-md border border-uacc-gold/20">Daily Activity Record</span>
               </div>
 
@@ -256,7 +256,7 @@ export default function ActivityLogsPage() {
                   <label className="text-xs font-semibold font-heading text-[var(--text-muted)] uppercase tracking-wider">
                     Department
                   </label>
-                  <div className="px-3 py-2 bg-[var(--surface-container)] border border-[var(--border-subtle)] rounded-lg text-sm text-[var(--text-secondary)] font-medium">
+                  <div className="px-3 py-2 bg-[var(--bg-surface-container)] border border-[var(--border-subtle)] rounded-lg text-sm text-[var(--text-secondary)] font-medium">
                     Finance &amp; Administration
                   </div>
                 </div>
@@ -318,9 +318,9 @@ export default function ActivityLogsPage() {
           {/* RIGHT COL: My Log History */}
           <div className="md:col-span-7 card rounded-xl p-6 min-h-[500px]">
             <div className="flex items-center justify-between mb-6 pb-4 border-b border-[var(--border-subtle)]">
-              <h3 className="font-heading text-lg font-bold text-white flex items-center gap-2">
+              <h3 className="font-heading text-lg font-bold text-[var(--text-primary)] flex items-center gap-2">
                 My Log History
-                <span className="bg-[var(--surface-container)] text-[var(--text-secondary)] text-xs py-0.5 px-2 rounded-full border border-[var(--border-subtle)]">
+                <span className="bg-[var(--bg-surface-container)] text-[var(--text-secondary)] text-xs py-0.5 px-2 rounded-full border border-[var(--border-subtle)]">
                   {myLogsData.length} entries
                 </span>
               </h3>
@@ -331,7 +331,7 @@ export default function ActivityLogsPage() {
                 myLogsData.map((log) => (
                   <div key={log.id} className="bg-[var(--bg-surface-low)] border border-[var(--border-subtle)] rounded-lg p-4 border-l-2 border-l-uacc-gold shadow-sm">
                     <div className="flex items-start justify-between mb-2 gap-4">
-                      <h4 className="font-bold text-white text-sm">{formatDate(log.logDate)}</h4>
+                      <h4 className="font-bold text-[var(--text-primary)] text-sm">{formatDate(log.logDate)}</h4>
                       <span className="bg-uacc-gold/20 text-uacc-gold border border-uacc-gold/30 text-xs font-bold px-2 py-0.5 rounded-full whitespace-nowrap">
                         {log.hoursSpent} hrs
                       </span>
@@ -340,7 +340,7 @@ export default function ActivityLogsPage() {
                       {log.activityDescription}
                     </p>
                     <div className="flex items-center justify-between text-xs">
-                      <span className="text-[10px] font-bold text-[var(--text-muted)] bg-[var(--surface-container)] px-2 py-1 rounded border border-[var(--border-subtle)] uppercase tracking-wider">
+                      <span className="text-[10px] font-bold text-[var(--text-muted)] bg-[var(--bg-surface-container)] px-2 py-1 rounded border border-[var(--border-subtle)] uppercase tracking-wider">
                         {formatDept(log.department)}
                       </span>
                       <span className="text-[var(--text-faint)]">
@@ -444,10 +444,10 @@ export default function ActivityLogsPage() {
                             {/* Staff Member */}
                             <td>
                               <div className="flex items-center gap-2">
-                                <div className="w-7 h-7 rounded-full bg-[var(--surface-container)] border border-[var(--border-subtle)] flex items-center justify-center text-xs font-bold text-white flex-shrink-0">
+                                <div className="w-7 h-7 rounded-full bg-[var(--bg-surface-container)] border border-[var(--border-subtle)] flex items-center justify-center text-xs font-bold text-[var(--text-primary)] flex-shrink-0">
                                   {log.staffName.charAt(0)}
                                 </div>
-                                <span className="font-bold text-white text-sm">
+                                <span className="font-bold text-[var(--text-primary)] text-sm">
                                   {log.staffName}
                                 </span>
                               </div>
@@ -495,7 +495,7 @@ export default function ActivityLogsPage() {
                     </tbody>
                   </table>
                   <div className="p-4 border-t border-[var(--border-subtle)] bg-[var(--bg-surface-low)] text-center text-xs text-[var(--text-muted)]">
-                    Total hours logged: <span className="font-bold text-white">{totalFilteredHours} hrs</span> across {filteredDeptLogs.length} entries
+                    Total hours logged: <span className="font-bold text-[var(--text-primary)]">{totalFilteredHours} hrs</span> across {filteredDeptLogs.length} entries
                   </div>
                 </>
               ) : (
@@ -528,7 +528,7 @@ export default function ActivityLogsPage() {
           >
             {toast.type === 'success' && <CheckCircle size={18} className="text-emerald-400 flex-shrink-0" />}
             {toast.type === 'error' && <XCircle size={18} className="text-uacc-red flex-shrink-0" />}
-            <span className="text-xs font-semibold text-white">
+            <span className="text-xs font-semibold text-[var(--text-primary)]">
               {toast.message}
             </span>
           </div>

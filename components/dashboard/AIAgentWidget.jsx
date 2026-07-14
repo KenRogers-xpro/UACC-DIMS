@@ -285,7 +285,7 @@ export default function AIAgentWidget() {
       {/* ── Chat Window Panel ── */}
       {isOpen && (
         <div 
-          className="w-[360px] md:w-[400px] h-[520px] mb-4 flex flex-col rounded-2xl border bg-slate-950/95 backdrop-blur-md shadow-2xl transition-all duration-300 transform scale-100 origin-bottom-right"
+          className="w-[calc(100vw-2rem)] max-w-[360px] md:max-w-[400px] md:w-[400px] h-[520px] mb-4 flex flex-col rounded-2xl border bg-slate-950/95 backdrop-blur-md shadow-2xl transition-all duration-300 transform scale-100 origin-bottom-right"
           style={{ borderColor: 'var(--border-default)' }}
         >
           {/* Header */}

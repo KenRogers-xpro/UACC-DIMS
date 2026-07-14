@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback, useRef } from 'react'
+import { useSearchParams, useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   FolderOpen,
@@ -15,7 +16,11 @@ import {
   ChevronRight,
   CheckCircle,
   FileText,
-  Sparkles
+  Sparkles,
+  Sparkle,
+  Inbox,
+  Repeat,
+  Archive,
 } from 'lucide-react'
 import { useAuth } from '@/lib/auth-context'
 import { useDocuments } from '@/lib/useDocuments'
@@ -26,6 +31,13 @@ import Badge from '@/components/ui/Badge'
 import Button from '@/components/ui/Button'
 import EmptyState from '@/components/ui/EmptyState'
 import DocumentViewerModal from '@/components/documents/DocumentViewerModal'
+
+const STATE_TABS = [
+  { key: 'new', label: 'New Arrivals', state: 'NEW', icon: Sparkle },
+  { key: 'pending', label: 'Pending My Action', state: 'PENDING', icon: Inbox },
+  { key: 'circulating', label: 'In Circulation', state: 'IN_CIRCULATION', icon: Repeat },
+  { key: 'stored', label: 'Stored / Closed', state: 'STORED', icon: Archive },
+]
 
 const CATEGORIES = ['All', 'POLICY', 'REPORT', 'MEMO', 'CONTRACT', 'FORM', 'OTHER']
 const DEPARTMENTS = [
@@ -86,8 +98,12 @@ export default function DocumentsPage() {
     uploadDocument, updateDocument, submitDocument, deleteDocument,
   } = useDocuments()
   const [semanticActive, setSemanticActive] = useState(false)
+  const searchParams = useSearchParams()
+  const router = useRouter()
 
   // STATE MANAGEMENT
+  const initialTab = STATE_TABS.find((t) => t.key === searchParams.get('tab'))?.key || 'pending'
+  const [activeTab, setActiveTab] = useState(initialTab)
   const [searchTerm, setSearchTerm] = useState('')
   const [categoryFilter, setCategoryFilter] = useState('All')
   const [departmentFilter, setDepartmentFilter] = useState('All')
@@ -111,10 +127,23 @@ export default function DocumentsPage() {
   const fileInputRef = useRef(null)
   const itemsPerPage = 8
 
+  // Deep link from the notification bell (?tab=pending etc.) — sync if the
+  // query param changes while already on this page.
+  useEffect(() => {
+    const tabParam = STATE_TABS.find((t) => t.key === searchParams.get('tab'))?.key
+    if (tabParam && tabParam !== activeTab) setActiveTab(tabParam)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams])
+
+  const handleTabChange = (key) => {
+    setActiveTab(key)
+    router.replace(`/dashboard/documents?tab=${key}`, { scroll: false })
+  }
+
   // Reset page when filters change
   useEffect(() => {
     setCurrentPage(1)
-  }, [searchTerm, categoryFilter, departmentFilter])
+  }, [searchTerm, categoryFilter, departmentFilter, activeTab])
 
   // Fetch from the real API whenever filters/page change
   const refresh = useCallback(async () => {
@@ -135,14 +164,17 @@ export default function DocumentsPage() {
       setSemanticActive(false)
     }
 
+    const activeState = STATE_TABS.find((t) => t.key === activeTab)?.state
+
     fetchDocuments({
       search: searchTerm || undefined,
       category: categoryFilter !== 'All' ? categoryFilter : undefined,
       department: departmentFilter !== 'All' ? departmentFilter : undefined,
+      state: activeState,
       page: currentPage,
       limit: itemsPerPage,
     }).catch(() => {})
-  }, [fetchDocuments, semanticSearch, searchTerm, categoryFilter, departmentFilter, currentPage])
+  }, [fetchDocuments, semanticSearch, searchTerm, categoryFilter, departmentFilter, activeTab, currentPage])
 
   useEffect(() => {
     refresh()
@@ -292,6 +324,30 @@ export default function DocumentsPage() {
         </Button>
       </PageHeader>
 
+      {/* STATE TABS — New Arrivals / Pending My Action / In Circulation / Stored */}
+      <div className="card rounded-xl p-1.5 flex gap-1 overflow-x-auto">
+        {STATE_TABS.map((tab) => (
+          <button
+            key={tab.key}
+            onClick={() => handleTabChange(tab.key)}
+            className={`relative flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold uppercase tracking-wider whitespace-nowrap transition-colors flex-shrink-0 ${
+              activeTab === tab.key ? 'text-uacc-gold' : 'hover:bg-white/5'
+            }`}
+            style={activeTab !== tab.key ? { color: 'var(--text-muted)' } : undefined}
+          >
+            {activeTab === tab.key && (
+              <motion.div
+                layoutId="documents-tab-active"
+                className="absolute inset-0 rounded-lg bg-uacc-gold/10 border border-uacc-gold/25"
+                transition={{ type: 'spring', stiffness: 400, damping: 35 }}
+              />
+            )}
+            <tab.icon size={13} className="relative" />
+            <span className="relative">{tab.label}</span>
+          </button>
+        ))}
+      </div>
+
       {/* FILTER BAR CARD */}
       <div className="card rounded-xl p-4 flex flex-col gap-3">
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
@@ -405,7 +461,7 @@ export default function DocumentsPage() {
                               <FileText size={18} style={{ color: catColor }} />
                             </div>
                             <div className="min-w-0 flex flex-col">
-                              <span className="block font-bold text-white truncate max-w-[260px]" title={doc.title}>
+                              <span className="block font-bold text-(--text-primary) truncate max-w-[260px]" title={doc.title}>
                                 {doc.title}
                               </span>
                               <span className="text-[10px]" style={{ color: 'var(--text-muted)' }}>{formatFileSize(doc.fileSize)}</span>
@@ -451,7 +507,7 @@ export default function DocumentsPage() {
                         <FileText size={18} style={{ color: catColor }} />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="font-bold text-white text-sm leading-snug" title={doc.title}>{doc.title}</p>
+                        <p className="font-bold text-(--text-primary) text-sm leading-snug" title={doc.title}>{doc.title}</p>
                         <p className="text-[10px] mt-0.5" style={{ color: 'var(--text-muted)' }}>{formatFileSize(doc.fileSize)} · {formatDate(doc.createdAt)}</p>
                       </div>
                     </div>
@@ -484,7 +540,16 @@ export default function DocumentsPage() {
             <EmptyState
               icon={FolderOpen}
               title="No documents found"
-              message="Try adjusting your search or filter criteria"
+              message={
+                searchTerm || categoryFilter !== 'All' || departmentFilter !== 'All'
+                  ? 'Try adjusting your search or filter criteria'
+                  : {
+                      new: 'Nothing has landed with you recently.',
+                      pending: "You're all caught up — nothing awaiting your action.",
+                      circulating: 'No documents are currently circulating elsewhere.',
+                      stored: 'No closed or archived documents yet.',
+                    }[activeTab]
+              }
             />
           </div>
         )}
@@ -529,7 +594,7 @@ export default function DocumentsPage() {
               </h2>
               <button
                 onClick={() => setUploadModalOpen(false)}
-                className="p-1 hover:bg-white/5 rounded-lg text-[var(--text-muted)] hover:text-white transition-colors cursor-pointer"
+                className="p-1 hover:bg-white/5 rounded-lg text-[var(--text-muted)] hover:text-(--text-primary) transition-colors cursor-pointer"
               >
                 <X size={18} />
               </button>
@@ -568,7 +633,7 @@ export default function DocumentsPage() {
                 {selectedFileName && (
                   <div className="flex items-center gap-2 mt-1.5 bg-uacc-gold/5 border border-uacc-gold/20 px-3 py-2 rounded-lg text-xs">
                     <FileText size={14} className="text-uacc-gold" />
-                    <span className="font-semibold text-white truncate flex-1">{selectedFileName}</span>
+                    <span className="font-semibold text-(--text-primary) truncate flex-1">{selectedFileName}</span>
                     <button
                       type="button"
                       onClick={(e) => {
@@ -698,7 +763,7 @@ export default function DocumentsPage() {
           }}
         >
           <CheckCircle size={18} className="text-emerald-400 flex-shrink-0" />
-          <span className="text-xs font-semibold text-white">
+          <span className="text-xs font-semibold text-(--text-primary)">
             {toastMessage}
           </span>
         </div>

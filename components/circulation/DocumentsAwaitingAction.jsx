@@ -4,6 +4,7 @@ import { useCirculation } from '@/lib/useCirculation'
 import { useAuth } from '@/lib/auth-context'
 import Button from '@/components/ui/Button'
 import SigningModal from '@/components/circulation/SigningModal'
+import CirculationLiveTracker from '@/components/circulation/CirculationLiveTracker'
 
 export default function DocumentsAwaitingAction() {
   const { inbox, loading, fetchInbox } = useCirculation()
@@ -40,6 +41,9 @@ export default function DocumentsAwaitingAction() {
               <p className="text-[11px] text-white/60 mt-1">
                 From: {doc.originator?.name || 'Unknown'} · Status: {doc.status}
               </p>
+              <div className="mt-2">
+                <CirculationLiveTracker circulationId={doc.id} />
+              </div>
             </div>
             <Button
               size="sm"

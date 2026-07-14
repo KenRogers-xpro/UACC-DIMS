@@ -6,7 +6,7 @@ import {
   BookOpen, ArrowLeftRight, BarChart2, Plus, Download,
   ArrowDownCircle, ArrowUpCircle, ArrowRightCircle, Lock,
   Search, FileText, Mail, MessageSquare, MapPin, Eye, Edit,
-  Printer, Check, X, Calendar, Inbox
+  Printer, Check, X, Calendar, Inbox, ChevronRight
 } from 'lucide-react'
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, Legend, ResponsiveContainer,
@@ -190,7 +190,7 @@ const STATUS_META = {
   DISPATCHED: { label: 'Dispatched', class: 'bg-blue-500/10 text-blue-400 border border-blue-500/20' },
   RECEIVED:   { label: 'Received',   class: 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' },
   ACTIONED:   { label: 'Actioned',   class: 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20' },
-  CLOSED:     { label: 'Closed',     class: 'bg-white/10 text-white/50 border border-white/10' },
+  CLOSED:     { label: 'Closed',     class: 'bg-white/10 text-[var(--text-muted)] border border-white/10' },
 }
 
 const DIRECTION_META = {
@@ -200,7 +200,7 @@ const DIRECTION_META = {
 }
 
 const PRIORITY_META = {
-  NORMAL:       { label: 'Normal',       class: 'text-white/60 border border-white/10 bg-white/5' },
+  NORMAL:       { label: 'Normal',       class: 'text-[var(--text-muted)] border border-white/10 bg-white/5' },
   HIGH:         { label: 'High',         class: 'text-amber-400 border border-amber-500/30 bg-amber-500/10' },
   CONFIDENTIAL: { label: 'Confidential', class: 'text-red-400 border border-red-500/30 bg-red-500/10' },
 }
@@ -360,19 +360,19 @@ export default function RecordsExecutivePage() {
       {/* HEADER */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
         <div>
-          <h1 className="text-2xl font-bold text-white mb-1">Records Executive</h1>
-          <p className="text-white/60 text-sm">Universal document registry — tracking all correspondence in and out of UACC</p>
+          <h1 className="text-2xl font-bold text-[var(--text-primary)] mb-1">Records Executive</h1>
+          <p className="text-[var(--text-muted)] text-sm">Universal document registry — tracking all correspondence in and out of UACC</p>
         </div>
         <div className="flex items-center gap-3">
           <button 
             onClick={() => showToast("Document register exported. File: UACC_Registry_Jun2026.pdf")}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold bg-white/5 text-white/70 hover:bg-white/10 hover:text-white transition-colors"
+            className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold bg-white/5 text-[var(--text-secondary)] hover:bg-white/10 hover:text-[var(--text-primary)] transition-colors"
           >
             <Download size={16} /> Export Register
           </button>
           <button 
             onClick={() => setRegisterModalOpen(true)}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold bg-uacc-gold text-white hover:bg-uacc-gold/90 transition-colors shadow-lg shadow-uacc-gold/20"
+            className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold bg-uacc-gold text-[var(--text-primary)] hover:bg-uacc-gold/90 transition-colors shadow-lg shadow-uacc-gold/20"
           >
             <Plus size={16} /> Register Document
           </button>
@@ -383,45 +383,45 @@ export default function RecordsExecutivePage() {
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-8">
         <div className="card rounded-xl p-4 border border-white/5 flex flex-col gap-2 relative overflow-hidden group">
           <div className="flex justify-between items-start">
-            <span className="text-xs font-semibold text-white/50 uppercase tracking-wider">Pending Filing</span>
+            <span className="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider">Pending Filing</span>
             <Inbox size={16} className="text-purple-400" />
           </div>
-          <div className="text-2xl font-bold text-white font-heading">{pendingCopiesCount}</div>
+          <div className="text-2xl font-bold text-[var(--text-primary)] font-heading">{pendingCopiesCount}</div>
         </div>
         <div className="card rounded-xl p-4 border border-white/5 flex flex-col gap-2 relative overflow-hidden group">
           <div className="flex justify-between items-start">
-            <span className="text-xs font-semibold text-white/50 uppercase tracking-wider">Total Registered</span>
+            <span className="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider">Total Registered</span>
             <BookOpen size={16} className="text-uacc-gold" />
           </div>
-          <div className="text-2xl font-bold text-white font-heading">{stats.total}</div>
+          <div className="text-2xl font-bold text-[var(--text-primary)] font-heading">{stats.total}</div>
         </div>
         <div className="card rounded-xl p-4 border border-white/5 flex flex-col gap-2 relative overflow-hidden group">
           <div className="flex justify-between items-start">
-            <span className="text-xs font-semibold text-white/50 uppercase tracking-wider">Incoming</span>
+            <span className="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider">Incoming</span>
             <ArrowDownCircle size={16} className="text-emerald-400" />
           </div>
-          <div className="text-2xl font-bold text-white font-heading">{stats.incoming}</div>
+          <div className="text-2xl font-bold text-[var(--text-primary)] font-heading">{stats.incoming}</div>
         </div>
         <div className="card rounded-xl p-4 border border-white/5 flex flex-col gap-2 relative overflow-hidden group">
           <div className="flex justify-between items-start">
-            <span className="text-xs font-semibold text-white/50 uppercase tracking-wider">Outgoing</span>
+            <span className="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider">Outgoing</span>
             <ArrowUpCircle size={16} className="text-red-400" />
           </div>
-          <div className="text-2xl font-bold text-white font-heading">{stats.outgoing}</div>
+          <div className="text-2xl font-bold text-[var(--text-primary)] font-heading">{stats.outgoing}</div>
         </div>
         <div className="card rounded-xl p-4 border border-white/5 flex flex-col gap-2 relative overflow-hidden group">
           <div className="flex justify-between items-start">
-            <span className="text-xs font-semibold text-white/50 uppercase tracking-wider">Internal</span>
+            <span className="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider">Internal</span>
             <ArrowRightCircle size={16} className="text-uacc-gold" />
           </div>
-          <div className="text-2xl font-bold text-white font-heading">{stats.internal}</div>
+          <div className="text-2xl font-bold text-[var(--text-primary)] font-heading">{stats.internal}</div>
         </div>
         <div className="card rounded-xl p-4 border border-white/5 flex flex-col gap-2 relative overflow-hidden group">
           <div className="flex justify-between items-start">
-            <span className="text-xs font-semibold text-white/50 uppercase tracking-wider">Confidential</span>
+            <span className="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider">Confidential</span>
             <Lock size={16} className="text-red-400" />
           </div>
-          <div className="text-2xl font-bold text-white font-heading">{stats.confidential}</div>
+          <div className="text-2xl font-bold text-[var(--text-primary)] font-heading">{stats.confidential}</div>
         </div>
       </div>
 
@@ -430,7 +430,7 @@ export default function RecordsExecutivePage() {
         <button 
           onClick={() => setActiveView('register')}
           className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-colors whitespace-nowrap ${
-            activeView === 'register' ? 'bg-uacc-gold text-white' : 'border border-white/10 text-white/60 hover:bg-white/5'
+            activeView === 'register' ? 'bg-uacc-gold text-[var(--text-primary)]' : 'border border-white/10 text-[var(--text-muted)] hover:bg-white/5'
           }`}
         >
           <BookOpen size={16} /> Document Register
@@ -438,7 +438,7 @@ export default function RecordsExecutivePage() {
         <button 
           onClick={() => setActiveView('movement')}
           className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-colors whitespace-nowrap ${
-            activeView === 'movement' ? 'bg-uacc-gold text-white' : 'border border-white/10 text-white/60 hover:bg-white/5'
+            activeView === 'movement' ? 'bg-uacc-gold text-[var(--text-primary)]' : 'border border-white/10 text-[var(--text-muted)] hover:bg-white/5'
           }`}
         >
           <ArrowLeftRight size={16} /> Movement Tracker
@@ -446,7 +446,7 @@ export default function RecordsExecutivePage() {
         <button 
           onClick={() => setActiveView('analytics')}
           className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-colors whitespace-nowrap ${
-            activeView === 'analytics' ? 'bg-uacc-gold text-white' : 'border border-white/10 text-white/60 hover:bg-white/5'
+            activeView === 'analytics' ? 'bg-uacc-gold text-[var(--text-primary)]' : 'border border-white/10 text-[var(--text-muted)] hover:bg-white/5'
           }`}
         >
           <BarChart2 size={16} /> Analytics
@@ -458,13 +458,13 @@ export default function RecordsExecutivePage() {
         <div className="space-y-6">
           <div className="card rounded-xl p-4 border border-white/5 space-y-4 bg-white/[0.02]">
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-white/30" size={16} />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-faint)]" size={16} />
               <input 
                 type="text" 
                 placeholder="Search subject, registry ID, source, or destination..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full bg-white/5 border border-white/10 rounded-lg pl-10 pr-4 py-2.5 text-sm text-white focus:outline-none focus:border-uacc-gold/50"
+                className="w-full bg-white/5 border border-white/10 rounded-lg pl-10 pr-4 py-2.5 text-sm text-[var(--text-primary)] focus:outline-none focus:border-uacc-gold/50"
               />
             </div>
             
@@ -475,35 +475,35 @@ export default function RecordsExecutivePage() {
                     key={dir} 
                     onClick={() => setFilterDirection(dir)}
                     className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-colors ${
-                      filterDirection === dir ? 'bg-white/10 text-white' : 'text-white/50 hover:text-white/80'
+                      filterDirection === dir ? 'bg-white/10 text-[var(--text-primary)]' : 'text-[var(--text-muted)] hover:text-[var(--text-secondary)]'
                     }`}
                   >
                     {dir}
                   </button>
                 ))}
               </div>
-              <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)} className="bg-white/5 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none appearance-none">
+              <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)} className="bg-white/5 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-[var(--text-primary)] focus:outline-none appearance-none">
                 {STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
               </select>
-              <select value={filterPriority} onChange={(e) => setFilterPriority(e.target.value)} className="bg-white/5 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none appearance-none">
+              <select value={filterPriority} onChange={(e) => setFilterPriority(e.target.value)} className="bg-white/5 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-[var(--text-primary)] focus:outline-none appearance-none">
                 {PRIORITIES.map(p => <option key={p} value={p}>{p}</option>)}
               </select>
-              <select value={filterType} onChange={(e) => setFilterType(e.target.value)} className="bg-white/5 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none appearance-none">
+              <select value={filterType} onChange={(e) => setFilterType(e.target.value)} className="bg-white/5 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-[var(--text-primary)] focus:outline-none appearance-none">
                 {DOC_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
               </select>
-              <select value={filterMedium} onChange={(e) => setFilterMedium(e.target.value)} className="bg-white/5 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none appearance-none">
+              <select value={filterMedium} onChange={(e) => setFilterMedium(e.target.value)} className="bg-white/5 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-[var(--text-primary)] focus:outline-none appearance-none">
                 {MEDIUMS.map(m => <option key={m} value={m}>{m}</option>)}
               </select>
             </div>
             
             <div className="flex flex-wrap items-center justify-between gap-4">
               <div className="flex items-center gap-2">
-                <input type="date" value={filterDateFrom} onChange={(e) => setFilterDateFrom(e.target.value)} className="bg-white/5 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white/70" />
-                <span className="text-white/30 text-xs">to</span>
-                <input type="date" value={filterDateTo} onChange={(e) => setFilterDateTo(e.target.value)} className="bg-white/5 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white/70" />
+                <input type="date" value={filterDateFrom} onChange={(e) => setFilterDateFrom(e.target.value)} className="bg-white/5 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-[var(--text-secondary)]" />
+                <span className="text-[var(--text-faint)] text-xs">to</span>
+                <input type="date" value={filterDateTo} onChange={(e) => setFilterDateTo(e.target.value)} className="bg-white/5 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-[var(--text-secondary)]" />
               </div>
               <div className="flex items-center gap-4">
-                <span className="text-xs text-white/50">{filteredData.length} records found</span>
+                <span className="text-xs text-[var(--text-muted)]">{filteredData.length} records found</span>
                 <button 
                   onClick={() => {
                     setSearchQuery(''); setFilterType('ALL'); setFilterDirection('ALL'); 
@@ -523,13 +523,13 @@ export default function RecordsExecutivePage() {
               <table className="w-full text-left border-collapse data-table">
                 <thead>
                   <tr className="bg-white/5 border-b border-white/10">
-                    <th className="p-4 text-xs font-semibold text-white/50 uppercase tracking-wider">Registry No</th>
-                    <th className="p-4 text-xs font-semibold text-white/50 uppercase tracking-wider">Direction</th>
-                    <th className="p-4 text-xs font-semibold text-white/50 uppercase tracking-wider">Subject</th>
-                    <th className="p-4 text-xs font-semibold text-white/50 uppercase tracking-wider hidden md:table-cell">Source → Dest</th>
-                    <th className="p-4 text-xs font-semibold text-white/50 uppercase tracking-wider">Medium / Priority</th>
-                    <th className="p-4 text-xs font-semibold text-white/50 uppercase tracking-wider">Status</th>
-                    <th className="p-4 text-xs font-semibold text-white/50 uppercase tracking-wider text-right">Actions</th>
+                    <th className="p-4 text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider">Registry No</th>
+                    <th className="p-4 text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider">Direction</th>
+                    <th className="p-4 text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider">Subject</th>
+                    <th className="p-4 text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider hidden md:table-cell">Source → Dest</th>
+                    <th className="p-4 text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider">Medium / Priority</th>
+                    <th className="p-4 text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider">Status</th>
+                    <th className="p-4 text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider text-right">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-white/5">
@@ -543,7 +543,7 @@ export default function RecordsExecutivePage() {
                       >
                         <td className="p-4 whitespace-nowrap">
                           <span className="text-xs font-heading font-bold text-uacc-gold cursor-pointer hover:underline">{row.id}</span>
-                          <div className="text-[10px] text-white/40 mt-1">{row.dateRegistered}</div>
+                          <div className="text-[10px] text-[var(--text-faint)] mt-1">{row.dateRegistered}</div>
                         </td>
                         <td className="p-4 whitespace-nowrap">
                           <div className={`inline-flex items-center gap-1.5 px-2 py-1 rounded-md ${DIRECTION_META[row.direction].bg} ${DIRECTION_META[row.direction].color}`}>
@@ -552,18 +552,18 @@ export default function RecordsExecutivePage() {
                           </div>
                         </td>
                         <td className="p-4 min-w-[200px] max-w-[300px]">
-                          <p className="text-sm text-white font-medium truncate" title={row.subject}>{row.subject}</p>
-                          <span className="text-[10px] text-white/40 uppercase tracking-widest mt-1 inline-block">{row.docType}</span>
+                          <p className="text-sm text-[var(--text-primary)] font-medium truncate" title={row.subject}>{row.subject}</p>
+                          <span className="text-[10px] text-[var(--text-faint)] uppercase tracking-widest mt-1 inline-block">{row.docType}</span>
                         </td>
                         <td className="p-4 hidden md:table-cell">
                           <div className="flex flex-col gap-1">
-                            <span className="text-xs text-white/60 truncate max-w-[200px]" title={row.source}>{row.source}</span>
-                            <span className="text-[10px] text-white/30 truncate max-w-[200px]" title={row.destination}>→ {row.destination}</span>
+                            <span className="text-xs text-[var(--text-muted)] truncate max-w-[200px]" title={row.source}>{row.source}</span>
+                            <span className="text-[10px] text-[var(--text-faint)] truncate max-w-[200px]" title={row.destination}>→ {row.destination}</span>
                           </div>
                         </td>
                         <td className="p-4">
                           <div className="flex flex-col gap-2">
-                            <div className="flex items-center gap-1.5 text-xs text-white/70">
+                            <div className="flex items-center gap-1.5 text-xs text-[var(--text-secondary)]">
                               {row.medium === 'PHYSICAL' && <FileText size={14} />}
                               {row.medium === 'EMAIL' && <Mail size={14} />}
                               {row.medium === 'BOTH' && <><FileText size={12} /><Mail size={12} /></>}
@@ -587,7 +587,7 @@ export default function RecordsExecutivePage() {
                         </td>
                         <td className="p-4 text-right">
                           <div className="flex justify-end gap-2">
-                            <button className="p-1.5 text-white/50 hover:text-white hover:bg-white/10 rounded-md transition-colors"><Eye size={16} /></button>
+                            <button className="p-1.5 text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-white/10 rounded-md transition-colors"><Eye size={16} /></button>
                           </div>
                         </td>
                       </tr>
@@ -595,7 +595,7 @@ export default function RecordsExecutivePage() {
                   })}
                   {filteredData.length === 0 && (
                     <tr>
-                      <td colSpan={7} className="p-8 text-center text-white/50">No registry entries found matching your filters.</td>
+                      <td colSpan={7} className="p-8 text-center text-[var(--text-muted)]">No registry entries found matching your filters.</td>
                     </tr>
                   )}
                 </tbody>
@@ -605,21 +605,21 @@ export default function RecordsExecutivePage() {
             {/* Pagination */}
             {filteredData.length > ROWS_PER_PAGE && (
               <div className="p-4 border-t border-white/10 flex justify-between items-center bg-white/5">
-                <span className="text-xs text-white/50">
+                <span className="text-xs text-[var(--text-muted)]">
                   Showing {(currentPage - 1) * ROWS_PER_PAGE + 1} to {Math.min(currentPage * ROWS_PER_PAGE, filteredData.length)} of {filteredData.length}
                 </span>
                 <div className="flex gap-2">
                   <button 
                     disabled={currentPage === 1}
                     onClick={() => setCurrentPage(c => c - 1)}
-                    className="px-3 py-1.5 rounded-lg border border-white/10 text-xs font-semibold text-white/70 hover:bg-white/10 disabled:opacity-50"
+                    className="px-3 py-1.5 rounded-lg border border-white/10 text-xs font-semibold text-[var(--text-secondary)] hover:bg-white/10 disabled:opacity-50"
                   >
                     Previous
                   </button>
                   <button 
                     disabled={currentPage * ROWS_PER_PAGE >= filteredData.length}
                     onClick={() => setCurrentPage(c => c + 1)}
-                    className="px-3 py-1.5 rounded-lg border border-white/10 text-xs font-semibold text-white/70 hover:bg-white/10 disabled:opacity-50"
+                    className="px-3 py-1.5 rounded-lg border border-white/10 text-xs font-semibold text-[var(--text-secondary)] hover:bg-white/10 disabled:opacity-50"
                   >
                     Next
                   </button>
@@ -634,7 +634,7 @@ export default function RecordsExecutivePage() {
       {activeView === 'movement' && (
         <div className="max-w-4xl mx-auto space-y-6">
           <div className="flex items-center justify-between">
-            <h2 className="text-lg font-bold text-white">Document Movement Log</h2>
+            <h2 className="text-lg font-bold text-[var(--text-primary)]">Document Movement Log</h2>
           </div>
           <div className="space-y-4 relative before:absolute before:inset-0 before:ml-[23px] before:w-0.5 before:bg-white/10">
             {MOCK_REGISTRY.map((row, idx) => {
@@ -655,23 +655,23 @@ export default function RecordsExecutivePage() {
                         {row.priority === 'CONFIDENTIAL' && <Lock size={14} className="text-red-400" />}
                         <span className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider ${STATUS_META[row.status].class}`}>{STATUS_META[row.status].label}</span>
                       </div>
-                      <span className="text-xs text-white/40">{row.dateRegistered}</span>
+                      <span className="text-xs text-[var(--text-faint)]">{row.dateRegistered}</span>
                     </div>
                     
-                    <h3 className="text-white font-semibold text-sm mb-4">{row.subject}</h3>
+                    <h3 className="text-[var(--text-primary)] font-semibold text-sm mb-4">{row.subject}</h3>
                     
                     <div className="bg-white/5 rounded-lg p-3 mb-4 flex flex-col gap-1.5">
                       <div className="flex items-center gap-2 text-xs">
-                        <span className="text-white/40 w-12 font-bold uppercase">From</span>
-                        <span className="text-white/80 font-medium truncate">{row.source}</span>
+                        <span className="text-[var(--text-faint)] w-12 font-bold uppercase">From</span>
+                        <span className="text-[var(--text-secondary)] font-medium truncate">{row.source}</span>
                       </div>
                       <div className="flex items-center gap-2 text-xs">
-                        <span className="text-white/40 w-12 font-bold uppercase">To</span>
-                        <span className="text-white/80 font-medium truncate">{row.destination}</span>
+                        <span className="text-[var(--text-faint)] w-12 font-bold uppercase">To</span>
+                        <span className="text-[var(--text-secondary)] font-medium truncate">{row.destination}</span>
                       </div>
                     </div>
 
-                    <div className="flex items-center justify-between text-xs text-white/50">
+                    <div className="flex items-center justify-between text-xs text-[var(--text-muted)]">
                       <div className="flex items-center gap-4">
                         <div className="flex items-center gap-1.5">
                           {row.medium === 'PHYSICAL' && <FileText size={14} />}
@@ -700,7 +700,7 @@ export default function RecordsExecutivePage() {
       {activeView === 'analytics' && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <div className="card rounded-xl p-6 border border-white/5">
-            <h3 className="text-sm font-bold text-white mb-6 uppercase tracking-wider text-center">Document Flow by Month</h3>
+            <h3 className="text-sm font-bold text-[var(--text-primary)] mb-6 uppercase tracking-wider text-center">Document Flow by Month</h3>
             <div className="h-[300px] w-full">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={ANALYTICS_DATA.byMonth} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
@@ -718,7 +718,7 @@ export default function RecordsExecutivePage() {
           </div>
 
           <div className="card rounded-xl p-6 border border-white/5 flex flex-col">
-            <h3 className="text-sm font-bold text-white mb-2 uppercase tracking-wider text-center">Documents by Direction</h3>
+            <h3 className="text-sm font-bold text-[var(--text-primary)] mb-2 uppercase tracking-wider text-center">Documents by Direction</h3>
             <div className="flex-1 min-h-[300px] w-full relative">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
@@ -738,22 +738,22 @@ export default function RecordsExecutivePage() {
                 </PieChart>
               </ResponsiveContainer>
               <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none mt-2">
-                <span className="text-3xl font-heading font-bold text-white">{stats.total}</span>
-                <span className="text-[10px] text-white/50 uppercase tracking-widest font-bold">Total</span>
+                <span className="text-3xl font-heading font-bold text-[var(--text-primary)]">{stats.total}</span>
+                <span className="text-[10px] text-[var(--text-muted)] uppercase tracking-widest font-bold">Total</span>
               </div>
             </div>
             <div className="flex justify-center gap-6 mt-4">
               {ANALYTICS_DATA.byDirection.map(d => (
                 <div key={d.name} className="flex items-center gap-2">
                   <div className="w-3 h-3 rounded-full" style={{ backgroundColor: d.color }}></div>
-                  <span className="text-xs text-white/70">{d.name}</span>
+                  <span className="text-xs text-[var(--text-secondary)]">{d.name}</span>
                 </div>
               ))}
             </div>
           </div>
 
           <div className="card rounded-xl p-6 border border-white/5">
-            <h3 className="text-sm font-bold text-white mb-6 uppercase tracking-wider text-center">Documents by Type</h3>
+            <h3 className="text-sm font-bold text-[var(--text-primary)] mb-6 uppercase tracking-wider text-center">Documents by Type</h3>
             <div className="h-[300px] w-full">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={ANALYTICS_DATA.byType} layout="vertical" margin={{ top: 0, right: 20, left: 0, bottom: 0 }}>
@@ -768,13 +768,13 @@ export default function RecordsExecutivePage() {
           </div>
 
           <div className="card rounded-xl p-6 border border-white/5">
-            <h3 className="text-sm font-bold text-white mb-6 uppercase tracking-wider text-center">Registry Status Distribution</h3>
+            <h3 className="text-sm font-bold text-[var(--text-primary)] mb-6 uppercase tracking-wider text-center">Registry Status Distribution</h3>
             <div className="flex flex-col justify-center h-full gap-5 pb-6">
               {ANALYTICS_DATA.byStatus.map(s => (
                 <div key={s.status} className="space-y-2">
                   <div className="flex justify-between items-end text-sm">
-                    <span className="text-white/80 font-medium">{s.status}</span>
-                    <span className="text-white font-bold">{s.count}</span>
+                    <span className="text-[var(--text-secondary)] font-medium">{s.status}</span>
+                    <span className="text-[var(--text-primary)] font-bold">{s.count}</span>
                   </div>
                   <div className="w-full h-2 bg-white/10 rounded-full overflow-hidden">
                     <div 
@@ -824,32 +824,32 @@ export default function RecordsExecutivePage() {
               
               {/* Document Details */}
               <div className="card rounded-xl p-5 border border-white/5 bg-white/[0.02]">
-                <h3 className="text-[10px] font-bold text-white/50 uppercase tracking-widest mb-4">Document Details</h3>
-                <div className="grid grid-cols-2 gap-y-5 gap-x-4">
+                <h3 className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-widest mb-4">Document Details</h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-5 gap-x-4">
                   <div className="col-span-2">
-                    <span className="block text-[10px] text-white/40 uppercase font-bold mb-1">Subject</span>
-                    <span className="text-white font-semibold text-sm leading-relaxed">{selectedEntry.subject}</span>
+                    <span className="block text-[10px] text-[var(--text-faint)] uppercase font-bold mb-1">Subject</span>
+                    <span className="text-[var(--text-primary)] font-semibold text-sm leading-relaxed">{selectedEntry.subject}</span>
                   </div>
                   <div>
-                    <span className="block text-[10px] text-white/40 uppercase font-bold mb-1">Document Type</span>
-                    <span className="text-white/80 text-sm">{selectedEntry.docType}</span>
+                    <span className="block text-[10px] text-[var(--text-faint)] uppercase font-bold mb-1">Document Type</span>
+                    <span className="text-[var(--text-secondary)] text-sm">{selectedEntry.docType}</span>
                   </div>
                   <div>
-                    <span className="block text-[10px] text-white/40 uppercase font-bold mb-1">Handled By</span>
-                    <span className="text-white/80 text-sm">{selectedEntry.handledBy}</span>
+                    <span className="block text-[10px] text-[var(--text-faint)] uppercase font-bold mb-1">Handled By</span>
+                    <span className="text-[var(--text-secondary)] text-sm">{selectedEntry.handledBy}</span>
                   </div>
                   <div>
-                    <span className="block text-[10px] text-white/40 uppercase font-bold mb-1">Source</span>
-                    <span className="text-white/80 text-sm font-medium">{selectedEntry.source}</span>
+                    <span className="block text-[10px] text-[var(--text-faint)] uppercase font-bold mb-1">Source</span>
+                    <span className="text-[var(--text-secondary)] text-sm font-medium">{selectedEntry.source}</span>
                   </div>
                   <div>
-                    <span className="block text-[10px] text-white/40 uppercase font-bold mb-1">Destination</span>
-                    <span className="text-white/80 text-sm font-medium">{selectedEntry.destination}</span>
+                    <span className="block text-[10px] text-[var(--text-faint)] uppercase font-bold mb-1">Destination</span>
+                    <span className="text-[var(--text-secondary)] text-sm font-medium">{selectedEntry.destination}</span>
                   </div>
                   {selectedEntry.receivedFrom && (
                     <div className="col-span-2">
-                      <span className="block text-[10px] text-white/40 uppercase font-bold mb-1">Received From / Attention</span>
-                      <span className="text-white/80 text-sm">{selectedEntry.receivedFrom}</span>
+                      <span className="block text-[10px] text-[var(--text-faint)] uppercase font-bold mb-1">Received From / Attention</span>
+                      <span className="text-[var(--text-secondary)] text-sm">{selectedEntry.receivedFrom}</span>
                     </div>
                   )}
                   {selectedEntry.physicalLocation && (
@@ -857,7 +857,7 @@ export default function RecordsExecutivePage() {
                       <MapPin size={18} className="text-uacc-gold shrink-0" />
                       <div>
                         <span className="block text-[10px] text-uacc-gold/80 uppercase font-bold mb-0.5">Physical Location</span>
-                        <span className="text-white text-sm">{selectedEntry.physicalLocation}</span>
+                        <span className="text-[var(--text-primary)] text-sm">{selectedEntry.physicalLocation}</span>
                       </div>
                     </div>
                   )}
@@ -871,7 +871,7 @@ export default function RecordsExecutivePage() {
 
               {/* Document Journey */}
               <div className="card rounded-xl p-5 border border-white/5 bg-white/[0.02]">
-                <h3 className="text-[10px] font-bold text-white/50 uppercase tracking-widest mb-6">Document Journey</h3>
+                <h3 className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-widest mb-6">Document Journey</h3>
                 
                 <div className="relative pl-6 space-y-6 before:absolute before:left-[11px] before:top-2 before:bottom-2 before:w-0.5 before:bg-white/10">
                   {/* Registered */}
@@ -879,8 +879,8 @@ export default function RecordsExecutivePage() {
                     <div className="absolute -left-[30px] top-0 w-6 h-6 rounded-full bg-emerald-500 border-4 border-[#0b1120] flex items-center justify-center">
                       <Check size={12} className="text-[#0b1120]" />
                     </div>
-                    <h4 className="text-sm font-bold text-white mb-0.5">REGISTERED</h4>
-                    <p className="text-xs text-white/50">{selectedEntry.dateRegistered} · By: {selectedEntry.handledBy}</p>
+                    <h4 className="text-sm font-bold text-[var(--text-primary)] mb-0.5">REGISTERED</h4>
+                    <p className="text-xs text-[var(--text-muted)]">{selectedEntry.dateRegistered} · By: {selectedEntry.handledBy}</p>
                   </div>
 
                   {/* Dispatched */}
@@ -888,11 +888,11 @@ export default function RecordsExecutivePage() {
                     <div className={`absolute -left-[30px] top-0 w-6 h-6 rounded-full border-4 border-[#0b1120] flex items-center justify-center ${selectedEntry.dateDispatched ? 'bg-emerald-500' : 'bg-white/10'}`}>
                       {selectedEntry.dateDispatched && <Check size={12} className="text-[#0b1120]" />}
                     </div>
-                    <h4 className={`text-sm font-bold mb-0.5 ${selectedEntry.dateDispatched ? 'text-white' : 'text-white/40'}`}>DISPATCHED</h4>
+                    <h4 className={`text-sm font-bold mb-0.5 ${selectedEntry.dateDispatched ? 'text-[var(--text-primary)]' : 'text-[var(--text-faint)]'}`}>DISPATCHED</h4>
                     {selectedEntry.dateDispatched ? (
-                      <p className="text-xs text-white/50">{selectedEntry.dateDispatched} · Medium: {selectedEntry.medium}</p>
+                      <p className="text-xs text-[var(--text-muted)]">{selectedEntry.dateDispatched} · Medium: {selectedEntry.medium}</p>
                     ) : (
-                      <p className="text-xs text-white/30 italic">Pending dispatch</p>
+                      <p className="text-xs text-[var(--text-faint)] italic">Pending dispatch</p>
                     )}
                   </div>
 
@@ -901,11 +901,11 @@ export default function RecordsExecutivePage() {
                     <div className={`absolute -left-[30px] top-0 w-6 h-6 rounded-full border-4 border-[#0b1120] flex items-center justify-center ${selectedEntry.dateReceived ? 'bg-emerald-500' : 'bg-white/10'}`}>
                       {selectedEntry.dateReceived && <Check size={12} className="text-[#0b1120]" />}
                     </div>
-                    <h4 className={`text-sm font-bold mb-0.5 ${selectedEntry.dateReceived ? 'text-white' : 'text-white/40'}`}>RECEIVED</h4>
+                    <h4 className={`text-sm font-bold mb-0.5 ${selectedEntry.dateReceived ? 'text-[var(--text-primary)]' : 'text-[var(--text-faint)]'}`}>RECEIVED</h4>
                     {selectedEntry.dateReceived ? (
-                      <p className="text-xs text-white/50">{selectedEntry.dateReceived} · At Destination</p>
+                      <p className="text-xs text-[var(--text-muted)]">{selectedEntry.dateReceived} · At Destination</p>
                     ) : (
-                      <p className="text-xs text-white/30 italic">Pending receipt confirmation</p>
+                      <p className="text-xs text-[var(--text-faint)] italic">Pending receipt confirmation</p>
                     )}
                   </div>
 
@@ -914,8 +914,8 @@ export default function RecordsExecutivePage() {
                     <div className={`absolute -left-[30px] top-0 w-6 h-6 rounded-full border-4 border-[#0b1120] flex items-center justify-center ${(selectedEntry.status === 'ACTIONED' || selectedEntry.status === 'CLOSED') ? 'bg-emerald-500' : 'bg-white/10'}`}>
                       {(selectedEntry.status === 'ACTIONED' || selectedEntry.status === 'CLOSED') && <Check size={12} className="text-[#0b1120]" />}
                     </div>
-                    <h4 className={`text-sm font-bold mb-0.5 ${(selectedEntry.status === 'ACTIONED' || selectedEntry.status === 'CLOSED') ? 'text-white' : 'text-white/40'}`}>ACTIONED</h4>
-                    <p className="text-xs text-white/50">{(selectedEntry.status === 'ACTIONED' || selectedEntry.status === 'CLOSED') ? 'See annotations for details' : 'Awaiting action'}</p>
+                    <h4 className={`text-sm font-bold mb-0.5 ${(selectedEntry.status === 'ACTIONED' || selectedEntry.status === 'CLOSED') ? 'text-[var(--text-primary)]' : 'text-[var(--text-faint)]'}`}>ACTIONED</h4>
+                    <p className="text-xs text-[var(--text-muted)]">{(selectedEntry.status === 'ACTIONED' || selectedEntry.status === 'CLOSED') ? 'See annotations for details' : 'Awaiting action'}</p>
                   </div>
 
                   {/* Closed */}
@@ -923,11 +923,11 @@ export default function RecordsExecutivePage() {
                     <div className={`absolute -left-[30px] top-0 w-6 h-6 rounded-full border-4 border-[#0b1120] flex items-center justify-center ${selectedEntry.status === 'CLOSED' ? 'bg-uacc-gold' : 'bg-white/10 border-dashed'}`}>
                       {selectedEntry.status === 'CLOSED' && <Check size={12} className="text-[#0b1120]" />}
                     </div>
-                    <h4 className={`text-sm font-bold mb-0.5 ${selectedEntry.status === 'CLOSED' ? 'text-uacc-gold' : 'text-white/40'}`}>CLOSED</h4>
+                    <h4 className={`text-sm font-bold mb-0.5 ${selectedEntry.status === 'CLOSED' ? 'text-uacc-gold' : 'text-[var(--text-faint)]'}`}>CLOSED</h4>
                     {selectedEntry.status === 'CLOSED' ? (
-                      <p className="text-xs text-white/50">Registry entry closed and filed</p>
+                      <p className="text-xs text-[var(--text-muted)]">Registry entry closed and filed</p>
                     ) : (
-                      <p className="text-xs text-white/30 italic">Entry remains open</p>
+                      <p className="text-xs text-[var(--text-faint)] italic">Entry remains open</p>
                     )}
                   </div>
                 </div>
@@ -936,28 +936,28 @@ export default function RecordsExecutivePage() {
               {/* Annotation Chain */}
               <div className="card rounded-xl p-5 border border-white/5 bg-white/[0.02]">
                 <div className="flex items-center gap-3 mb-1">
-                  <h3 className="text-[10px] font-bold text-white/50 uppercase tracking-widest">Annotation Chain</h3>
+                  <h3 className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-widest">Annotation Chain</h3>
                   <span className="bg-uacc-gold/20 text-uacc-gold px-2 py-0.5 rounded-full text-[10px] font-bold">{selectedEntry.annotations.length}</span>
                 </div>
-                <p className="text-xs text-white/40 mb-6 italic">All remarks, instructions and actions recorded in chronological order</p>
+                <p className="text-xs text-[var(--text-faint)] mb-6 italic">All remarks, instructions and actions recorded in chronological order</p>
 
                 <div className="space-y-4">
                   {selectedEntry.annotations.map(ann => (
                     <div key={ann.id} className="flex gap-3">
-                      <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${ROLE_COLORS[ann.role] || 'bg-white/10 text-white'}`}>
+                      <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${ROLE_COLORS[ann.role] || 'bg-white/10 text-[var(--text-primary)]'}`}>
                         {ann.author.charAt(0)}
                       </div>
                       <div className="flex-1">
                         <div className="flex items-baseline justify-between mb-1">
                           <div className="flex items-center gap-2">
-                            <span className="text-sm font-bold text-white">{ann.author}</span>
-                            <span className={`text-[8px] font-bold uppercase px-1.5 py-0.5 rounded ${ROLE_COLORS[ann.role] || 'bg-white/10 text-white/50'}`}>
+                            <span className="text-sm font-bold text-[var(--text-primary)]">{ann.author}</span>
+                            <span className={`text-[8px] font-bold uppercase px-1.5 py-0.5 rounded ${ROLE_COLORS[ann.role] || 'bg-white/10 text-[var(--text-muted)]'}`}>
                               {ann.role.replace('_', ' ')}
                             </span>
                           </div>
-                          <span className="text-[10px] text-white/40">{ann.timestamp}</span>
+                          <span className="text-[10px] text-[var(--text-faint)]">{ann.timestamp}</span>
                         </div>
-                        <div className="bg-white/5 border border-white/5 border-l-2 border-l-uacc-gold rounded-r-lg rounded-bl-lg p-3 text-sm text-white/80 leading-relaxed shadow-sm">
+                        <div className="bg-white/5 border border-white/5 border-l-2 border-l-uacc-gold rounded-r-lg rounded-bl-lg p-3 text-sm text-[var(--text-secondary)] leading-relaxed shadow-sm">
                           {ann.text}
                         </div>
                       </div>
@@ -966,19 +966,19 @@ export default function RecordsExecutivePage() {
                 </div>
 
                 <div className="mt-8 pt-6 border-t border-white/10">
-                  <h4 className="text-xs font-bold text-white mb-3">Add Annotation</h4>
+                  <h4 className="text-xs font-bold text-[var(--text-primary)] mb-3">Add Annotation</h4>
                   <textarea 
                     value={annotationText}
                     onChange={(e) => setAnnotationText(e.target.value)}
                     placeholder="Add a remark, instruction, or update to this registry entry..."
-                    className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-sm text-white focus:outline-none focus:border-uacc-gold/50 resize-none h-24 mb-3"
+                    className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-sm text-[var(--text-primary)] focus:outline-none focus:border-uacc-gold/50 resize-none h-24 mb-3"
                   />
                   <div className="flex items-center justify-between">
-                    <span className="text-[10px] text-white/40">{annotationText.length} characters</span>
+                    <span className="text-[10px] text-[var(--text-faint)]">{annotationText.length} characters</span>
                     <button 
                       onClick={handleAddAnnotation}
                       disabled={!annotationText.trim()}
-                      className="flex items-center gap-2 px-4 py-2 rounded-lg bg-uacc-gold/20 text-uacc-gold border border-uacc-gold/30 hover:bg-uacc-gold hover:text-white transition-colors text-sm font-bold disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="flex items-center gap-2 px-4 py-2 rounded-lg bg-uacc-gold/20 text-uacc-gold border border-uacc-gold/30 hover:bg-uacc-gold hover:text-[var(--text-primary)] transition-colors text-sm font-bold disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       <MessageSquare size={16} /> Add Annotation
                     </button>
@@ -1063,7 +1063,7 @@ export default function RecordsExecutivePage() {
                   />
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-xs font-bold text-white/70 mb-1.5 uppercase tracking-wider">Document Type</label>
                     <select 
@@ -1084,7 +1084,7 @@ export default function RecordsExecutivePage() {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-xs font-bold text-white/70 mb-1.5 uppercase tracking-wider">Source *</label>
                     <input type="text" required value={formData.source} onChange={e => setFormData({...formData, source: e.target.value})} placeholder="e.g. Ministry of Transport" className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2.5 text-sm text-white focus:outline-none focus:border-uacc-gold/50" />
@@ -1095,7 +1095,7 @@ export default function RecordsExecutivePage() {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {formData.direction === 'INCOMING' && (
                     <>
                       <div>
@@ -1138,7 +1138,7 @@ export default function RecordsExecutivePage() {
                   )}
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-xs font-bold text-white/70 mb-1.5 uppercase tracking-wider">Priority</label>
                     <select 
@@ -1166,7 +1166,7 @@ export default function RecordsExecutivePage() {
                   </div>
                 )}
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-xs font-bold text-white/70 mb-1.5 uppercase tracking-wider">File Reference</label>
                     <input type="text" value={formData.fileRef} onChange={e => setFormData({...formData, fileRef: e.target.value})} placeholder="e.g. UACC/LEGAL/2026/005" className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2.5 text-sm text-white focus:outline-none focus:border-uacc-gold/50" />

@@ -459,7 +459,7 @@ export default function DashboardHome() {
                         <span className="text-xs font-semibold" style={{ color: 'var(--text-primary)' }}>
                           {item.user}
                         </span>
-                        <span className="text-[10px] text-slate-400 font-medium">
+                        <span className="text-[10px] text-(--text-muted) font-medium">
                           ({item.role?.replace(/_/g, ' ') || ''})
                         </span>
                         <Badge status={item.module?.toUpperCase()?.replace(/\s+/g, '_') || 'SYSTEM'} label={item.module} />
@@ -513,7 +513,7 @@ export default function DashboardHome() {
               pendingProcurement.map((req) => (
                 <div
                   key={req.id}
-                  className="border border-(--border-default) rounded-lg p-4 bg-surface-low/30 hover:border-(--border-gold) transition-all duration-200 flex flex-col gap-2.5"
+                  className="border border-(--border-default) rounded-lg p-4 bg-(--bg-surface-low) hover:border-(--border-gold) transition-all duration-200 flex flex-col gap-2.5"
                 >
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-bold text-uacc-gold uppercase tracking-wider font-heading">
@@ -522,7 +522,7 @@ export default function DashboardHome() {
                     <Badge status={req.status} />
                   </div>
                   <div>
-                    <h4 className="text-sm font-bold text-white truncate" title={req.item}>
+                    <h4 className="text-sm font-bold text-(--text-primary) truncate" title={req.item}>
                       {req.item}
                     </h4>
                     <p className="text-[11px]" style={{ color: 'var(--text-muted)' }}>

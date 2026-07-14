@@ -129,7 +129,7 @@ export default function SigningModal({ circulationId, currentUserRole, isOpen, o
           transition={{ duration: 0.2, ease: 'easeOut' }}
         >
           <motion.div
-            className="card rounded-2xl w-full max-w-md p-6 flex flex-col gap-4"
+            className="card rounded-2xl w-full max-w-md p-6 flex flex-col gap-4 max-h-[90vh] overflow-y-auto"
             style={{ background: 'var(--bg-surface)' }}
             initial={{ opacity: 0, scale: 0.96, y: 12 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}

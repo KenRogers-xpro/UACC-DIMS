@@ -109,7 +109,7 @@ export default function DraftEditorPage() {
     }
   }
 
-  if (loading) return <div className="p-8 text-white/50">Loading...</div>
+  if (loading) return <div className="p-8 text-(--text-muted)">Loading...</div>
 
   const needsReview = draft?.origin === 'AI_GENERATED' && !draft?.reviewedAt
   const canSubmit = !isNew && (!needsReview)
@@ -155,16 +155,16 @@ export default function DraftEditorPage() {
 
       <div className="card rounded-xl p-6 flex flex-col gap-4">
         <div className="flex justify-between items-center">
-          <h3 className="text-lg font-semibold text-white">Document Details</h3>
+          <h3 className="text-lg font-semibold text-(--text-primary)">Document Details</h3>
           {!isNew && (
-            <div className="flex items-center gap-2 text-xs text-white/50">
+            <div className="flex items-center gap-2 text-xs text-(--text-muted)">
               {saving ? <><Save size={12} className="animate-pulse" /> Saving...</> : 'Saved'}
             </div>
           )}
         </div>
 
         <div className="flex flex-col gap-1.5">
-          <label className="text-sm font-medium text-white/70">Title</label>
+          <label className="text-sm font-medium text-(--text-secondary)">Title</label>
           <input
             type="text"
             value={title}
@@ -175,7 +175,7 @@ export default function DraftEditorPage() {
         </div>
 
         <div className="flex flex-col gap-1.5">
-          <label className="text-sm font-medium text-white/70">Content</label>
+          <label className="text-sm font-medium text-(--text-secondary)">Content</label>
           <textarea
             value={content}
             onChange={e => setContent(e.target.value)}

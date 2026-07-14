@@ -392,7 +392,7 @@ export default function ProcurementPage() {
                     <td>
                       <div className="flex flex-col min-w-0">
                         <span 
-                          className="font-bold text-white max-w-[200px] truncate" 
+                          className="font-bold text-[var(--text-primary)] max-w-[200px] truncate"
                           title={req.itemDescription}
                         >
                           {req.itemDescription}
@@ -484,7 +484,7 @@ export default function ProcurementPage() {
           transition={{ duration: 0.2, ease: 'easeOut' }}
         >
           <motion.div
-            className="card rounded-2xl w-full max-w-2xl bg-[var(--bg-surface)] flex flex-col my-8 shadow-2xl relative shadow-black/50"
+            className="card rounded-2xl w-full max-w-2xl bg-[var(--bg-surface)] flex flex-col my-8 shadow-2xl relative shadow-black/50 max-h-[90vh] overflow-y-auto"
             initial={{ opacity: 0, scale: 0.96, y: 12 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.96, y: 12 }}
@@ -504,7 +504,7 @@ export default function ProcurementPage() {
               </div>
               <button
                 onClick={() => setReviewModalOpen(false)}
-                className="p-1.5 rounded-lg text-[var(--text-muted)] hover:bg-white/5 hover:text-white transition-colors cursor-pointer"
+                className="p-1.5 rounded-lg text-[var(--text-muted)] hover:bg-white/5 hover:text-[var(--text-primary)] transition-colors cursor-pointer"
               >
                 <X size={20} />
               </button>
@@ -518,27 +518,27 @@ export default function ProcurementPage() {
               <div className="flex flex-col gap-5">
                 <div>
                   <p className="text-[10px] uppercase tracking-widest font-semibold text-[var(--text-muted)] mb-2">Request Details</p>
-                  <p className="text-base font-bold text-white leading-snug">
+                  <p className="text-base font-bold text-[var(--text-primary)] leading-snug">
                     {selectedRequest.itemDescription}
                   </p>
                 </div>
 
-                <div className="grid grid-cols-2 gap-y-3 gap-x-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-3 gap-x-4">
                   <div className="flex flex-col gap-0.5">
                     <span className="text-[10px] text-[var(--text-muted)] uppercase tracking-wider">Quantity</span>
-                    <span className="text-sm font-semibold text-white">{selectedRequest.quantity}</span>
+                    <span className="text-sm font-semibold text-[var(--text-primary)]">{selectedRequest.quantity}</span>
                   </div>
                   <div className="flex flex-col gap-0.5">
                     <span className="text-[10px] text-[var(--text-muted)] uppercase tracking-wider">Department</span>
-                    <span className="text-sm font-semibold text-white">{formatDept(selectedRequest.department)}</span>
+                    <span className="text-sm font-semibold text-[var(--text-primary)]">{formatDept(selectedRequest.department)}</span>
                   </div>
                   <div className="flex flex-col gap-0.5">
                     <span className="text-[10px] text-[var(--text-muted)] uppercase tracking-wider">Requested By</span>
-                    <span className="text-sm font-semibold text-white">{selectedRequest.requestedBy}</span>
+                    <span className="text-sm font-semibold text-[var(--text-primary)]">{selectedRequest.requestedBy}</span>
                   </div>
                   <div className="flex flex-col gap-0.5">
                     <span className="text-[10px] text-[var(--text-muted)] uppercase tracking-wider">Date Submitted</span>
-                    <span className="text-sm font-semibold text-white">{formatDate(selectedRequest.requestedAt)}</span>
+                    <span className="text-sm font-semibold text-[var(--text-primary)]">{formatDate(selectedRequest.requestedAt)}</span>
                   </div>
                 </div>
 
@@ -559,7 +559,7 @@ export default function ProcurementPage() {
                     <span className="text-[10px] text-[var(--text-muted)] uppercase tracking-wider">Supporting Document</span>
                     <div className="flex items-center gap-3 bg-[var(--bg-surface-container)] border border-[var(--border-subtle)] rounded-lg p-3">
                       <Paperclip size={16} className="text-uacc-gold" />
-                      <span className="text-sm font-medium text-white flex-1 truncate">{selectedRequest.supportingDocument}</span>
+                      <span className="text-sm font-medium text-[var(--text-primary)] flex-1 truncate">{selectedRequest.supportingDocument}</span>
                       <a href="#" className="text-xs text-blue-400 hover:underline font-semibold flex items-center gap-1">
                         <Download size={12} /> Download
                       </a>
@@ -582,7 +582,7 @@ export default function ProcurementPage() {
                       <Check size={14} className="text-white" />
                     </div>
                     <div className="flex flex-col bg-[var(--bg-surface-low)] border-l-2 border-emerald-500 rounded-r-lg p-3 flex-1 border-y border-r border-y-[var(--border-subtle)] border-r-[var(--border-subtle)]">
-                      <span className="text-sm font-bold text-white">Submitted</span>
+                      <span className="text-sm font-bold text-[var(--text-primary)]">Submitted</span>
                       <span className="text-xs text-[var(--text-muted)] mt-1">
                         By: {selectedRequest.requestedBy} &middot; {formatDate(selectedRequest.requestedAt)}
                       </span>
@@ -609,7 +609,7 @@ export default function ProcurementPage() {
                       selectedRequest.deptHeadApproval === 'APPROVED' ? 'border-emerald-500' :
                       selectedRequest.deptHeadApproval === 'REJECTED' ? 'border-uacc-red' : 'border-uacc-gold'
                     }`}>
-                      <span className="text-sm font-bold text-white">Dept Head Review</span>
+                      <span className="text-sm font-bold text-[var(--text-primary)]">Dept Head Review</span>
                       {selectedRequest.deptHeadApproval ? (
                         <>
                           <span className={`text-xs font-semibold mt-1 ${
@@ -641,7 +641,7 @@ export default function ProcurementPage() {
                       </div>
                     ) : (
                       <div className={`w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 ${
-                        selectedRequest.deptHeadApproval === 'APPROVED' ? 'bg-uacc-gold/20 border-2 border-uacc-gold animate-pulse' : 'bg-[var(--surface-container)] border border-[var(--border-subtle)]'
+                        selectedRequest.deptHeadApproval === 'APPROVED' ? 'bg-uacc-gold/20 border-2 border-uacc-gold animate-pulse' : 'bg-[var(--bg-surface-container)] border border-[var(--border-subtle)]'
                       }`}>
                         {selectedRequest.deptHeadApproval === 'APPROVED' ? <Clock size={12} className="text-uacc-gold" /> : <Clock size={12} className="text-[var(--text-muted)]" />}
                       </div>
@@ -652,7 +652,7 @@ export default function ProcurementPage() {
                       selectedRequest.gmApproval === 'REJECTED' ? 'border-uacc-red' :
                       selectedRequest.deptHeadApproval === 'APPROVED' ? 'border-uacc-gold' : 'border-[var(--border-subtle)]'
                     }`}>
-                      <span className="text-sm font-bold text-white">GM Final Approval</span>
+                      <span className="text-sm font-bold text-[var(--text-primary)]">GM Final Approval</span>
                       {selectedRequest.gmApproval ? (
                         <>
                           <span className={`text-xs font-semibold mt-1 ${
@@ -714,12 +714,12 @@ export default function ProcurementPage() {
             {/* Header */}
             <div className="p-6 border-b border-[var(--border-subtle)] flex items-start justify-between bg-[var(--bg-surface-low)]">
               <div>
-                <h2 className="text-xl font-bold font-heading text-white mb-1">New Procurement Request</h2>
+                <h2 className="text-xl font-bold font-heading text-[var(--text-primary)] mb-1">New Procurement Request</h2>
                 <p className="text-xs font-semibold text-uacc-gold tracking-widest uppercase">Digital Form 5 — UACC</p>
               </div>
               <button
                 onClick={() => setSubmitFormOpen(false)}
-                className="p-1.5 rounded-lg text-[var(--text-muted)] hover:bg-white/5 hover:text-white transition-colors cursor-pointer"
+                className="p-1.5 rounded-lg text-[var(--text-muted)] hover:bg-white/5 hover:text-[var(--text-primary)] transition-colors cursor-pointer"
               >
                 <X size={20} />
               </button>
@@ -741,7 +741,7 @@ export default function ProcurementPage() {
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="flex flex-col gap-1.5">
                   <label className="text-xs font-semibold font-heading text-[var(--text-muted)] uppercase tracking-wider">
                     Quantity <span className="text-uacc-red">*</span>
@@ -827,7 +827,7 @@ export default function ProcurementPage() {
                 {selectedFileName && (
                   <div className="flex items-center gap-2 mt-1 bg-uacc-gold/5 border border-uacc-gold/20 px-3 py-2 rounded-lg text-xs">
                     <Paperclip size={14} className="text-uacc-gold" />
-                    <span className="font-semibold text-white truncate flex-1">{selectedFileName}</span>
+                    <span className="font-semibold text-[var(--text-primary)] truncate flex-1">{selectedFileName}</span>
                     <button
                       type="button"
                       onClick={(e) => {
@@ -880,7 +880,7 @@ export default function ProcurementPage() {
             {toast.type === 'success' && <CheckCircle size={18} className="text-emerald-400 flex-shrink-0" />}
             {toast.type === 'error' && <XCircle size={18} className="text-uacc-red flex-shrink-0" />}
             {toast.type === 'info' && <CheckCircle size={18} className="text-uacc-gold flex-shrink-0" />}
-            <span className="text-xs font-semibold text-white">
+            <span className="text-xs font-semibold text-[var(--text-primary)]">
               {toast.message}
             </span>
           </div>

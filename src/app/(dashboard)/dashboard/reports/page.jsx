@@ -100,8 +100,8 @@ const DEPARTMENTS = [
 const CustomTooltip = ({ active, payload, label }) => {
   if (active && payload && payload.length) {
     return (
-      <div className="bg-[var(--surface-container)] border border-[var(--border-subtle)] p-3 rounded-lg shadow-xl text-sm">
-        <p className="font-bold text-white mb-2 pb-1 border-b border-[var(--border-subtle)]">{label}</p>
+      <div className="bg-[var(--bg-surface-container)] border border-[var(--border-subtle)] p-3 rounded-lg shadow-xl text-sm">
+        <p className="font-bold text-[var(--text-primary)] mb-2 pb-1 border-b border-[var(--border-subtle)]">{label}</p>
         {payload.map((entry, index) => (
           <p key={index} style={{ color: entry.color }} className="flex justify-between gap-4 font-semibold text-xs mb-1">
             <span className="capitalize">{entry.name}:</span>
@@ -207,7 +207,7 @@ export default function ReportsPage() {
       <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
         {/* Left: Procurement Trend Line Chart */}
         <div className="md:col-span-8 card rounded-xl p-6">
-          <h3 className="font-heading font-bold text-white mb-6">Procurement Requests — 6 Month Trend</h3>
+          <h3 className="font-heading font-bold text-[var(--text-primary)] mb-6">Procurement Requests — 6 Month Trend</h3>
           <div className="w-full" style={{ height: 280 }}>
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={MOCK_MONTHLY_PROCUREMENT} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
@@ -225,13 +225,13 @@ export default function ReportsPage() {
 
         {/* Right: Documents by Department Bar Chart */}
         <div className="md:col-span-4 card rounded-xl p-6">
-          <h3 className="font-heading font-bold text-white mb-6">Documents by Department</h3>
+          <h3 className="font-heading font-bold text-[var(--text-primary)] mb-6">Documents by Department</h3>
           <div className="w-full" style={{ height: 280 }}>
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={MOCK_DOCS_BY_DEPT} layout="vertical" margin={{ top: 0, right: 30, left: 20, bottom: 0 }}>
                 <XAxis type="number" hide />
                 <YAxis dataKey="dept" type="category" stroke="var(--text-muted)" fontSize={11} tickLine={false} axisLine={false} width={80} />
-                <Tooltip content={<CustomTooltip />} cursor={{fill: 'var(--surface-container)'}} />
+                <Tooltip content={<CustomTooltip />} cursor={{fill: 'var(--bg-surface-container)'}} />
                 {/* Gradient Definition */}
                 <defs>
                   <linearGradient id="colorCount" x1="0" y1="0" x2="1" y2="0">
@@ -250,7 +250,7 @@ export default function ReportsPage() {
       <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
         {/* Left: Activity Log Trend AreaChart */}
         <div className="md:col-span-6 card rounded-xl p-6">
-          <h3 className="font-heading font-bold text-white mb-6">Activity Log Submissions — Weekly Trend</h3>
+          <h3 className="font-heading font-bold text-[var(--text-primary)] mb-6">Activity Log Submissions — Weekly Trend</h3>
           <div className="w-full" style={{ height: 240 }}>
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={MOCK_ACTIVITY_TREND} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
@@ -267,7 +267,7 @@ export default function ReportsPage() {
 
         {/* Right: Department Performance Table */}
         <div className="md:col-span-6 card rounded-xl p-6 flex flex-col">
-          <h3 className="font-heading font-bold text-white mb-6">Department Log Compliance</h3>
+          <h3 className="font-heading font-bold text-[var(--text-primary)] mb-6">Department Log Compliance</h3>
           <div className="flex-1 overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
@@ -281,7 +281,7 @@ export default function ReportsPage() {
               <tbody>
                 {MOCK_DEPT_PERFORMANCE.map((dept, idx) => (
                   <tr key={dept.dept} className={`border-b border-[var(--border-subtle)]/50 ${idx === MOCK_DEPT_PERFORMANCE.length - 1 ? 'border-b-0' : ''}`}>
-                    <td className="py-3 text-sm font-semibold text-white whitespace-nowrap">{dept.dept}</td>
+                    <td className="py-3 text-sm font-semibold text-[var(--text-primary)] whitespace-nowrap">{dept.dept}</td>
                     <td className="py-3 text-sm text-[var(--text-secondary)] text-right">{dept.logsSubmitted}</td>
                     <td className="py-3 text-sm text-[var(--text-secondary)] text-right">{dept.avgHours.toFixed(1)}</td>
                     <td className="py-3 pl-6">
@@ -292,7 +292,7 @@ export default function ReportsPage() {
                             style={{ width: `${dept.compliance}%` }}
                           ></div>
                         </div>
-                        <span className="text-xs font-bold text-white w-8 text-right">{dept.compliance}%</span>
+                        <span className="text-xs font-bold text-[var(--text-primary)] w-8 text-right">{dept.compliance}%</span>
                       </div>
                     </td>
                   </tr>
@@ -310,7 +310,7 @@ export default function ReportsPage() {
 
         <div className="flex items-center gap-3 mb-2 relative z-10">
           <FileText className="text-uacc-gold" size={24} />
-          <h3 className="font-heading font-bold text-xl text-white">Generate Report</h3>
+          <h3 className="font-heading font-bold text-xl text-[var(--text-primary)]">Generate Report</h3>
         </div>
         <p className="text-sm text-[var(--text-muted)] mb-6 relative z-10">Select report parameters and export as a formatted PDF.</p>
 
@@ -425,6 +425,7 @@ export default function ReportsPage() {
               {/* Data Presentation */}
               <h4 className="text-gray-700 font-bold text-sm uppercase tracking-wider mb-3">Data Overview</h4>
               {reportType === 'PROCUREMENT_SUMMARY' && (
+                <div className="overflow-x-auto">
                 <table className="w-full text-left border-collapse border border-gray-200">
                   <thead className="bg-gray-50">
                     <tr className="text-xs uppercase tracking-wider text-gray-500 border-b border-gray-200">
@@ -447,9 +448,11 @@ export default function ReportsPage() {
                     ))}
                   </tbody>
                 </table>
+                </div>
               )}
 
               {reportType === 'ACTIVITY_LOG_REPORT' && (
+                <div className="overflow-x-auto">
                 <table className="w-full text-left border-collapse border border-gray-200">
                   <thead className="bg-gray-50">
                     <tr className="text-xs uppercase tracking-wider text-gray-500 border-b border-gray-200">
@@ -468,9 +471,11 @@ export default function ReportsPage() {
                     ))}
                   </tbody>
                 </table>
+                </div>
               )}
 
               {reportType === 'DOCUMENT_INVENTORY' && (
+                <div className="overflow-x-auto">
                 <table className="w-full text-left border-collapse border border-gray-200">
                   <thead className="bg-gray-50">
                     <tr className="text-xs uppercase tracking-wider text-gray-500 border-b border-gray-200">
@@ -487,9 +492,11 @@ export default function ReportsPage() {
                     ))}
                   </tbody>
                 </table>
+                </div>
               )}
 
               {reportType === 'DEPT_PERFORMANCE' && (
+                <div className="overflow-x-auto">
                 <table className="w-full text-left border-collapse border border-gray-200">
                   <thead className="bg-gray-50">
                     <tr className="text-xs uppercase tracking-wider text-gray-500 border-b border-gray-200">
@@ -516,9 +523,11 @@ export default function ReportsPage() {
                     ))}
                   </tbody>
                 </table>
+                </div>
               )}
 
               {reportType === 'AUDIT_SUMMARY' && (
+                <div className="overflow-x-auto">
                 <table className="w-full text-left border-collapse border border-gray-200">
                   <thead className="bg-gray-50">
                     <tr className="text-xs uppercase tracking-wider text-gray-500 border-b border-gray-200">
@@ -539,6 +548,7 @@ export default function ReportsPage() {
                     ))}
                   </tbody>
                 </table>
+                </div>
               )}
             </div>
 
@@ -595,7 +605,7 @@ export default function ReportsPage() {
             {toast.type === 'success' && <CheckCircle size={18} className="text-emerald-400 flex-shrink-0" />}
             {toast.type === 'error' && <XCircle size={18} className="text-uacc-red flex-shrink-0" />}
             {toast.type === 'info' && <Info size={18} className="text-uacc-gold flex-shrink-0" />}
-            <span className="text-xs font-semibold text-white">
+            <span className="text-xs font-semibold text-[var(--text-primary)]">
               {toast.message}
             </span>
           </div>

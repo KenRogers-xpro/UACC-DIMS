@@ -1,9 +1,28 @@
 'use client'
-import { usePathname } from 'next/navigation'
-import { Menu, Bell, ChevronLeft, ChevronRight, Search } from 'lucide-react'
+import { useState, useRef, useEffect } from 'react'
+import { usePathname, useRouter } from 'next/navigation'
+import { motion, AnimatePresence } from 'framer-motion'
+import { Menu, Bell, ChevronLeft, ChevronRight, Search, FileText, MessageSquare, Megaphone, CheckCheck } from 'lucide-react'
 import ThemeToggle from '@/components/ui/ThemeToggle'
 import StatusDot from '@/components/ui/StatusDot'
 import { useOnlineStatus } from '@/lib/useOnlineStatus'
+import { useNotifications } from '@/lib/useNotifications'
+
+const NOTIFICATION_ICONS = {
+  CIRCULATION: FileText,
+  MESSAGE: MessageSquare,
+  ANNOUNCEMENT: Megaphone,
+}
+
+function timeAgo(dateStr) {
+  const diffMs = Date.now() - new Date(dateStr).getTime()
+  const mins = Math.floor(diffMs / 60000)
+  if (mins < 1) return 'just now'
+  if (mins < 60) return `${mins}m ago`
+  const hours = Math.floor(mins / 60)
+  if (hours < 24) return `${hours}h ago`
+  return `${Math.floor(hours / 24)}d ago`
+}
 
 const PAGE_TITLES = {
   '/dashboard':                 { title: 'Dashboard',       sub: 'Overview of operational activities' },
@@ -23,8 +42,27 @@ const PAGE_TITLES = {
 
 export default function TopBar({ user, sidebarCollapsed, onToggleSidebar, onMobileMenuOpen }) {
   const pathname = usePathname()
+  const router = useRouter()
   const page = PAGE_TITLES[pathname] || { title: 'DIMS', sub: 'Uganda Air Cargo Corporation' }
   const { isUserOnline } = useOnlineStatus()
+  const { items: notifications, unreadCount, refresh: refreshNotifications } = useNotifications()
+
+  const [notifOpen, setNotifOpen] = useState(false)
+  const notifRef = useRef(null)
+
+  useEffect(() => {
+    if (!notifOpen) return
+    const handleClickOutside = (e) => {
+      if (notifRef.current && !notifRef.current.contains(e.target)) setNotifOpen(false)
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [notifOpen])
+
+  const handleNotificationClick = (item) => {
+    setNotifOpen(false)
+    router.push(item.link)
+  }
 
   const userInitial = user?.name?.charAt(0)?.toUpperCase() || 'U'
   const firstName = user?.name?.split(' ')[0] || 'User'
@@ -87,18 +125,83 @@ export default function TopBar({ user, sidebarCollapsed, onToggleSidebar, onMobi
         <ThemeToggle />
 
         {/* Notification bell */}
-        <button
-          className="relative p-2 rounded-md topbar-icon-btn transition-colors"
-          style={{ color: 'var(--text-muted)' }}
-          title="Notifications"
-          aria-label="Notifications"
-        >
-          <Bell size={16} />
-          <span
-            className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full bg-uacc-red"
-            style={{ boxShadow: '0 0 0 1.5px var(--nav-bg)' }}
-          />
-        </button>
+        <div className="relative" ref={notifRef}>
+          <button
+            onClick={() => {
+              setNotifOpen((open) => !open)
+              if (!notifOpen) refreshNotifications()
+            }}
+            className="relative p-2 rounded-md topbar-icon-btn transition-colors"
+            style={{ color: 'var(--text-muted)' }}
+            title="Notifications"
+            aria-label="Notifications"
+          >
+            <Bell size={16} />
+            {unreadCount > 0 && (
+              <span
+                className="absolute top-0.5 right-0.5 min-w-[15px] h-[15px] px-[3px] flex items-center justify-center rounded-full bg-uacc-red text-white text-[9px] font-bold leading-none"
+                style={{ boxShadow: '0 0 0 1.5px var(--nav-bg)' }}
+              >
+                {unreadCount > 9 ? '9+' : unreadCount}
+              </span>
+            )}
+          </button>
+
+          <AnimatePresence>
+            {notifOpen && (
+              <motion.div
+                className="card absolute right-0 mt-2 w-80 max-w-[90vw] rounded-xl overflow-hidden shadow-2xl z-30"
+                style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-default)' }}
+                initial={{ opacity: 0, scale: 0.96, y: -8 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.96, y: -8 }}
+                transition={{ duration: 0.15, ease: 'easeOut' }}
+              >
+                <div className="px-4 py-3 border-b flex items-center justify-between" style={{ borderColor: 'var(--border-subtle)' }}>
+                  <span className="font-heading font-bold text-xs uppercase tracking-wider" style={{ color: 'var(--text-primary)' }}>
+                    Notifications
+                  </span>
+                  {unreadCount > 0 && (
+                    <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-uacc-gold/15 text-uacc-gold">
+                      {unreadCount} unread
+                    </span>
+                  )}
+                </div>
+
+                <div className="max-h-80 overflow-y-auto">
+                  {notifications.length === 0 ? (
+                    <div className="px-4 py-8 flex flex-col items-center gap-2 text-center">
+                      <CheckCheck size={22} style={{ color: 'var(--text-faint)' }} />
+                      <p className="text-xs" style={{ color: 'var(--text-muted)' }}>You&apos;re all caught up</p>
+                    </div>
+                  ) : (
+                    notifications.map((item) => {
+                      const Icon = NOTIFICATION_ICONS[item.type] || Bell
+                      return (
+                        <button
+                          key={`${item.type}-${item.id}`}
+                          onClick={() => handleNotificationClick(item)}
+                          className="w-full text-left px-4 py-3 border-b hover:bg-white/5 transition-colors flex items-start gap-3"
+                          style={{ borderColor: 'var(--border-subtle)' }}
+                        >
+                          <div className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5"
+                               style={{ background: 'rgba(201,151,58,0.12)', border: '1px solid rgba(201,151,58,0.25)' }}>
+                            <Icon size={13} className="text-uacc-gold" />
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <p className="text-xs font-semibold truncate" style={{ color: 'var(--text-primary)' }}>{item.title}</p>
+                            <p className="text-[11px] truncate" style={{ color: 'var(--text-muted)' }}>{item.subtitle}</p>
+                            <p className="text-[10px] mt-0.5" style={{ color: 'var(--text-faint)' }}>{timeAgo(item.createdAt)}</p>
+                          </div>
+                        </button>
+                      )
+                    })
+                  )}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
 
         {/* Divider */}
         <div className="hidden sm:block w-px h-4 mx-1"
