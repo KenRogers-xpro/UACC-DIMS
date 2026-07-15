@@ -281,7 +281,7 @@ export default function DocumentViewerModal({
           transition={{ duration: 0.2, ease: 'easeOut' }}
         >
           <motion.div
-            className="card rounded-2xl w-full max-w-3xl bg-[var(--bg-surface)] flex flex-col my-8 shadow-2xl relative shadow-black/50 max-h-[90vh]"
+            className="card rounded-2xl w-full max-w-5xl bg-[var(--bg-surface)] flex flex-col my-8 shadow-2xl relative shadow-black/50 max-h-[92vh]"
             initial={{ opacity: 0, scale: 0.96, y: 12 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.96, y: 12 }}
@@ -348,7 +348,7 @@ export default function DocumentViewerModal({
             <div className="flex-1 overflow-y-auto p-5 flex flex-col gap-5">
               {tab === 'preview' && (
                 <>
-                  <div className="rounded-xl overflow-hidden border flex items-center justify-center bg-black/20" style={{ borderColor: 'var(--border-subtle)', minHeight: '340px' }}>
+                  <div className="rounded-xl overflow-hidden border flex items-center justify-center bg-black/20" style={{ borderColor: 'var(--border-subtle)', minHeight: '420px' }}>
                     {previewLoading ? (
                       <div className="py-16"><SkeletonLine height="h-8" /></div>
                     ) : !previewUrl ? (
@@ -359,10 +359,10 @@ export default function DocumentViewerModal({
                         </p>
                       </div>
                     ) : fileKind === 'pdf' ? (
-                      <iframe src={previewUrl} title={document.title} className="w-full h-[60vh]" />
+                      <iframe src={previewUrl} title={document.title} className="w-full h-[70vh]" />
                     ) : fileKind === 'image' ? (
                       // eslint-disable-next-line @next/next/no-img-element
-                      <img src={previewUrl} alt={document.title} className="max-w-full max-h-[60vh] object-contain" />
+                      <img src={previewUrl} alt={document.title} className="max-w-full max-h-[70vh] object-contain" />
                     ) : (
                       <div className="flex flex-col items-center gap-3 py-16 text-center px-6">
                         <FileText size={40} style={{ color: 'var(--text-muted)' }} />
