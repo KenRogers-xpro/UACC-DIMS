@@ -473,9 +473,16 @@ input, select, textarea {
 }
 
 /* ─── ANIMATIONS ──────────────────────────��──────────────────────── */
+/* `to` must end at transform: none, not translateY(0) — with
+   animation-fill-mode: forwards, that end state is frozen on the element
+   permanently, and translateY(0) is still a non-none transform value.
+   Per the CSS spec, any non-none transform creates a new containing block
+   for position:fixed descendants, which silently confined every modal
+   nested inside an .animate-fadeIn page wrapper (nearly every dashboard
+   page) to that div's box instead of the viewport. */
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(-6px); }
-  to   { opacity: 1; transform: translateY(0); }
+  to   { opacity: 1; transform: none; }
 }
 
 .animate-fadeIn {
@@ -489,7 +496,7 @@ input, select, textarea {
   }
   to {
     opacity: 1;
-    transform: translateY(0) scaleX(1);
+    transform: none;
   }
 }
 
