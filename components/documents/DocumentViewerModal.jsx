@@ -8,6 +8,8 @@ import Button from '@/components/ui/Button'
 import EmptyState from '@/components/ui/EmptyState'
 import { SkeletonLine } from '@/components/ui/SkeletonLoader'
 import SignaturesPanel from '@/components/circulation/SignaturesPanel'
+import AnnotationTrail from '@/components/circulation/AnnotationTrail'
+import CirculationLiveTracker from '@/components/circulation/CirculationLiveTracker'
 import SigningModal from '@/components/circulation/SigningModal'
 import { useCirculation } from '@/lib/useCirculation'
 import { notifyNotificationsChanged } from '@/lib/useNotifications'
@@ -371,6 +373,13 @@ export default function DocumentViewerModal({
               </button>
             </div>
 
+            {/* Circulation status strip — persistently visible across all
+                three tabs (not buried inside one), so it sits between the
+                header and the tab bar rather than inside the tab body. */}
+            <div className="px-5 py-2 flex-shrink-0 border-b" style={{ borderColor: 'var(--border-subtle)' }}>
+              <CirculationLiveTracker circulationId={circulation?.id} />
+            </div>
+
             {/* Tabs */}
             <div className="flex gap-1 px-5 pt-3 flex-shrink-0 border-b" style={{ borderColor: 'var(--border-subtle)' }}>
               {TABS.map((t) => (
@@ -534,58 +543,41 @@ export default function DocumentViewerModal({
 
               {tab === 'annotations' && (
                 <div className="flex flex-col gap-4 w-full max-w-3xl mx-auto">
-                  <form onSubmit={handlePostAnnotation} className="flex flex-col gap-2 w-full">
-                    <div className="flex gap-2 w-full min-w-0 items-start">
-                      <select
-                        className="input-field py-2 px-2 text-xs w-36 flex-shrink-0"
-                        value={newAnnotationType}
-                        onChange={(e) => setNewAnnotationType(e.target.value)}
-                      >
-                        {ANNOTATION_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
-                      </select>
-                      {/* Textarea, not a single-line input — real annotations
-                          ("Sir, audit has no objection, forwarded for your
-                          further consideration") are sentences. flex-1 +
-                          min-w-0 is what makes this the widest element in the
-                          row: flex children default to min-width:auto and
-                          refuse to shrink below their content otherwise,
-                          which is what was squeezing this into a sliver next
-                          to the dropdown. */}
-                      <textarea
-                        className="input-field flex-1 min-w-0 resize-none"
-                        rows={2}
-                        placeholder="Add a comment or note..."
-                        value={newAnnotationText}
-                        onChange={(e) => setNewAnnotationText(e.target.value)}
-                      />
-                      <Button type="submit" variant="primary" size="sm" loading={postingAnnotation} className="flex-shrink-0 self-start">Add</Button>
-                    </div>
+                  <form onSubmit={handlePostAnnotation} className="flex items-start gap-3 w-full">
+                    <select
+                      className="input-field w-40 shrink-0 py-2 px-2 text-xs"
+                      value={newAnnotationType}
+                      onChange={(e) => setNewAnnotationType(e.target.value)}
+                    >
+                      {ANNOTATION_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
+                    </select>
+                    {/* Textarea, not a single-line input — real annotations
+                        ("Sir, audit has no objection, forwarded for your
+                        further consideration") are sentences. */}
+                    <textarea
+                      className="input-field flex-1 min-w-0 resize-none"
+                      rows={2}
+                      placeholder="Add a comment or note..."
+                      value={newAnnotationText}
+                      onChange={(e) => setNewAnnotationText(e.target.value)}
+                    />
+                    <Button type="submit" variant="primary" size="sm" loading={postingAnnotation} className="shrink-0">Add</Button>
                   </form>
 
-                  {annotationsLoading ? (
+                  {/* Unified trail — CirculationStep routing history and
+                      Annotation side notes interleaved by timestamp, the
+                      same way both sit on the same page of a physical
+                      docket. SignaturesPanel (the other tab) stays the
+                      separate, pure proof-of-authenticity view. */}
+                  {(annotationsLoading || circulationLoading) ? (
                     <div className="flex flex-col gap-2">
-                      <SkeletonLine height="h-12" />
-                      <SkeletonLine height="h-12" />
+                      <SkeletonLine height="h-16" />
+                      <SkeletonLine height="h-16" />
                     </div>
-                  ) : annotations.length === 0 ? (
-                    <EmptyState icon={MessageSquare} title="No annotations yet" message="Comments and notes on this document will appear here." />
+                  ) : annotations.length === 0 && !(circulation?.steps?.length) ? (
+                    <EmptyState icon={MessageSquare} title="No annotations yet" message="Comments, notes, and routing history for this document will appear here." />
                   ) : (
-                    <div className="flex flex-col gap-3">
-                      {annotations.map((a) => (
-                        <div key={a.id} className="p-3 rounded-lg border" style={{ borderColor: 'var(--border-subtle)' }}>
-                          <div className="flex items-center justify-between mb-1.5">
-                            <div className="flex items-center gap-2">
-                              <span className="text-xs font-semibold" style={{ color: 'var(--text-primary)' }}>{a.author?.name}</span>
-                              <Badge status={a.type} label={a.type} />
-                            </div>
-                            <span className="text-[10px]" style={{ color: 'var(--text-faint)' }}>
-                              {new Date(a.createdAt).toLocaleString()}
-                            </span>
-                          </div>
-                          <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>{a.text}</p>
-                        </div>
-                      ))}
-                    </div>
+                    <AnnotationTrail circulation={circulation} annotations={annotations} />
                   )}
                 </div>
               )}

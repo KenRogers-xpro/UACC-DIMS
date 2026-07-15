@@ -310,38 +310,49 @@ select option {
   color: var(--text-primary);
 }
 
-.input-field {
-  background: var(--input-bg);
-  border: 1px solid var(--input-border);
-  color: var(--input-text);
-  border-radius: 8px;
-  padding: 11px 14px;
-  font-size: 13px;
-  width: 100%;
-  outline: none;
-  transition: border-color 0.28s cubic-bezier(0.4, 0, 0.2, 1),
-              background-color 0.28s cubic-bezier(0.4, 0, 0.2, 1),
-              box-shadow 0.28s cubic-bezier(0.4, 0, 0.2, 1);
-}
+/* @layer components — Tailwind v4 puts its own utility classes in an
+   `utilities` layer, and per the CSS cascade-layers spec, ANY unlayered
+   style always beats ALL layered styles regardless of source order or
+   specificity. .input-field's `width: 100%` was unlayered plain CSS, so it
+   was silently overriding every `w-*`/`flex-1`/`min-w-0` utility applied
+   alongside it on the same element — no amount of className changes could
+   ever have fixed that. Putting it in @layer components (which Tailwind
+   registers with lower priority than `utilities`) lets those utilities win
+   again, as intended. */
+@layer components {
+  .input-field {
+    background: var(--input-bg);
+    border: 1px solid var(--input-border);
+    color: var(--input-text);
+    border-radius: 8px;
+    padding: 11px 14px;
+    font-size: 13px;
+    width: 100%;
+    outline: none;
+    transition: border-color 0.28s cubic-bezier(0.4, 0, 0.2, 1),
+                background-color 0.28s cubic-bezier(0.4, 0, 0.2, 1),
+                box-shadow 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+  }
 
-.input-field::placeholder {
-  color: var(--input-placeholder);
-  transition: color 0.28s cubic-bezier(0.4, 0, 0.2, 1);
-}
+  .input-field::placeholder {
+    color: var(--input-placeholder);
+    transition: color 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+  }
 
-.input-field:focus {
-  border-color: var(--input-border-focus);
-  box-shadow: 0 0 0 3px rgba(201, 151, 58, 0.12), inset 0 0 0 1px rgba(201, 151, 58, 0.06);
-  background: var(--input-bg);
-}
+  .input-field:focus {
+    border-color: var(--input-border-focus);
+    box-shadow: 0 0 0 3px rgba(201, 151, 58, 0.12), inset 0 0 0 1px rgba(201, 151, 58, 0.06);
+    background: var(--input-bg);
+  }
 
-.input-field:focus::placeholder {
-  color: transparent;
-}
+  .input-field:focus::placeholder {
+    color: transparent;
+  }
 
-.input-field:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
+  .input-field:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
 }
 
 /* ─── SIDEBAR ────────────────────────────────────────────────────── */

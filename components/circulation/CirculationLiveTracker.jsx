@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import {
   User, Users, Shield, Wallet, Megaphone, FileCheck2,
-  Landmark, ClipboardList, ScrollText, Briefcase, Check,
+  Landmark, ClipboardList, ScrollText, Briefcase, Check, ArrowRight,
 } from 'lucide-react'
 import api from '@/lib/api'
 
@@ -29,17 +29,24 @@ function roleLabel(role) {
 }
 
 /**
- * Compact, package-tracking-style progress preview for a single circulation —
- * role icons in sequence, current holder pulsing. Fetches and polls its own
- * data by circulationId so it can be dropped into an inbox row or the top of
- * the full CirculationTimeline without the parent needing to already have
- * step data loaded.
+ * Compact, package-tracking-style horizontal stepper for a single
+ * circulation — role icons left to right, connected by arrows. Completed
+ * hops are muted gold with a check; the current holder pulses gold; a
+ * document that hasn't entered circulation yet (still PRIVATE, no
+ * circulationId) renders as a single outlined "Not yet circulated" node
+ * rather than disappearing, so placement stays consistent everywhere this
+ * is embedded (inbox rows, DocumentViewerModal). Fetches and polls its own
+ * data by circulationId so the parent never needs to already have step data
+ * loaded.
  */
 export default function CirculationLiveTracker({ circulationId }) {
   const [circulation, setCirculation] = useState(null)
 
   const fetchCirculation = useCallback(async () => {
-    if (!circulationId) return
+    if (!circulationId) {
+      setCirculation(null)
+      return
+    }
     try {
       const res = await api.get(`/circulation/${circulationId}`)
       setCirculation(res.data?.circulation || res.data || null)
@@ -56,7 +63,21 @@ export default function CirculationLiveTracker({ circulationId }) {
     return () => clearInterval(interval)
   }, [fetchCirculation])
 
-  if (!circulation) return null
+  // No circulation at all — a still-PRIVATE document that's never been
+  // submitted. Shown, not hidden, so this component's placement never shifts.
+  if (!circulationId || !circulation) {
+    return (
+      <div className="flex items-center gap-2 py-1">
+        <div
+          className="w-6 h-6 rounded-full border border-dashed flex items-center justify-center flex-shrink-0"
+          style={{ borderColor: 'var(--border-default)' }}
+        >
+          <User size={11} style={{ color: 'var(--text-faint)' }} />
+        </div>
+        <span className="text-[11px]" style={{ color: 'var(--text-faint)' }}>Not yet circulated</span>
+      </div>
+    )
+  }
 
   const steps = circulation.steps || []
   const sequence = steps.length > 0
@@ -65,41 +86,42 @@ export default function CirculationLiveTracker({ circulationId }) {
   const isClosed = circulation.status === 'CLOSED'
 
   return (
-    <div className="flex items-center gap-1 overflow-x-auto py-0.5">
+    <div className="flex items-center gap-1 overflow-x-auto py-1">
       {sequence.map((role, idx) => {
         const Icon = ROLE_ICONS[role] || User
         const isLast = idx === sequence.length - 1
         const isCurrent = isLast && !isClosed
-        const isFinal = isLast && isClosed
+        const isCompleted = !isCurrent
 
         return (
           <div key={`${role}-${idx}`} className="flex items-center flex-shrink-0">
             {idx > 0 && (
-              <div className="w-3 sm:w-4 h-px flex-shrink-0" style={{ background: 'var(--border-default)' }} />
+              <ArrowRight size={13} className="flex-shrink-0 mx-0.5" style={{ color: 'var(--border-strong)' }} />
             )}
-            <div className="relative flex-shrink-0" title={`${roleLabel(role)}${isCurrent ? ' — current holder' : ''}`}>
+            <div
+              className="relative flex-shrink-0"
+              title={`${roleLabel(role)}${isCurrent ? ' — current holder, awaiting action' : isCompleted ? ' — completed' : ''}`}
+            >
               {isCurrent && (
                 <span className="animate-ping absolute inset-0 rounded-full bg-uacc-gold opacity-60" />
               )}
               <div
-                className="relative w-5 h-5 sm:w-6 sm:h-6 rounded-full flex items-center justify-center flex-shrink-0"
+                className="relative w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0"
                 style={
-                  isFinal
-                    ? { background: 'rgba(34,197,94,0.15)', border: '1px solid rgba(34,197,94,0.5)' }
-                    : isCurrent
-                    ? { background: 'rgba(201,151,58,0.25)', border: '1px solid rgba(201,151,58,0.7)', boxShadow: '0 0 8px rgba(201,151,58,0.5)' }
-                    : { background: 'var(--glass-bg)', border: '1px solid var(--border-default)' }
+                  isCurrent
+                    ? { background: 'rgba(201,151,58,0.25)', border: '1.5px solid rgba(201,151,58,0.8)', boxShadow: '0 0 10px rgba(201,151,58,0.5)' }
+                    : { background: 'rgba(201,151,58,0.12)', border: '1.5px solid rgba(201,151,58,0.4)' }
                 }
               >
-                {isFinal
-                  ? <Check size={11} className="text-emerald-400" />
-                  : <Icon size={11} className={isCurrent ? 'text-uacc-gold' : ''} style={!isCurrent ? { color: 'var(--text-muted)' } : undefined} />}
+                {isCompleted
+                  ? <Check size={13} className="text-uacc-gold" />
+                  : <Icon size={13} className="text-uacc-gold" />}
               </div>
             </div>
           </div>
         )
       })}
-      <span className="ml-1.5 text-[10px] whitespace-nowrap flex-shrink-0" style={{ color: 'var(--text-muted)' }}>
+      <span className="ml-2 text-[10px] whitespace-nowrap flex-shrink-0" style={{ color: 'var(--text-muted)' }}>
         {isClosed ? 'Closed' : `With ${roleLabel(circulation.currentHolderRole)}`}
       </span>
     </div>
