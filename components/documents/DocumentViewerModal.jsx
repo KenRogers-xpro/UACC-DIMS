@@ -1,8 +1,8 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { X, Download, FileText, Pencil, Send, Lock, MessageSquare, History, Eye, PenTool } from 'lucide-react'
+import { X, Download, FileText, Pencil, Send, Lock, MessageSquare, History, Eye, PenTool, Maximize2, Minimize2 } from 'lucide-react'
 import Badge from '@/components/ui/Badge'
 import Button from '@/components/ui/Button'
 import EmptyState from '@/components/ui/EmptyState'
@@ -90,6 +90,27 @@ export default function DocumentViewerModal({
   const [previewUrl, setPreviewUrl] = useState(null)
   const [previewLoading, setPreviewLoading] = useState(false)
   const [downloading, setDownloading] = useState(false)
+
+  // Fullscreen for the preview box only — requestFullscreen on this
+  // specific container, not the whole modal, so "full screen" means the
+  // document itself, edge to edge, with everything else (header, tabs,
+  // footer) out of the way.
+  const previewBoxRef = useRef(null)
+  const [isPreviewFullscreen, setIsPreviewFullscreen] = useState(false)
+
+  useEffect(() => {
+    const handleFsChange = () => setIsPreviewFullscreen(document.fullscreenElement === previewBoxRef.current)
+    window.document.addEventListener('fullscreenchange', handleFsChange)
+    return () => window.document.removeEventListener('fullscreenchange', handleFsChange)
+  }, [])
+
+  const togglePreviewFullscreen = () => {
+    if (window.document.fullscreenElement) {
+      window.document.exitFullscreen()
+    } else {
+      previewBoxRef.current?.requestFullscreen()
+    }
+  }
 
   const [showForwardForm, setShowForwardForm] = useState(false)
   const [forwardToRole, setForwardToRole] = useState(SUBMIT_ROLES[0].value)
@@ -388,7 +409,21 @@ export default function DocumentViewerModal({
                       height/ratio, which is far narrower than this modal is
                       wide, so the PDF rendered small in the middle of a
                       mostly-empty container). */}
-                  <div className="rounded-xl overflow-hidden border bg-black/20 flex-1 min-h-[420px] flex flex-col" style={{ borderColor: 'var(--border-subtle)' }}>
+                  <div
+                    ref={previewBoxRef}
+                    className="relative rounded-xl overflow-hidden border bg-black/20 flex-1 min-h-[420px] flex flex-col"
+                    style={{ borderColor: 'var(--border-subtle)' }}
+                  >
+                    {previewUrl && (fileKind === 'pdf' || fileKind === 'image') && (
+                      <button
+                        onClick={togglePreviewFullscreen}
+                        className="absolute top-2 right-2 z-10 p-2 rounded-lg backdrop-blur-sm hover:bg-black/60 transition-colors"
+                        style={{ background: 'rgba(0,0,0,0.4)', color: '#fff' }}
+                        title={isPreviewFullscreen ? 'Exit full screen' : 'Full screen'}
+                      >
+                        {isPreviewFullscreen ? <Minimize2 size={15} /> : <Maximize2 size={15} />}
+                      </button>
+                    )}
                     {previewLoading ? (
                       <div className="flex-1 flex items-center justify-center py-16"><SkeletonLine height="h-8" /></div>
                     ) : !previewUrl ? (
@@ -399,7 +434,14 @@ export default function DocumentViewerModal({
                         </p>
                       </div>
                     ) : fileKind === 'pdf' ? (
-                      <iframe src={previewUrl} title={document.title} className="w-full h-full flex-1" />
+                      // #view=FitH tells the browser's built-in PDF viewer to
+                      // open at "fit width" zoom instead of its 100%/actual-
+                      // size default — at 100% zoom an A4 page is much
+                      // narrower than this container, and the leftover space
+                      // was being left-aligned rather than centered. Fitting
+                      // the page to the available width removes the leftover
+                      // space entirely instead of trying to center it.
+                      <iframe src={`${previewUrl}#view=FitH`} title={document.title} className="w-full h-full flex-1" />
                     ) : fileKind === 'image' ? (
                       <div className="flex-1 min-h-0 flex items-center justify-center">
                         {/* eslint-disable-next-line @next/next/no-img-element */}
