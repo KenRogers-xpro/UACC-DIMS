@@ -292,6 +292,24 @@ input, select, textarea {
   transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
 }
 
+/* The closed <select> box is themed fine via .input-field's own
+   background/color, but its native dropdown popup is drawn by the OS/
+   browser on its own opaque canvas — it ignores our translucent
+   --input-bg and can end up rendering near-white option text on a
+   near-white popup. color-scheme tells the browser which palette to use
+   for that native chrome; the explicit option colors are a belt-and-
+   braces fallback for browsers (Chromium) that also honor them directly. */
+select {
+  color-scheme: dark;
+}
+[data-theme="light"] select {
+  color-scheme: light;
+}
+select option {
+  background: var(--bg-surface-container);
+  color: var(--text-primary);
+}
+
 .input-field {
   background: var(--input-bg);
   border: 1px solid var(--input-border);
