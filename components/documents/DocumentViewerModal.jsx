@@ -300,7 +300,7 @@ export default function DocumentViewerModal({
               generously (max-w-7xl / 92vh) so the Preview tab has enough
               room to render a page close to real A4 proportions. */}
           <motion.div
-            className="card rounded-none md:rounded-2xl bg-[var(--bg-surface)] flex flex-col shadow-2xl shadow-black/50 fixed inset-0 md:static md:w-full md:max-w-7xl md:max-h-[92vh]"
+            className="card rounded-none md:rounded-2xl bg-[var(--bg-surface)] flex flex-col shadow-2xl shadow-black/50 fixed inset-0 md:static md:w-full md:max-w-7xl md:h-[92vh]"
             initial={{ opacity: 0, scale: 0.98 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.98 }}
@@ -367,31 +367,39 @@ export default function DocumentViewerModal({
             <div className="flex-1 overflow-y-auto p-5 flex flex-col gap-5 min-h-0">
               {tab === 'preview' && (
                 <div className="flex flex-col gap-5 flex-1 min-h-0">
-                  <div className="rounded-xl overflow-hidden border flex items-center justify-center bg-black/20 flex-1 min-h-[420px]" style={{ borderColor: 'var(--border-subtle)' }}>
+                  {/* flex-1 + min-h-0 on this wrapper (not h-full/percentage
+                      sizing) is what makes it actually get a real, definite
+                      height from the flex layout — the modal above is a
+                      fixed h-[92vh], not just a max-height, so that height
+                      is real all the way down this chain. The iframe fills
+                      it with plain w-full h-full: no max-width/aspect-ratio
+                      constraint, so it renders the same way a PDF does in
+                      its own browser tab — full-bleed, with the viewer's
+                      own zoom/page controls, not letterboxed down to a
+                      forced page-shaped box (that was the previous bug:
+                      an aspect-[1/1.414] wrapper computed its width from
+                      height/ratio, which is far narrower than this modal is
+                      wide, so the PDF rendered small in the middle of a
+                      mostly-empty container). */}
+                  <div className="rounded-xl overflow-hidden border bg-black/20 flex-1 min-h-[420px] flex flex-col" style={{ borderColor: 'var(--border-subtle)' }}>
                     {previewLoading ? (
-                      <div className="py-16"><SkeletonLine height="h-8" /></div>
+                      <div className="flex-1 flex items-center justify-center py-16"><SkeletonLine height="h-8" /></div>
                     ) : !previewUrl ? (
-                      <div className="flex flex-col items-center gap-3 py-16 text-center px-6">
+                      <div className="flex-1 flex flex-col items-center justify-center gap-3 py-16 text-center px-6">
                         <FileText size={40} style={{ color: 'var(--text-muted)' }} />
                         <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
                           Couldn&apos;t load this file.
                         </p>
                       </div>
                     ) : fileKind === 'pdf' ? (
-                      // A4 is a 1:1.414 ratio — locking the wrapper to it
-                      // (rather than letting the iframe stretch full-bleed)
-                      // means the page renders close to its real proportions
-                      // with letterboxing on the sides, instead of a
-                      // squashed/stretched box. h-full + max-w-full lets the
-                      // browser pick whichever dimension is the limiting one.
-                      <div className="h-full max-h-full max-w-full aspect-[1/1.414]">
-                        <iframe src={previewUrl} title={document.title} className="w-full h-full rounded" />
-                      </div>
+                      <iframe src={previewUrl} title={document.title} className="w-full h-full flex-1" />
                     ) : fileKind === 'image' ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={previewUrl} alt={document.title} className="max-w-full max-h-full object-contain" />
+                      <div className="flex-1 min-h-0 flex items-center justify-center">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src={previewUrl} alt={document.title} className="max-w-full max-h-full object-contain" />
+                      </div>
                     ) : (
-                      <div className="flex flex-col items-center gap-3 py-16 text-center px-6">
+                      <div className="flex-1 flex flex-col items-center justify-center gap-3 py-16 text-center px-6">
                         <FileText size={40} style={{ color: 'var(--text-muted)' }} />
                         <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
                           This file type can&apos;t be previewed inline.

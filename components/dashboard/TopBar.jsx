@@ -132,7 +132,7 @@ export default function TopBar({ user, sidebarCollapsed, onToggleSidebar, onMobi
               if (!notifOpen) refreshNotifications()
             }}
             className="relative p-2 rounded-md topbar-icon-btn transition-colors"
-            style={{ color: 'var(--text-muted)' }}
+            style={{ color: unreadCount > 0 ? 'var(--text-primary)' : 'var(--text-muted)' }}
             title="Notifications"
             aria-label="Notifications"
           >
