@@ -1,8 +1,9 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
+import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
-import { X, Lock, ShieldCheck, Check, KeyRound } from 'lucide-react'
+import { X, Lock, ShieldCheck, ShieldAlert, Check, KeyRound, Settings } from 'lucide-react'
 import api from '@/lib/api'
 import Button from '@/components/ui/Button'
 
@@ -23,8 +24,10 @@ const ROLE_OPTIONS = [
  * viewer's Signatures tab).
  */
 export default function SigningModal({ circulationId, currentUserRole, isOpen, onClose, onSigned }) {
+  const router = useRouter()
   const [checkingPin, setCheckingPin] = useState(true)
   const [hasPinSet, setHasPinSet] = useState(true)
+  const [pinRequired, setPinRequired] = useState(true)
 
   // Set-PIN sub-form state
   const [newPin, setNewPin] = useState('')
@@ -53,10 +56,18 @@ export default function SigningModal({ circulationId, currentUserRole, isOpen, o
     setSignError('')
     setPin('')
     api.get('/users/me/signing-pin-status')
-      .then((res) => setHasPinSet(Boolean(res.data?.hasPinSet)))
-      .catch(() => setHasPinSet(true))
+      .then((res) => {
+        setHasPinSet(Boolean(res.data?.hasPinSet))
+        setPinRequired(res.data?.pinRequired !== false)
+      })
+      .catch(() => { setHasPinSet(true); setPinRequired(true) })
       .finally(() => setCheckingPin(false))
   }, [isOpen])
+
+  const goToSettings = () => {
+    onClose?.()
+    router.push('/dashboard/settings')
+  }
 
   const handleSetPin = async (e) => {
     e.preventDefault()
@@ -83,7 +94,7 @@ export default function SigningModal({ circulationId, currentUserRole, isOpen, o
 
   const handleSign = async (e) => {
     e.preventDefault()
-    if (!/^\d{4,6}$/.test(pin)) {
+    if (pinRequired && !/^\d{4,6}$/.test(pin)) {
       setSignError('Enter your PIN')
       return
     }
@@ -91,7 +102,7 @@ export default function SigningModal({ circulationId, currentUserRole, isOpen, o
     setSignError('')
     try {
       const res = await api.post(`/circulation/${circulationId}/sign`, {
-        pin,
+        ...(pinRequired ? { pin } : {}),
         decision,
         toRole: finalDecision ? currentUserRole : toRole,
         instruction: instruction || undefined,
@@ -139,7 +150,7 @@ export default function SigningModal({ circulationId, currentUserRole, isOpen, o
             <div className="flex items-center justify-between">
               <h2 className="font-heading font-bold text-lg flex items-center gap-2" style={{ color: 'var(--text-primary)' }}>
                 <ShieldCheck size={20} className="text-uacc-gold" />
-                {success ? 'Signed' : hasPinSet ? 'Sign Document' : 'Set Signing PIN'}
+                {success ? 'Signed' : !pinRequired || hasPinSet ? 'Sign Document' : 'Set Signing PIN'}
               </h2>
               <button onClick={onClose} className="p-1 hover:bg-white/5 rounded-lg" style={{ color: 'var(--text-muted)' }}>
                 <X size={18} />
@@ -164,7 +175,7 @@ export default function SigningModal({ circulationId, currentUserRole, isOpen, o
                 </motion.div>
                 <p className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>Signature recorded</p>
               </motion.div>
-            ) : !hasPinSet ? (
+            ) : pinRequired && !hasPinSet ? (
               <form onSubmit={handleSetPin} className="flex flex-col gap-3">
                 <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
                   You need a signing PIN before you can sign documents. This is separate from your login password.
@@ -196,6 +207,14 @@ export default function SigningModal({ circulationId, currentUserRole, isOpen, o
                 <Button type="submit" variant="primary" loading={settingPin} icon={KeyRound}>
                   Set PIN
                 </Button>
+                <button
+                  type="button"
+                  onClick={goToSettings}
+                  className="flex items-center justify-center gap-1.5 text-xs hover:underline"
+                  style={{ color: 'var(--text-muted)' }}
+                >
+                  <Settings size={12} /> Or manage this later from Settings
+                </button>
               </form>
             ) : (
               <form onSubmit={handleSign} className="flex flex-col gap-3">
@@ -256,24 +275,42 @@ export default function SigningModal({ circulationId, currentUserRole, isOpen, o
                   onChange={(e) => setAmount(e.target.value)}
                 />
 
-                <motion.div
-                  animate={shake ? { x: [0, -8, 8, -8, 8, 0] } : { x: 0 }}
-                  transition={{ duration: 0.4 }}
-                >
-                  <label className="flex items-center gap-2 text-[10px] uppercase tracking-wider font-semibold mb-1.5" style={{ color: 'var(--text-muted)' }}>
-                    <Lock size={12} /> Signing PIN
-                  </label>
-                  <input
-                    ref={pinInputRef}
-                    type="password"
-                    inputMode="numeric"
-                    autoFocus
-                    className={`input-field w-full text-center tracking-[0.5em] font-bold ${shake ? 'border-uacc-red' : ''}`}
-                    placeholder="••••"
-                    value={pin}
-                    onChange={(e) => setPin(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                  />
-                </motion.div>
+                {pinRequired ? (
+                  <motion.div
+                    animate={shake ? { x: [0, -8, 8, -8, 8, 0] } : { x: 0 }}
+                    transition={{ duration: 0.4 }}
+                  >
+                    <label className="flex items-center gap-2 text-[10px] uppercase tracking-wider font-semibold mb-1.5" style={{ color: 'var(--text-muted)' }}>
+                      <Lock size={12} /> Signing PIN
+                    </label>
+                    <input
+                      ref={pinInputRef}
+                      type="password"
+                      inputMode="numeric"
+                      autoFocus
+                      className={`input-field w-full text-center tracking-[0.5em] font-bold ${shake ? 'border-uacc-red' : ''}`}
+                      placeholder="••••"
+                      value={pin}
+                      onChange={(e) => setPin(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                    />
+                  </motion.div>
+                ) : (
+                  // Demo mode — SIGNING_PIN_REQUIRED=false on the backend.
+                  // No PIN is collected or sent; the resulting
+                  // DigitalSignature record honestly stores
+                  // verifiedWithPin: false, since none was actually checked.
+                  <div className="rounded-lg p-3 border flex items-start gap-2" style={{ borderColor: 'var(--border-gold)', background: 'rgba(201,151,58,0.05)' }}>
+                    <ShieldAlert size={14} className="text-uacc-gold flex-shrink-0 mt-0.5" />
+                    <div>
+                      <p className="text-xs font-semibold" style={{ color: 'var(--text-primary)' }}>
+                        Sign as {currentUserRole?.replace(/_/g, ' ')} — {new Date().toLocaleString()}?
+                      </p>
+                      <p className="text-[10px] mt-1" style={{ color: 'var(--text-muted)' }}>
+                        Demo mode: PIN verification is disabled for this environment.
+                      </p>
+                    </div>
+                  </div>
+                )}
 
                 {signError && <p className="text-xs text-uacc-red">{signError}</p>}
 

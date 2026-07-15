@@ -195,7 +195,12 @@ export default function DocumentViewerModal({
   const isPrivate = document.status === 'PRIVATE'
   const canEdit = isOwner && isPrivate && document.isEditable !== false
   const fileKind = getFileKind(document)
-  const canSign = circulation && circulation.status === 'IN_CIRCULATION' && circulation.currentHolderRole === currentUserRole
+  // The extra !latestStep?.signature guard matters for the FINAL_DECISION-
+  // to-self case: signing a step can leave currentHolderRole equal to the
+  // signer's own role (closing the loop), which would otherwise leave the
+  // sign button showing for a step that's already been signed.
+  const latestStep = circulation?.steps?.[circulation.steps.length - 1]
+  const canSign = circulation && circulation.status === 'IN_CIRCULATION' && circulation.currentHolderRole === currentUserRole && !latestStep?.signature
 
   const handleDownload = async () => {
     setDownloading(true)
@@ -294,13 +299,15 @@ export default function DocumentViewerModal({
           exit={{ opacity: 0 }}
           transition={{ duration: 0.2, ease: 'easeOut' }}
         >
-          {/* Below md: a full-screen takeover (fixed inset-0, no rounded
-              corners) — a bounded dialog this large has nowhere good to sit
-              on a small screen. At md+: a large centered dialog, sized
-              generously (max-w-7xl / 92vh) so the Preview tab has enough
-              room to render a page close to real A4 proportions. */}
+          {/* Below md: a full-screen takeover (fixed inset-0 + w-screen
+              h-screen, no rounded corners) — a bounded dialog this large has
+              nowhere good to sit on a small screen. At md+: near-fullscreen,
+              w-[95vw] h-[95vh]. max-w-none is deliberate — a leftover
+              max-w-* class overrides an explicit width utility since it caps
+              growth regardless of what width is requested, which is exactly
+              why this kept rendering smaller than intended. */}
           <motion.div
-            className="card rounded-none md:rounded-2xl bg-[var(--bg-surface)] flex flex-col shadow-2xl shadow-black/50 fixed inset-0 md:static md:w-full md:max-w-7xl md:h-[92vh]"
+            className="card rounded-none md:rounded-2xl bg-[var(--bg-surface)] flex flex-col shadow-2xl shadow-black/50 fixed inset-0 w-screen h-screen md:static md:w-[95vw] md:h-[95vh] md:max-w-none"
             initial={{ opacity: 0, scale: 0.98 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.98 }}
@@ -370,7 +377,7 @@ export default function DocumentViewerModal({
                   {/* flex-1 + min-h-0 on this wrapper (not h-full/percentage
                       sizing) is what makes it actually get a real, definite
                       height from the flex layout — the modal above is a
-                      fixed h-[92vh], not just a max-height, so that height
+                      fixed h-[95vh], not just a max-height, so that height
                       is real all the way down this chain. The iframe fills
                       it with plain w-full h-full: no max-width/aspect-ratio
                       constraint, so it renders the same way a PDF does in
@@ -486,21 +493,30 @@ export default function DocumentViewerModal({
               {tab === 'annotations' && (
                 <div className="flex flex-col gap-4 w-full max-w-3xl mx-auto">
                   <form onSubmit={handlePostAnnotation} className="flex flex-col gap-2 w-full">
-                    <div className="flex gap-2 w-full min-w-0">
+                    <div className="flex gap-2 w-full min-w-0 items-start">
                       <select
-                        className="input-field py-2 px-2 text-xs w-28 flex-shrink-0"
+                        className="input-field py-2 px-2 text-xs w-36 flex-shrink-0"
                         value={newAnnotationType}
                         onChange={(e) => setNewAnnotationType(e.target.value)}
                       >
                         {ANNOTATION_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
                       </select>
-                      <input
-                        className="input-field flex-1 min-w-0"
+                      {/* Textarea, not a single-line input — real annotations
+                          ("Sir, audit has no objection, forwarded for your
+                          further consideration") are sentences. flex-1 +
+                          min-w-0 is what makes this the widest element in the
+                          row: flex children default to min-width:auto and
+                          refuse to shrink below their content otherwise,
+                          which is what was squeezing this into a sliver next
+                          to the dropdown. */}
+                      <textarea
+                        className="input-field flex-1 min-w-0 resize-none"
+                        rows={2}
                         placeholder="Add a comment or note..."
                         value={newAnnotationText}
                         onChange={(e) => setNewAnnotationText(e.target.value)}
                       />
-                      <Button type="submit" variant="primary" size="sm" loading={postingAnnotation} className="flex-shrink-0">Add</Button>
+                      <Button type="submit" variant="primary" size="sm" loading={postingAnnotation} className="flex-shrink-0 self-start">Add</Button>
                     </div>
                   </form>
 
@@ -546,7 +562,7 @@ export default function DocumentViewerModal({
                       {canSign && (
                         <div className="flex justify-end">
                           <Button variant="primary" icon={PenTool} onClick={() => setSigningOpen(true)}>
-                            Add Signature
+                            Sign This Step
                           </Button>
                         </div>
                       )}

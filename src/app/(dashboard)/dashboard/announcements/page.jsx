@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Megaphone, Plus, X, Pin, Trash2 } from 'lucide-react'
+import { Megaphone, Plus, X, Pin, Trash2, Pencil, Check } from 'lucide-react'
 import { useAuth } from '@/lib/auth-context'
 import { useAnnouncements } from '@/lib/useAnnouncements'
 import PageHeader from '@/components/ui/PageHeader'
@@ -18,7 +18,7 @@ function formatDate(dateStr) {
 
 export default function AnnouncementsPage() {
   const { user } = useAuth()
-  const { announcements, loading, createAnnouncement, deleteAnnouncement } = useAnnouncements()
+  const { announcements, loading, createAnnouncement, editAnnouncement, deleteAnnouncement } = useAnnouncements()
 
   const [composeOpen, setComposeOpen] = useState(false)
   const [title, setTitle] = useState('')
@@ -26,6 +26,12 @@ export default function AnnouncementsPage() {
   const [pinned, setPinned] = useState(false)
   const [posting, setPosting] = useState(false)
   const [error, setError] = useState('')
+
+  const [editingId, setEditingId] = useState(null)
+  const [editTitle, setEditTitle] = useState('')
+  const [editContent, setEditContent] = useState('')
+  const [savingEdit, setSavingEdit] = useState(false)
+  const [editError, setEditError] = useState('')
 
   const handlePost = async (e) => {
     e.preventDefault()
@@ -48,6 +54,37 @@ export default function AnnouncementsPage() {
     }
   }
 
+  const startEdit = (a) => {
+    setEditingId(a.id)
+    setEditTitle(a.title)
+    setEditContent(a.content)
+    setEditError('')
+  }
+
+  const cancelEdit = () => {
+    setEditingId(null)
+    setEditTitle('')
+    setEditContent('')
+    setEditError('')
+  }
+
+  const saveEdit = async (id) => {
+    if (!editTitle.trim() || !editContent.trim()) {
+      setEditError('Title and content are required')
+      return
+    }
+    setSavingEdit(true)
+    setEditError('')
+    try {
+      await editAnnouncement(id, editTitle.trim(), editContent.trim())
+      setEditingId(null)
+    } catch (err) {
+      setEditError(err.message || 'Failed to save changes')
+    } finally {
+      setSavingEdit(false)
+    }
+  }
+
   return (
     <div className="flex flex-col gap-6 w-full animate-fadeIn">
       <PageHeader title="Announcements" subtitle="Company-wide updates for everyone at UACC">
@@ -63,7 +100,9 @@ export default function AnnouncementsPage() {
       ) : (
         <div className="flex flex-col gap-4">
           {announcements.map((a) => {
-            const canDelete = a.author?.id === user?.id || user?.role === 'GENERAL_MANAGER'
+            const canEdit = a.author?.id === user?.id
+            const canDelete = canEdit || user?.role === 'GENERAL_MANAGER'
+            const isEditing = editingId === a.id
             return (
               <motion.div
                 key={a.id}
@@ -73,26 +112,74 @@ export default function AnnouncementsPage() {
                 transition={{ duration: 0.3 }}
                 style={a.pinned ? { borderColor: 'var(--border-gold)' } : undefined}
               >
-                <div className="flex items-start justify-between gap-3 mb-2">
-                  <div className="flex items-center gap-2">
-                    {a.pinned && <Pin size={14} className="text-uacc-gold" />}
-                    <h3 className="font-heading font-bold text-base" style={{ color: 'var(--text-primary)' }}>{a.title}</h3>
+                {isEditing ? (
+                  <div className="flex flex-col gap-3">
+                    <input
+                      className="input-field w-full font-heading font-bold"
+                      value={editTitle}
+                      onChange={(e) => setEditTitle(e.target.value)}
+                    />
+                    <textarea
+                      className="input-field w-full text-sm resize-none"
+                      rows={4}
+                      value={editContent}
+                      onChange={(e) => setEditContent(e.target.value)}
+                    />
+                    {editError && <p className="text-xs text-uacc-red">{editError}</p>}
+                    <div className="flex justify-end gap-2">
+                      <button
+                        onClick={cancelEdit}
+                        className="text-[10px] font-semibold uppercase tracking-wider px-3 py-1.5 rounded hover:bg-white/5"
+                        style={{ color: 'var(--text-muted)' }}
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        onClick={() => saveEdit(a.id)}
+                        disabled={savingEdit}
+                        className="text-[10px] font-semibold uppercase tracking-wider px-3 py-1.5 rounded flex items-center gap-1 bg-uacc-gold/15 text-uacc-gold hover:bg-uacc-gold/25 disabled:opacity-50"
+                      >
+                        <Check size={11} /> Save
+                      </button>
+                    </div>
                   </div>
-                  {canDelete && (
-                    <button
-                      onClick={() => deleteAnnouncement(a.id)}
-                      className="p-1.5 rounded hover:bg-uacc-red/10 hover:text-uacc-red flex-shrink-0"
-                      style={{ color: 'var(--text-muted)' }}
-                      title="Delete"
-                    >
-                      <Trash2 size={14} />
-                    </button>
-                  )}
-                </div>
-                <p className="text-sm mb-3 whitespace-pre-wrap" style={{ color: 'var(--text-secondary)' }}>{a.content}</p>
-                <p className="text-[11px]" style={{ color: 'var(--text-muted)' }}>
-                  {a.author?.name} · {a.author?.role?.replace(/_/g, ' ')} · {formatDate(a.createdAt)}
-                </p>
+                ) : (
+                  <>
+                    <div className="flex items-start justify-between gap-3 mb-2">
+                      <div className="flex items-center gap-2">
+                        {a.pinned && <Pin size={14} className="text-uacc-gold" />}
+                        <h3 className="font-heading font-bold text-base" style={{ color: 'var(--text-primary)' }}>{a.title}</h3>
+                      </div>
+                      <div className="flex items-center gap-1 flex-shrink-0">
+                        {canEdit && (
+                          <button
+                            onClick={() => startEdit(a)}
+                            className="p-1.5 rounded hover:bg-white/5"
+                            style={{ color: 'var(--text-muted)' }}
+                            title="Edit"
+                          >
+                            <Pencil size={14} />
+                          </button>
+                        )}
+                        {canDelete && (
+                          <button
+                            onClick={() => deleteAnnouncement(a.id)}
+                            className="p-1.5 rounded hover:bg-uacc-red/10 hover:text-uacc-red"
+                            style={{ color: 'var(--text-muted)' }}
+                            title="Delete"
+                          >
+                            <Trash2 size={14} />
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                    <p className="text-sm mb-3 whitespace-pre-wrap" style={{ color: 'var(--text-secondary)' }}>{a.content}</p>
+                    <p className="text-[11px]" style={{ color: 'var(--text-muted)' }}>
+                      {a.author?.name} · {a.author?.role?.replace(/_/g, ' ')} · {formatDate(a.createdAt)}
+                      {a.editedAt && <span className="italic"> · edited</span>}
+                    </p>
+                  </>
+                )}
               </motion.div>
             )
           })}

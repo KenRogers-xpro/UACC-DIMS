@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo } from 'react'
 import { useSearchParams } from 'next/navigation'
-import { Send, Search, Plus, X, MessageSquare } from 'lucide-react'
+import { Send, Search, Plus, X, MessageSquare, Pencil, Trash2, Check } from 'lucide-react'
 import { useAuth } from '@/lib/auth-context'
 import { useMessages } from '@/lib/useMessages'
 import { useOnlineStatus } from '@/lib/useOnlineStatus'
@@ -22,7 +22,7 @@ export default function MessagesPage() {
   const { user } = useAuth()
   const {
     directory, conversations, thread, loading,
-    fetchDirectory, fetchConversations, openThread, sendMessage,
+    fetchDirectory, fetchConversations, openThread, sendMessage, editMessage, deleteMessage,
   } = useMessages()
   const { isUserOnline } = useOnlineStatus()
   const searchParams = useSearchParams()
@@ -32,6 +32,9 @@ export default function MessagesPage() {
   const [sending, setSending] = useState(false)
   const [pickerOpen, setPickerOpen] = useState(false)
   const [pickerSearch, setPickerSearch] = useState('')
+  const [editingMessageId, setEditingMessageId] = useState(null)
+  const [editText, setEditText] = useState('')
+  const [savingEdit, setSavingEdit] = useState(false)
 
   useEffect(() => {
     fetchDirectory()
@@ -67,6 +70,35 @@ export default function MessagesPage() {
     } finally {
       setSending(false)
     }
+  }
+
+  const startEdit = (m) => {
+    setEditingMessageId(m.id)
+    setEditText(m.content)
+  }
+
+  const cancelEdit = () => {
+    setEditingMessageId(null)
+    setEditText('')
+  }
+
+  const saveEdit = async (id) => {
+    if (!editText.trim()) return
+    setSavingEdit(true)
+    try {
+      await editMessage(id, editText.trim(), activePartnerId)
+      setEditingMessageId(null)
+      setEditText('')
+    } catch {
+      // leave the edit box open with its text intact so the user can retry
+    } finally {
+      setSavingEdit(false)
+    }
+  }
+
+  const handleDelete = async (id) => {
+    if (!window.confirm('Delete this message? This cannot be undone.')) return
+    await deleteMessage(id, activePartnerId).catch(() => {})
   }
 
   const activePartner = thread?.otherUser
@@ -167,19 +199,79 @@ export default function MessagesPage() {
                 {loading && !thread ? (
                   <><SkeletonLine height="h-10" /><SkeletonLine height="h-10" /></>
                 ) : (
-                  thread?.messages.map((m) => (
-                    <div key={m.id} className={`flex flex-col max-w-[75%] ${m.senderId === user.id ? 'self-end items-end' : 'self-start items-start'}`}>
-                      <div
-                        className="px-3.5 py-2.5 rounded-lg text-sm"
-                        style={m.senderId === user.id
-                          ? { background: 'var(--glass-bg)', border: '1px solid var(--border-default)', color: 'var(--text-primary)' }
-                          : { background: 'rgba(201,151,58,0.08)', color: 'var(--text-secondary)' }}
-                      >
-                        {m.content}
+                  thread?.messages.map((m) => {
+                    const isOwn = m.senderId === user.id
+                    const isDeleted = Boolean(m.deletedAt)
+                    const isEditing = editingMessageId === m.id
+                    return (
+                      <div key={m.id} className={`group flex flex-col max-w-[75%] ${isOwn ? 'self-end items-end' : 'self-start items-start'}`}>
+                        {isEditing ? (
+                          <div className="w-full min-w-[240px] flex flex-col gap-1.5">
+                            <textarea
+                              className="input-field w-full text-sm resize-none"
+                              rows={2}
+                              autoFocus
+                              value={editText}
+                              onChange={(e) => setEditText(e.target.value)}
+                            />
+                            <div className="flex justify-end gap-2">
+                              <button
+                                onClick={cancelEdit}
+                                className="text-[10px] font-semibold uppercase tracking-wider px-2 py-1 rounded hover:bg-white/5"
+                                style={{ color: 'var(--text-muted)' }}
+                              >
+                                Cancel
+                              </button>
+                              <button
+                                onClick={() => saveEdit(m.id)}
+                                disabled={savingEdit}
+                                className="text-[10px] font-semibold uppercase tracking-wider px-2 py-1 rounded flex items-center gap-1 bg-uacc-gold/15 text-uacc-gold hover:bg-uacc-gold/25 disabled:opacity-50"
+                              >
+                                <Check size={11} /> Save
+                              </button>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="flex items-end gap-1.5">
+                            {isOwn && !isDeleted && (
+                              <div className="hidden group-hover:flex items-center gap-1 pb-0.5">
+                                <button
+                                  onClick={() => startEdit(m)}
+                                  className="p-1 rounded hover:bg-white/10"
+                                  style={{ color: 'var(--text-muted)' }}
+                                  title="Edit message"
+                                >
+                                  <Pencil size={12} />
+                                </button>
+                                <button
+                                  onClick={() => handleDelete(m.id)}
+                                  className="p-1 rounded hover:bg-uacc-red/10 hover:text-uacc-red"
+                                  style={{ color: 'var(--text-muted)' }}
+                                  title="Delete message"
+                                >
+                                  <Trash2 size={12} />
+                                </button>
+                              </div>
+                            )}
+                            <div
+                              className={`px-3.5 py-2.5 rounded-lg text-sm ${isDeleted ? 'italic' : ''}`}
+                              style={isDeleted
+                                ? { background: 'var(--glass-bg)', border: '1px dashed var(--border-default)', color: 'var(--text-faint)' }
+                                : isOwn
+                                ? { background: 'var(--glass-bg)', border: '1px solid var(--border-default)', color: 'var(--text-primary)' }
+                                : { background: 'rgba(201,151,58,0.08)', color: 'var(--text-secondary)' }}
+                            >
+                              {isDeleted ? 'This message was deleted' : m.content}
+                            </div>
+                          </div>
+                        )}
+                        <span className="text-[10px] mt-1 flex items-center gap-1.5" style={{ color: 'var(--text-faint)' }}>
+                          {formatTime(m.createdAt)}
+                          {m.editedAt && !isDeleted && <span className="italic">(edited)</span>}
+                        </span>
                       </div>
-                      <span className="text-[10px] mt-1" style={{ color: 'var(--text-faint)' }}>{formatTime(m.createdAt)}</span>
-                    </div>
-                  ))
+                    )
+                  })
                 )}
               </div>
 

@@ -1,8 +1,9 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import { Camera, Lock, Eye, EyeOff, Monitor, Smartphone, Moon, Sun, Check } from 'lucide-react'
+import { Camera, Lock, Eye, EyeOff, Monitor, Smartphone, Moon, Sun, Check, KeyRound } from 'lucide-react'
 import { useTheme } from 'next-themes'
+import api from '@/lib/api'
 
 const TABS = ['Profile', 'Security', 'Preferences', 'System Info']
 
@@ -49,6 +50,48 @@ export default function SettingsPage() {
     new: false,
     confirm: false
   })
+
+  // Signing PIN — the one genuinely API-wired section on this page (the rest
+  // is still mock data). Same endpoints SigningModal uses, so setting or
+  // changing it here is immediately reflected the next time you sign.
+  const [pinStatus, setPinStatus] = useState({ hasPinSet: false, pinRequired: true, loading: true })
+  const [pinForm, setPinForm] = useState({ newPin: '', confirmPin: '', password: '' })
+  const [savingPin, setSavingPin] = useState(false)
+  const [pinError, setPinError] = useState('')
+
+  useEffect(() => {
+    api.get('/users/me/signing-pin-status')
+      .then((res) => setPinStatus({
+        hasPinSet: Boolean(res.data?.hasPinSet),
+        pinRequired: res.data?.pinRequired !== false,
+        loading: false,
+      }))
+      .catch(() => setPinStatus((s) => ({ ...s, loading: false })))
+  }, [])
+
+  const handleSavePin = async (e) => {
+    e.preventDefault()
+    if (!/^\d{4,6}$/.test(pinForm.newPin)) {
+      setPinError('PIN must be 4 to 6 digits')
+      return
+    }
+    if (pinForm.newPin !== pinForm.confirmPin) {
+      setPinError('PINs do not match')
+      return
+    }
+    setSavingPin(true)
+    setPinError('')
+    try {
+      await api.post('/users/me/signing-pin', { newPin: pinForm.newPin, password: pinForm.password })
+      setPinStatus((s) => ({ ...s, hasPinSet: true }))
+      setPinForm({ newPin: '', confirmPin: '', password: '' })
+      showSuccessToast('Signing PIN saved.')
+    } catch (err) {
+      setPinError(err.message || 'Failed to save PIN')
+    } finally {
+      setSavingPin(false)
+    }
+  }
 
   // Preferences State
   const [prefs, setPrefs] = useState({
@@ -332,6 +375,69 @@ export default function SettingsPage() {
                 Update Password
               </button>
             </div>
+          </div>
+
+          <div className="card rounded-xl p-6 mt-4 border border-white/5 bg-white/[0.02]">
+            <h3 className="text-lg font-bold text-[var(--text-primary)] mb-2 flex items-center gap-2">
+              <KeyRound size={18} className="text-uacc-gold" /> Signing PIN
+            </h3>
+            <p className="text-xs text-[var(--text-muted)] mb-6">
+              A separate 4-6 digit PIN used to sign circulated documents — not your account password.
+              {!pinStatus.pinRequired && ' This environment currently has PIN verification disabled for signing (demo mode).'}
+            </p>
+            {pinStatus.loading ? (
+              <p className="text-xs text-[var(--text-muted)]">Checking status...</p>
+            ) : (
+              <form onSubmit={handleSavePin} className="space-y-4 max-w-md">
+                <div className="flex items-center gap-2 text-xs">
+                  <span className={`w-2 h-2 rounded-full ${pinStatus.hasPinSet ? 'bg-green-500' : 'bg-white/20'}`} />
+                  <span className="text-[var(--text-secondary)]">
+                    {pinStatus.hasPinSet ? 'A signing PIN is set' : 'No signing PIN set yet'}
+                  </span>
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1.5 uppercase tracking-wider">
+                    {pinStatus.hasPinSet ? 'New PIN' : 'Set PIN'}
+                  </label>
+                  <input
+                    type="password"
+                    inputMode="numeric"
+                    value={pinForm.newPin}
+                    onChange={(e) => setPinForm((f) => ({ ...f, newPin: e.target.value.replace(/\D/g, '').slice(0, 6) }))}
+                    placeholder="4-6 digits"
+                    className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2.5 text-sm text-[var(--text-primary)] focus:outline-none focus:border-uacc-gold/50"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1.5 uppercase tracking-wider">Confirm PIN</label>
+                  <input
+                    type="password"
+                    inputMode="numeric"
+                    value={pinForm.confirmPin}
+                    onChange={(e) => setPinForm((f) => ({ ...f, confirmPin: e.target.value.replace(/\D/g, '').slice(0, 6) }))}
+                    className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2.5 text-sm text-[var(--text-primary)] focus:outline-none focus:border-uacc-gold/50"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1.5 uppercase tracking-wider">Account Password</label>
+                  <input
+                    type="password"
+                    value={pinForm.password}
+                    onChange={(e) => setPinForm((f) => ({ ...f, password: e.target.value }))}
+                    placeholder="Confirm it's you"
+                    className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2.5 text-sm text-[var(--text-primary)] focus:outline-none focus:border-uacc-gold/50"
+                  />
+                </div>
+                {pinError && <p className="text-xs text-red-400">{pinError}</p>}
+                <button
+                  type="submit"
+                  disabled={savingPin}
+                  className="px-6 py-2.5 rounded-lg bg-uacc-gold/20 text-uacc-gold border border-uacc-gold/50 hover:bg-uacc-gold hover:text-[var(--text-primary)] transition-colors text-sm font-bold disabled:opacity-50"
+                >
+                  {pinStatus.hasPinSet ? 'Change PIN' : 'Set PIN'}
+                </button>
+              </form>
+            )}
           </div>
 
           <div className="card rounded-xl p-6 mt-4 border border-white/5 bg-white/[0.02]">
