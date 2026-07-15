@@ -31,6 +31,7 @@ import Badge from '@/components/ui/Badge'
 import Button from '@/components/ui/Button'
 import EmptyState from '@/components/ui/EmptyState'
 import DocumentViewerModal from '@/components/documents/DocumentViewerModal'
+import DocumentsAwaitingAction from '@/components/circulation/DocumentsAwaitingAction'
 
 const STATE_TABS = [
   { key: 'new', label: 'New Arrivals', state: 'NEW', icon: Sparkle },
@@ -347,6 +348,10 @@ export default function DocumentsPage() {
           </button>
         ))}
       </div>
+
+      {/* Circulation-inbox panel — only shown under the New Arrivals tab,
+          not globally on every dashboard anymore */}
+      {activeTab === 'new' && <DocumentsAwaitingAction />}
 
       {/* FILTER BAR CARD */}
       <div className="card rounded-xl p-4 flex flex-col gap-3">

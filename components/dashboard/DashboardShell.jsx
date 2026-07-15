@@ -5,7 +5,6 @@ import { motion, AnimatePresence } from 'framer-motion'
 import Sidebar from '@/components/dashboard/Sidebar'
 import TopBar from '@/components/dashboard/TopBar'
 import AIAgentWidget from '@/components/dashboard/AIAgentWidget'
-import DocumentsAwaitingAction from '@/components/circulation/DocumentsAwaitingAction'
 
 export default function DashboardShell({ children, user }) {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
@@ -53,13 +52,20 @@ export default function DashboardShell({ children, user }) {
           className="flex-1 p-4 md:p-6 lg:p-8 overflow-y-auto"
           style={{ color: 'var(--text-secondary)' }}
         >
-          <DocumentsAwaitingAction />
+          {/* Opacity-only on purpose: animating x/y/scale here would make
+              Framer Motion apply a persistent `transform` to this wrapper,
+              which — per the CSS spec — creates a new containing block for
+              every `position: fixed` descendant (every modal in the app
+              lives inside page content, i.e. inside this wrapper). That
+              silently confined every modal to this element's box instead of
+              the viewport, rendering them as a narrow sliver. Fade-only
+              avoids the transform property entirely, so it never happens. */}
           <AnimatePresence mode="popLayout" initial={false}>
             <motion.div
               key={pathname}
-              initial={{ opacity: 0, x: 8 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -8 }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
               transition={{ duration: 0.2, ease: 'easeInOut' }}
             >
               {children}
