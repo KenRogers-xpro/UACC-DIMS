@@ -9,13 +9,13 @@
   --font-heading: 'Space Grotesk', sans-serif;
   --font-body: 'Inter', sans-serif;
 
-  /* Spacing tokens */
-  --spacing-base: 8px;
-  --spacing-xs: 4px;
-  --spacing-sm: 12px;
-  --spacing-md: 24px;
-  --spacing-lg: 48px;
-  --spacing-xl: 80px;
+  /* Spacing tokens. Do not add xs, sm, md, lg, xl or base here — Tailwind
+     v4 resolves named max-w, w, h etc size keywords through this same
+     spacing namespace, so a token named e.g. --spacing-md silently
+     overrides the built-in max-w-md (28rem) with whatever it's set to,
+     everywhere that class is used across the app. Only gutter and the
+     margin- tokens below are actual custom tokens (used by the landing
+     page) with no Tailwind-reserved name to collide with. */
   --spacing-gutter: 24px;
   --spacing-margin-mobile: 16px;
   --spacing-margin-desktop: 40px;
