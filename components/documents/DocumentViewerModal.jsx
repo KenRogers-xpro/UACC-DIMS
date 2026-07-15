@@ -7,9 +7,10 @@ import Badge from '@/components/ui/Badge'
 import Button from '@/components/ui/Button'
 import EmptyState from '@/components/ui/EmptyState'
 import { SkeletonLine } from '@/components/ui/SkeletonLoader'
-import CirculationTimeline from '@/components/circulation/CirculationTimeline'
+import SignaturesPanel from '@/components/circulation/SignaturesPanel'
 import SigningModal from '@/components/circulation/SigningModal'
 import { useCirculation } from '@/lib/useCirculation'
+import { notifyNotificationsChanged } from '@/lib/useNotifications'
 import api from '@/lib/api'
 
 const CATEGORIES = ['POLICY', 'REPORT', 'MEMO', 'CONTRACT', 'FORM', 'OTHER']
@@ -153,7 +154,20 @@ export default function DocumentViewerModal({
     setCirculationLoading(true)
     try {
       const res = await api.get(`/documents/${document.id}/circulation`)
-      setCirculation(res.data || null)
+      const data = res.data || null
+      setCirculation(data)
+
+      // The user is genuinely viewing this circulation's current state right
+      // now (that's what opening this modal means) — mark its latest step
+      // read so the notification bell stops counting it, whether it landed
+      // on them (awaiting action) or they're just checking on something they
+      // forwarded earlier.
+      const latestStep = data?.steps?.[data.steps.length - 1]
+      if (latestStep) {
+        api.post(`/notifications/CIRCULATION_STEP/${latestStep.id}/read`, {})
+          .then(() => notifyNotificationsChanged())
+          .catch(() => {})
+      }
     } catch {
       setCirculation(null)
     } finally {
@@ -274,19 +288,19 @@ export default function DocumentViewerModal({
     <AnimatePresence>
       {isOpen && (
         <motion.div
-          className="fixed inset-0 bg-black/70 z-50 backdrop-blur-sm"
+          className="fixed inset-0 bg-black/70 z-50 backdrop-blur-sm md:flex md:items-center md:justify-center md:p-6"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.2, ease: 'easeOut' }}
         >
-          {/* Fixed-inset panel rather than a flex-centered card — this is
-              meant to be a near-fullscreen workspace for reading a document,
-              not a small floating dialog. Offset past the sidebar's width
-              on md+ (it stays fixed/visible, dimmed, underneath); on mobile
-              there's no permanent sidebar so it just fills the screen. */}
+          {/* Below md: a full-screen takeover (fixed inset-0, no rounded
+              corners) — a bounded dialog this large has nowhere good to sit
+              on a small screen. At md+: a large centered dialog, sized
+              generously (max-w-7xl / 92vh) so the Preview tab has enough
+              room to render a page close to real A4 proportions. */}
           <motion.div
-            className="card rounded-2xl bg-[var(--bg-surface)] flex flex-col shadow-2xl shadow-black/50 fixed inset-4 md:left-[256px]"
+            className="card rounded-none md:rounded-2xl bg-[var(--bg-surface)] flex flex-col shadow-2xl shadow-black/50 fixed inset-0 md:static md:w-full md:max-w-7xl md:max-h-[92vh]"
             initial={{ opacity: 0, scale: 0.98 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.98 }}
@@ -364,7 +378,15 @@ export default function DocumentViewerModal({
                         </p>
                       </div>
                     ) : fileKind === 'pdf' ? (
-                      <iframe src={previewUrl} title={document.title} className="w-full h-full" />
+                      // A4 is a 1:1.414 ratio — locking the wrapper to it
+                      // (rather than letting the iframe stretch full-bleed)
+                      // means the page renders close to its real proportions
+                      // with letterboxing on the sides, instead of a
+                      // squashed/stretched box. h-full + max-w-full lets the
+                      // browser pick whichever dimension is the limiting one.
+                      <div className="h-full max-h-full max-w-full aspect-[1/1.414]">
+                        <iframe src={previewUrl} title={document.title} className="w-full h-full rounded" />
+                      </div>
                     ) : fileKind === 'image' ? (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img src={previewUrl} alt={document.title} className="max-w-full max-h-full object-contain" />
@@ -454,23 +476,23 @@ export default function DocumentViewerModal({
               )}
 
               {tab === 'annotations' && (
-                <div className="flex flex-col gap-4">
-                  <form onSubmit={handlePostAnnotation} className="flex flex-col gap-2">
-                    <div className="flex gap-2">
+                <div className="flex flex-col gap-4 w-full max-w-3xl mx-auto">
+                  <form onSubmit={handlePostAnnotation} className="flex flex-col gap-2 w-full">
+                    <div className="flex gap-2 w-full min-w-0">
                       <select
-                        className="input-field py-2 px-2 text-xs w-32 flex-shrink-0"
+                        className="input-field py-2 px-2 text-xs w-28 flex-shrink-0"
                         value={newAnnotationType}
                         onChange={(e) => setNewAnnotationType(e.target.value)}
                       >
                         {ANNOTATION_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
                       </select>
                       <input
-                        className="input-field flex-1"
+                        className="input-field flex-1 min-w-0"
                         placeholder="Add a comment or note..."
                         value={newAnnotationText}
                         onChange={(e) => setNewAnnotationText(e.target.value)}
                       />
-                      <Button type="submit" variant="primary" size="sm" loading={postingAnnotation}>Add</Button>
+                      <Button type="submit" variant="primary" size="sm" loading={postingAnnotation} className="flex-shrink-0">Add</Button>
                     </div>
                   </form>
 
@@ -503,7 +525,7 @@ export default function DocumentViewerModal({
               )}
 
               {tab === 'signatures' && (
-                <div className="flex flex-col gap-4">
+                <div className="flex flex-col gap-4 w-full max-w-3xl mx-auto">
                   {circulationLoading ? (
                     <div className="flex flex-col gap-2">
                       <SkeletonLine height="h-16" />
@@ -520,7 +542,7 @@ export default function DocumentViewerModal({
                           </Button>
                         </div>
                       )}
-                      <CirculationTimeline circulation={circulation} />
+                      <SignaturesPanel circulation={circulation} />
                     </>
                   )}
                 </div>

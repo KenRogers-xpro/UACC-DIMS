@@ -45,7 +45,7 @@ export default function TopBar({ user, sidebarCollapsed, onToggleSidebar, onMobi
   const router = useRouter()
   const page = PAGE_TITLES[pathname] || { title: 'DIMS', sub: 'Uganda Air Cargo Corporation' }
   const { isUserOnline } = useOnlineStatus()
-  const { items: notifications, unreadCount, refresh: refreshNotifications } = useNotifications()
+  const { incoming, outgoing, unreadCount, refresh: refreshNotifications } = useNotifications()
 
   const [notifOpen, setNotifOpen] = useState(false)
   const notifRef = useRef(null)
@@ -168,34 +168,35 @@ export default function TopBar({ user, sidebarCollapsed, onToggleSidebar, onMobi
                   )}
                 </div>
 
-                <div className="max-h-80 overflow-y-auto">
-                  {notifications.length === 0 ? (
+                <div className="max-h-96 overflow-y-auto">
+                  {incoming.length === 0 && outgoing.length === 0 ? (
                     <div className="px-4 py-8 flex flex-col items-center gap-2 text-center">
                       <CheckCheck size={22} style={{ color: 'var(--text-faint)' }} />
                       <p className="text-xs" style={{ color: 'var(--text-muted)' }}>You&apos;re all caught up</p>
                     </div>
                   ) : (
-                    notifications.map((item) => {
-                      const Icon = NOTIFICATION_ICONS[item.type] || Bell
-                      return (
-                        <button
-                          key={`${item.type}-${item.id}`}
-                          onClick={() => handleNotificationClick(item)}
-                          className="w-full text-left px-4 py-3 border-b hover:bg-white/5 transition-colors flex items-start gap-3"
-                          style={{ borderColor: 'var(--border-subtle)' }}
-                        >
-                          <div className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5"
-                               style={{ background: 'rgba(201,151,58,0.12)', border: '1px solid rgba(201,151,58,0.25)' }}>
-                            <Icon size={13} className="text-uacc-gold" />
-                          </div>
-                          <div className="min-w-0 flex-1">
-                            <p className="text-xs font-semibold truncate" style={{ color: 'var(--text-primary)' }}>{item.title}</p>
-                            <p className="text-[11px] truncate" style={{ color: 'var(--text-muted)' }}>{item.subtitle}</p>
-                            <p className="text-[10px] mt-0.5" style={{ color: 'var(--text-faint)' }}>{timeAgo(item.createdAt)}</p>
-                          </div>
-                        </button>
-                      )
-                    })
+                    <>
+                      {incoming.length > 0 && (
+                        <div>
+                          <p className="px-4 pt-2.5 pb-1 text-[9px] font-bold uppercase tracking-widest" style={{ color: 'var(--text-faint)' }}>
+                            Incoming
+                          </p>
+                          {incoming.map((item) => (
+                            <NotificationRow key={`in-${item.type}-${item.id}`} item={item} onClick={handleNotificationClick} />
+                          ))}
+                        </div>
+                      )}
+                      {outgoing.length > 0 && (
+                        <div>
+                          <p className="px-4 pt-2.5 pb-1 text-[9px] font-bold uppercase tracking-widest" style={{ color: 'var(--text-faint)' }}>
+                            Outgoing
+                          </p>
+                          {outgoing.map((item) => (
+                            <NotificationRow key={`out-${item.type}-${item.id}`} item={item} onClick={handleNotificationClick} />
+                          ))}
+                        </div>
+                      )}
+                    </>
                   )}
                 </div>
               </motion.div>
@@ -234,5 +235,26 @@ export default function TopBar({ user, sidebarCollapsed, onToggleSidebar, onMobi
         </div>
       </div>
     </header>
+  )
+}
+
+function NotificationRow({ item, onClick }) {
+  const Icon = NOTIFICATION_ICONS[item.type] || Bell
+  return (
+    <button
+      onClick={() => onClick(item)}
+      className="w-full text-left px-4 py-3 border-b hover:bg-white/5 transition-colors flex items-start gap-3"
+      style={{ borderColor: 'var(--border-subtle)' }}
+    >
+      <div className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5"
+           style={{ background: 'rgba(201,151,58,0.12)', border: '1px solid rgba(201,151,58,0.25)' }}>
+        <Icon size={13} className="text-uacc-gold" />
+      </div>
+      <div className="min-w-0 flex-1">
+        <p className="text-xs font-semibold truncate" style={{ color: 'var(--text-primary)' }}>{item.title}</p>
+        <p className="text-[11px] truncate" style={{ color: 'var(--text-muted)' }}>{item.subtitle}</p>
+        <p className="text-[10px] mt-0.5" style={{ color: 'var(--text-faint)' }}>{timeAgo(item.createdAt)}</p>
+      </div>
+    </button>
   )
 }
