@@ -274,17 +274,22 @@ export default function DocumentViewerModal({
     <AnimatePresence>
       {isOpen && (
         <motion.div
-          className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4 backdrop-blur-sm overflow-y-auto"
+          className="fixed inset-0 bg-black/70 z-50 backdrop-blur-sm"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.2, ease: 'easeOut' }}
         >
+          {/* Fixed-inset panel rather than a flex-centered card — this is
+              meant to be a near-fullscreen workspace for reading a document,
+              not a small floating dialog. Offset past the sidebar's width
+              on md+ (it stays fixed/visible, dimmed, underneath); on mobile
+              there's no permanent sidebar so it just fills the screen. */}
           <motion.div
-            className="card rounded-2xl w-full max-w-6xl h-[94vh] bg-[var(--bg-surface)] flex flex-col my-8 shadow-2xl relative shadow-black/50"
-            initial={{ opacity: 0, scale: 0.96, y: 12 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.96, y: 12 }}
+            className="card rounded-2xl bg-[var(--bg-surface)] flex flex-col shadow-2xl shadow-black/50 fixed inset-4 md:left-[256px]"
+            initial={{ opacity: 0, scale: 0.98 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.98 }}
             transition={{ duration: 0.22, ease: 'easeOut' }}
           >
             {/* Header */}
