@@ -134,6 +134,67 @@ const CustomTooltip = ({ active, payload, label }) => {
   return null
 }
 
+// StatCard drill-downs — each mirrors the exact query the stat number
+// itself came from, just sliced to a handful of records instead of a
+// count, so the expanded list and the number above it can never disagree.
+async function fetchRecentDocumentsItems() {
+  const res = await api.get('/documents?limit=6')
+  const docs = res.data?.documents || []
+  return {
+    items: docs.map((d) => ({
+      id: d.id,
+      primary: d.title,
+      secondary: `${formatDept(d.category)} · ${new Date(d.createdAt).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })}`,
+      href: '/dashboard/documents',
+    })),
+    viewAllHref: '/dashboard/documents',
+  }
+}
+
+async function fetchPendingApprovalsItems() {
+  const res = await api.get('/dashboard/pending-procurement')
+  const requests = res.data || []
+  return {
+    items: requests.map((r) => ({
+      id: r.id,
+      primary: r.item,
+      secondary: `${formatDept(r.dept)} · ${formatUGX(r.cost)}`,
+      href: '/dashboard/procurement',
+    })),
+    viewAllHref: '/dashboard/procurement',
+  }
+}
+
+async function fetchLogsTodayItems() {
+  const today = new Date().toISOString().split('T')[0]
+  const res = await api.get(`/activity-logs?dateFrom=${today}&dateTo=${today}&limit=6`)
+  const logs = res.data?.logs || []
+  return {
+    items: logs.map((l) => ({
+      id: l.id,
+      primary: l.user?.name || 'Unknown',
+      secondary: l.activityDescription,
+      href: '/dashboard/activity-logs',
+    })),
+    viewAllHref: '/dashboard/activity-logs',
+  }
+}
+
+async function fetchStaffItems() {
+  const res = await api.get('/users/online-status')
+  const users = (res.data?.users || []).slice(0, 8)
+  return {
+    items: users.map((u) => ({
+      id: u.id,
+      primary: u.name,
+      secondary: formatDept(u.role),
+      href: '/dashboard/user-management',
+      online: u.isOnline,
+    })),
+    viewAllHref: '/dashboard/user-management',
+  }
+}
+
 export default function DashboardHome() {
   const { user } = useAuth()
   const [mounted, setMounted] = useState(false)
@@ -243,7 +304,7 @@ export default function DashboardHome() {
       {/* PAGE HEADER */}
       <PageHeader
         title={`${greeting}, ${user?.name?.split(' ')[0] || 'User'}`}
-        subtitle={`${new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })} · Here&apos;s what&apos;s happening at UACC today`}
+        subtitle={`${new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })} · Here's what's happening at UACC today`}
       />
 
       <SystemActivityWidget />
@@ -257,6 +318,7 @@ export default function DashboardHome() {
           icon={FolderOpen}
           accentColor="gold"
           subtitle={`${stats.documentsThisMonth || 0} this month`}
+          fetchItems={fetchRecentDocumentsItems}
         />
         <StatCard
           index={1}
@@ -265,6 +327,7 @@ export default function DashboardHome() {
           icon={ClipboardList}
           accentColor="red"
           subtitle="Awaiting GM sign-off"
+          fetchItems={fetchPendingApprovalsItems}
         />
         <StatCard
           index={2}
@@ -273,6 +336,7 @@ export default function DashboardHome() {
           icon={Clock}
           accentColor="green"
           subtitle="Across all departments"
+          fetchItems={fetchLogsTodayItems}
         />
         <StatCard
           index={3}
@@ -281,6 +345,7 @@ export default function DashboardHome() {
           icon={Users}
           accentColor="blue"
           subtitle="System wide"
+          fetchItems={fetchStaffItems}
         />
       </div>
 

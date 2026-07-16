@@ -22,7 +22,7 @@ export default function MessagesPage() {
   const { user } = useAuth()
   const {
     directory, conversations, thread, loading,
-    fetchDirectory, fetchConversations, openThread, sendMessage, editMessage, deleteMessage,
+    fetchDirectory, fetchConversations, openThread, sendMessage, editMessage, deleteMessage, hideConversation,
   } = useMessages()
   const { isUserOnline } = useOnlineStatus()
   const searchParams = useSearchParams()
@@ -101,6 +101,13 @@ export default function MessagesPage() {
     await deleteMessage(id, activePartnerId).catch(() => {})
   }
 
+  const handleHideConversation = async (e, partnerId) => {
+    e.stopPropagation()
+    if (!window.confirm('Hide this conversation? It reappears if new messages come in.')) return
+    await hideConversation(partnerId).catch(() => {})
+    if (activePartnerId === partnerId) setActivePartnerId(null)
+  }
+
   const activePartner = thread?.otherUser
 
   return (
@@ -156,7 +163,7 @@ export default function MessagesPage() {
                 <button
                   key={c.partner.id}
                   onClick={() => handleOpenThread(c.partner.id)}
-                  className={`w-full text-left px-4 py-3 border-b hover:bg-white/5 transition-colors flex items-start justify-between gap-2 ${
+                  className={`group w-full text-left px-4 py-3 border-b hover:bg-white/5 transition-colors flex items-start justify-between gap-2 ${
                     activePartnerId === c.partner.id ? 'bg-white/5' : ''
                   }`}
                   style={{ borderColor: 'var(--border-subtle)' }}
@@ -168,11 +175,22 @@ export default function MessagesPage() {
                     </p>
                     <p className="text-xs truncate" style={{ color: 'var(--text-muted)' }}>{c.lastMessage.content}</p>
                   </div>
-                  {c.unreadCount > 0 && (
-                    <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-uacc-gold text-white flex-shrink-0">
-                      {c.unreadCount}
+                  <div className="flex items-center gap-1.5 flex-shrink-0">
+                    {c.unreadCount > 0 && (
+                      <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-uacc-gold text-white">
+                        {c.unreadCount}
+                      </span>
+                    )}
+                    <span
+                      role="button"
+                      onClick={(e) => handleHideConversation(e, c.partner.id)}
+                      className="hidden group-hover:flex p-1 rounded hover:bg-uacc-red/10 hover:text-uacc-red"
+                      style={{ color: 'var(--text-muted)' }}
+                      title="Hide conversation"
+                    >
+                      <Trash2 size={12} />
                     </span>
-                  )}
+                  </div>
                 </button>
               ))
             )}

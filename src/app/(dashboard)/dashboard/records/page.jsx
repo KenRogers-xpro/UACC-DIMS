@@ -1,12 +1,13 @@
 'use client'
 
-import React, { useState, useMemo, useEffect } from 'react'
+import React, { useState, useMemo, useEffect, useCallback, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   BookOpen, ArrowLeftRight, BarChart2, Plus, Download,
   ArrowDownCircle, ArrowUpCircle, ArrowRightCircle, Lock,
   Search, FileText, Mail, MessageSquare, MapPin, Eye, Edit,
-  Printer, Check, X, Calendar, Inbox, ChevronRight
+  Printer, Check, X, Calendar, Inbox, ChevronRight, Folder,
+  UploadCloud, ChevronDown,
 } from 'lucide-react'
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, Legend, ResponsiveContainer,
@@ -14,170 +15,36 @@ import {
 } from 'recharts'
 import api from '@/lib/api'
 
-const MOCK_REGISTRY = [
-  {
-    id: 'REG-UACC-2026-0021',
-    subject: 'NCNDA Agreement — UACC & Air Dynamics Solutions (ADS)',
-    docType: 'CONTRACT',
-    direction: 'INCOMING',
-    source: 'Air Dynamics Solutions, Abu Dhabi, UAE',
-    destination: 'Office of the General Manager',
-    receivedFrom: 'Mr. Salman Alamoudi (ADS)',
-    handledBy: 'Records Executive',
-    dateRegistered: '2026-05-19',
-    dateDispatched: '2026-05-19',
-    dateReceived: '2026-05-19',
-    status: 'CLOSED',
-    priority: 'HIGH',
-    medium: 'PHYSICAL',
-    fileRef: 'UACC/LEGAL/2026/005',
-    physicalLocation: 'Cabinet 3, Shelf B, GM Office',
-    linkedDocumentId: 6,
-    annotations: [
-      { id: 1, author: 'Records Executive', role: 'RECORDS_EXECUTIVE', text: 'Original signed copy received. Stamped and registered. Forwarded to GM for signature.', timestamp: '2026-05-19 10:30' },
-      { id: 2, author: 'Lt. Gen. Lakara',   role: 'GENERAL_MANAGER',   text: 'Reviewed and signed. Return copy dispatched to ADS via email. File original in legal cabinet.', timestamp: '2026-05-19 14:45' },
-      { id: 3, author: 'Records Executive', role: 'RECORDS_EXECUTIVE', text: 'Original filed in Cabinet 3, Shelf B. Scanned copy uploaded to DIMS Documents module. Registry entry closed.', timestamp: '2026-05-19 16:00' },
-    ],
-  },
-  {
-    id: 'REG-UACC-2026-0022',
-    subject: 'NITA-Uganda Digital Transformation Partnership MOU',
-    docType: 'MEMO',
-    direction: 'INCOMING',
-    source: 'National Information Technology Authority — Uganda (NITA-U)',
-    destination: 'Office of the General Manager',
-    receivedFrom: 'NITA-U Director General',
-    handledBy: 'Records Executive',
-    dateRegistered: '2026-05-28',
-    dateDispatched: null,
-    dateReceived: '2026-05-28',
-    status: 'ACTIONED',
-    priority: 'HIGH',
-    medium: 'BOTH',
-    fileRef: 'UACC/ICT/2026/012',
-    physicalLocation: 'Cabinet 1, Shelf A, IT Office',
-    linkedDocumentId: null,
-    annotations: [
-      { id: 1, author: 'Records Executive', role: 'RECORDS_EXECUTIVE', text: 'MOU received via email and physical courier. Both copies registered. Forwarded to GM and IT Specialist for review.', timestamp: '2026-05-28 09:00' },
-      { id: 2, author: 'Patrick Katusabe',  role: 'IT_ADMINISTRATOR',  text: 'Reviewed MOU. Partnership covers UACC network upgrade, cybersecurity training, and DIMS deployment support. Recommended for GM signature.', timestamp: '2026-05-28 11:30' },
-      { id: 3, author: 'Lt. Gen. Lakara',   role: 'GENERAL_MANAGER',   text: 'MOU approved. Signed and returned to NITA-U. Proceed with partnership activities.', timestamp: '2026-05-29 08:00' },
-    ],
-  },
-  {
-    id: 'REG-UACC-2026-0023',
-    subject: 'Engineering Per-Diem Payment Request — Field Team Uganda North',
-    docType: 'MEMO',
-    direction: 'INTERNAL',
-    source: 'Engineering Department',
-    destination: 'Finance and Administration',
-    receivedFrom: 'Head Engineering',
-    handledBy: 'Records Executive',
-    dateRegistered: '2026-06-05',
-    dateDispatched: '2026-06-05',
-    dateReceived: '2026-06-05',
-    status: 'ACTIONED',
-    priority: 'NORMAL',
-    medium: 'PHYSICAL',
-    fileRef: 'UACC/FIN/2026/034',
-    physicalLocation: 'Cabinet 2, Shelf C, Finance Office',
-    linkedDocumentId: null,
-    annotations: [
-      { id: 1, author: 'Records Executive', role: 'RECORDS_EXECUTIVE', text: 'Internal memo received from Engineering. Registered and dispatched to Finance & Administration for processing.', timestamp: '2026-06-05 08:30' },
-      { id: 2, author: 'Records Executive', role: 'RECORDS_EXECUTIVE', text: 'Finance confirmed receipt. Per-diem processing initiated. Estimated disbursement: 3 working days.', timestamp: '2026-06-05 14:00' },
-    ],
-  },
-  {
-    id: 'REG-UACC-2026-0024',
-    subject: 'Ministry of Defence Quarterly Operations Report Submission',
-    docType: 'REPORT',
-    direction: 'OUTGOING',
-    source: 'Office of the General Manager',
-    destination: 'Ministry of Defence and Veteran Affairs (MODVA)',
-    receivedFrom: null,
-    handledBy: 'Records Executive',
-    dateRegistered: '2026-06-10',
-    dateDispatched: '2026-06-10',
-    dateReceived: null,
-    status: 'DISPATCHED',
-    priority: 'HIGH',
-    medium: 'BOTH',
-    fileRef: 'UACC/GM/2026/019',
-    physicalLocation: null,
-    linkedDocumentId: null,
-    annotations: [
-      { id: 1, author: 'Records Executive', role: 'RECORDS_EXECUTIVE', text: 'Q1 Operations Report compiled and registered. Physical copy dispatched to MODVA via courier. Digital copy sent via official email.', timestamp: '2026-06-10 10:00' },
-      { id: 2, author: 'Records Executive', role: 'RECORDS_EXECUTIVE', text: 'Courier tracking confirmed: delivered to MODVA Registry on 12 Jun 2026. Awaiting acknowledgement receipt.', timestamp: '2026-06-12 11:00' },
-    ],
-  },
-  {
-    id: 'REG-UACC-2026-0025',
-    subject: 'Flight Dispatch and Operations Manual (FDPM) — Revision 4',
-    docType: 'POLICY',
-    direction: 'INTERNAL',
-    source: 'Operations Department',
-    destination: 'All Departments',
-    receivedFrom: 'Head Operations',
-    handledBy: 'Records Executive',
-    dateRegistered: '2026-06-15',
-    dateDispatched: '2026-06-15',
-    dateReceived: '2026-06-15',
-    status: 'CLOSED',
-    priority: 'NORMAL',
-    medium: 'BOTH',
-    fileRef: 'UACC/OPS/2026/007',
-    physicalLocation: 'Cabinet 4, Shelf A, Operations Office',
-    linkedDocumentId: null,
-    annotations: [
-      { id: 1, author: 'Records Executive', role: 'RECORDS_EXECUTIVE', text: 'FDPM Revision 4 received from Operations. Registered and copies dispatched to all department heads.', timestamp: '2026-06-15 09:00' },
-      { id: 2, author: 'Head Engineering',  role: 'DEPARTMENT_HEAD',   text: 'Received and acknowledged. Engineering copy filed.', timestamp: '2026-06-15 11:30' },
-      { id: 3, author: 'Records Executive', role: 'RECORDS_EXECUTIVE', text: 'All departments confirmed receipt. Registry entry closed.', timestamp: '2026-06-16 08:00' },
-    ],
-  },
-  {
-    id: 'REG-UACC-2026-0026',
-    subject: 'Fuel Supply Tender — Uganda Petroleum Ltd Invoice',
-    docType: 'INVOICE',
-    direction: 'INCOMING',
-    source: 'Uganda Petroleum Ltd',
-    destination: 'Finance and Administration',
-    receivedFrom: 'Uganda Petroleum Ltd Accounts',
-    handledBy: 'Records Executive',
-    dateRegistered: '2026-06-18',
-    dateDispatched: '2026-06-18',
-    dateReceived: '2026-06-18',
-    status: 'PENDING',
-    priority: 'NORMAL',
-    medium: 'EMAIL',
-    fileRef: 'UACC/FIN/2026/041',
-    physicalLocation: null,
-    linkedDocumentId: null,
-    annotations: [
-      { id: 1, author: 'Records Executive', role: 'RECORDS_EXECUTIVE', text: 'Invoice received via email. Registered and forwarded to Finance for payment processing.', timestamp: '2026-06-18 10:15' },
-    ],
-  },
-  {
-    id: 'REG-UACC-2026-0027',
-    subject: 'Staff Disciplinary Notice — Operations Department',
-    docType: 'LETTER',
-    direction: 'INTERNAL',
-    source: 'Human Resources (Finance & Administration)',
-    destination: 'Operations Department',
-    receivedFrom: 'HR Manager',
-    handledBy: 'Records Executive',
-    dateRegistered: '2026-06-20',
-    dateDispatched: '2026-06-20',
-    dateReceived: null,
-    status: 'DISPATCHED',
-    priority: 'CONFIDENTIAL',
-    medium: 'PHYSICAL',
-    fileRef: 'UACC/HR/2026/008',
-    physicalLocation: 'Confidential Cabinet, HR Office',
-    linkedDocumentId: null,
-    annotations: [
-      { id: 1, author: 'Records Executive', role: 'RECORDS_EXECUTIVE', text: 'Confidential disciplinary notice registered. Dispatched to Operations Department Head via sealed envelope. Delivery confirmation pending.', timestamp: '2026-06-20 09:30' },
-    ],
-  },
-]
+// Adapts a real RegistryEntry (from GET/POST /api/records) into the flat
+// display shape this page's JSX already expects — `id` stays the display-
+// friendly registryNo (used as the row key and shown everywhere), dates are
+// trimmed to YYYY-MM-DD to match the date-range filter's string comparison,
+// and annotations/handledBy are flattened from their relational shape.
+function adaptRecord(r) {
+  return {
+    ...r,
+    id: r.registryNo,
+    dbId: r.id,
+    handledBy: r.handledBy?.name || 'Unknown',
+    dateRegistered: r.dateRegistered ? String(r.dateRegistered).slice(0, 10) : '',
+    dateDispatched: r.dateDispatched ? String(r.dateDispatched).slice(0, 10) : null,
+    dateReceived: r.dateReceived ? String(r.dateReceived).slice(0, 10) : null,
+    linkedDocumentId: r.sourceDocumentId || null,
+    recordsFile: r.recordsFile || null,
+    annotations: (r.annotations || []).map((a) => ({
+      id: a.id,
+      author: a.author?.name || 'Unknown',
+      role: a.author?.role,
+      text: a.text,
+      timestamp: new Date(a.createdAt).toLocaleString('en-GB', {
+        day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit',
+      }),
+    })),
+  }
+}
+
+
+const STEP_ROMAN = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X']
 
 const DOC_TYPES = ['ALL', 'MEMO', 'REPORT', 'CONTRACT', 'POLICY', 'LETTER', 'INVOICE', 'FORM', 'LOGBOOK', 'OTHER']
 const DIRECTIONS = ['ALL', 'INCOMING', 'OUTGOING', 'INTERNAL']
@@ -260,10 +127,32 @@ export default function RecordsExecutivePage() {
   const [currentPage, setCurrentPage] = useState(1)
   const [toast, setToast] = useState(null)
   const [pendingCopiesCount, setPendingCopiesCount] = useState(0)
-  
+
+  // Real data — replaces the old MOCK_REGISTRY/ANALYTICS_DATA-only prototype.
+  const [records, setRecords] = useState([])
+  const [recordsLoading, setRecordsLoading] = useState(false)
+  const [files, setFiles] = useState([])
+  const [filesLoading, setFilesLoading] = useState(false)
+  const [newFileModalOpen, setNewFileModalOpen] = useState(false)
+  const [newFileForm, setNewFileForm] = useState({ fileNumber: '', title: '', fileType: '', description: '' })
+  const [newFileSubmitting, setNewFileSubmitting] = useState(false)
+  const [newFileError, setNewFileError] = useState('')
+
+  // Filing Queue — PENDING_FILING circulation copies
+  const [filingQueue, setFilingQueue] = useState([])
+  const [filingQueueLoading, setFilingQueueLoading] = useState(false)
+  const [fileDialogCopy, setFileDialogCopy] = useState(null)
+  const [fileDialogSelectedId, setFileDialogSelectedId] = useState('')
+  const [fileDialogSearch, setFileDialogSearch] = useState('')
+  const [filingSubmitting, setFilingSubmitting] = useState(false)
+
+  // File drill-in — the per-file view opened from a File chip in the
+  // register table or a row in the Files tab.
+  const [fileDrillIn, setFileDrillIn] = useState(null)
+
   const ROWS_PER_PAGE = 8
 
-  const [formData, setFormData] = useState({
+  const emptyFormData = {
     subject: '',
     docType: 'MEMO',
     direction: 'INCOMING',
@@ -276,8 +165,49 @@ export default function RecordsExecutivePage() {
     physicalLocation: '',
     dateRegistered: new Date().toISOString().split('T')[0],
     notes: '',
-    attachFile: null,
-  })
+  }
+  const [formData, setFormData] = useState(emptyFormData)
+  const [attachedFile, setAttachedFile] = useState(null) // real File object for the dropzone
+  const [isDragging, setIsDragging] = useState(false)
+  const fileInputRef = useRef(null)
+
+  // Link to File — 'none' | 'existing' | 'new'
+  const [linkMode, setLinkMode] = useState('none')
+  const [linkFileId, setLinkFileId] = useState('')
+  const [fileSearchQuery, setFileSearchQuery] = useState('')
+  const [filePickerOpen, setFilePickerOpen] = useState(false)
+  const [newLinkFileNumber, setNewLinkFileNumber] = useState('')
+  const [newLinkFileTitle, setNewLinkFileTitle] = useState('')
+
+  const [submitting, setSubmitting] = useState(false)
+  const [submitError, setSubmitError] = useState('')
+
+  const fetchRecords = useCallback(async () => {
+    setRecordsLoading(true)
+    try {
+      const res = await api.get('/records?limit=200')
+      setRecords((res.data?.records || []).map(adaptRecord))
+    } catch (err) {
+      console.error('Failed to fetch records', err)
+    } finally {
+      setRecordsLoading(false)
+    }
+  }, [])
+
+  const fetchFiles = useCallback(async () => {
+    setFilesLoading(true)
+    try {
+      const res = await api.get('/records/files')
+      setFiles(res.data || [])
+    } catch (err) {
+      console.error('Failed to fetch records files', err)
+    } finally {
+      setFilesLoading(false)
+    }
+  }, [])
+
+  useEffect(() => { fetchRecords() }, [fetchRecords])
+  useEffect(() => { fetchFiles() }, [fetchFiles])
 
   useEffect(() => {
     if (toast) {
@@ -286,34 +216,81 @@ export default function RecordsExecutivePage() {
     }
   }, [toast])
 
-  useEffect(() => {
-    const fetchPending = async () => {
-      try {
-        const res = await api.get('/records/circulation-copies?status=PENDING_FILING')
-        if (res.data && res.data.data) {
-          setPendingCopiesCount(res.data.data.length)
-        }
-      } catch (err) {
-        console.error('Failed to fetch pending copies', err)
-      }
+  const fetchFilingQueue = useCallback(async () => {
+    setFilingQueueLoading(true)
+    try {
+      const res = await api.get('/records/circulation-copies?status=PENDING_FILING')
+      const list = res.data || []
+      setFilingQueue(list)
+      setPendingCopiesCount(list.length)
+    } catch (err) {
+      console.error('Failed to fetch filing queue', err)
+    } finally {
+      setFilingQueueLoading(false)
     }
-    fetchPending()
   }, [])
 
-  const showToast = (message) => {
-    setToast({ type: 'success', message })
+  useEffect(() => { fetchFilingQueue() }, [fetchFilingQueue])
+
+  const showToast = (message, type = 'success') => {
+    setToast({ type, message })
   }
 
-  const handleRegisterSubmit = (e) => {
+  const resetRegisterForm = () => {
+    setFormData(emptyFormData)
+    setAttachedFile(null)
+    setLinkMode('none')
+    setLinkFileId('')
+    setFileSearchQuery('')
+    setNewLinkFileNumber('')
+    setNewLinkFileTitle('')
+    setSubmitError('')
+    if (fileInputRef.current) fileInputRef.current.value = ''
+  }
+
+  const handleRegisterSubmit = async (e) => {
     e.preventDefault()
-    setRegisterModalOpen(false)
-    showToast("Document registered successfully. Reference: REG-UACC-2026-0028")
-    setFormData({
-      subject: '', docType: 'MEMO', direction: 'INCOMING', source: '', destination: '',
-      receivedFrom: '', priority: 'NORMAL', medium: 'PHYSICAL', fileRef: '',
-      physicalLocation: '', dateRegistered: new Date().toISOString().split('T')[0],
-      notes: '', attachFile: null,
-    })
+    setSubmitting(true)
+    setSubmitError('')
+    try {
+      const fd = new FormData()
+      Object.entries(formData).forEach(([key, value]) => {
+        if (value !== '' && value !== null && value !== undefined) fd.append(key, value)
+      })
+      if (attachedFile) fd.append('file', attachedFile)
+      if (linkMode === 'existing' && linkFileId) {
+        fd.append('recordsFileId', linkFileId)
+      } else if (linkMode === 'new' && newLinkFileTitle.trim()) {
+        if (newLinkFileNumber.trim()) fd.append('newFileNumber', newLinkFileNumber.trim())
+        fd.append('newFileTitle', newLinkFileTitle.trim())
+      }
+
+      const res = await api.post('/records', fd)
+      if (!res.success) throw new Error(res.message || 'Failed to register document')
+
+      setRegisterModalOpen(false)
+      resetRegisterForm()
+      showToast(`Document registered successfully. Reference: ${res.data.registryNo}`)
+      await fetchRecords()
+      if (linkMode === 'new') await fetchFiles()
+    } catch (err) {
+      setSubmitError(err.message || 'Failed to register document')
+      showToast(err.message || 'Failed to register document', 'error')
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  const handleFileSelect = (e) => {
+    const file = e.target.files?.[0]
+    if (file) setAttachedFile(file)
+  }
+
+  const handleDrop = (e) => {
+    e.preventDefault()
+    setIsDragging(false)
+    const file = e.dataTransfer.files?.[0]
+    if (file) setAttachedFile(file)
   }
 
   const handleAddAnnotation = () => {
@@ -322,9 +299,62 @@ export default function RecordsExecutivePage() {
     setAnnotationText('')
   }
 
+  // Pre-fill the auto-suggested next file number when the standalone "+ New
+  // File" modal opens, same sequential pattern as registry numbers.
+  useEffect(() => {
+    if (!newFileModalOpen) return
+    api.get('/records/files/next-number')
+      .then((res) => setNewFileForm((f) => (f.fileNumber ? f : { ...f, fileNumber: res.data?.fileNumber || '' })))
+      .catch(() => {})
+  }, [newFileModalOpen])
+
+  const handleCreateFile = async (e) => {
+    e.preventDefault()
+    if (!newFileForm.title.trim()) return
+    setNewFileSubmitting(true)
+    setNewFileError('')
+    try {
+      const res = await api.post('/records/files', newFileForm)
+      if (!res.success) throw new Error(res.message || 'Failed to create file')
+      setNewFileModalOpen(false)
+      setNewFileForm({ fileNumber: '', title: '', fileType: '', description: '' })
+      showToast(`File ${res.data.fileNumber} created.`)
+      await fetchFiles()
+    } catch (err) {
+      setNewFileError(err.message || 'Failed to create file')
+    } finally {
+      setNewFileSubmitting(false)
+    }
+  }
+
+  const openFileDialog = (copy) => {
+    setFileDialogCopy(copy)
+    setFileDialogSelectedId('')
+    setFileDialogSearch('')
+  }
+
+  const handleConfirmFiling = async () => {
+    if (!fileDialogCopy) return
+    setFilingSubmitting(true)
+    try {
+      const res = await api.put(`/records/circulation-copies/${fileDialogCopy.id}/file`, {
+        recordsFileId: fileDialogSelectedId || undefined,
+      })
+      if (!res.success) throw new Error(res.message || 'Failed to file copy')
+      showToast('Marked as filed.')
+      setFileDialogCopy(null)
+      await fetchFilingQueue()
+      if (fileDialogSelectedId) await fetchFiles()
+    } catch (err) {
+      showToast(err.message || 'Failed to file copy', 'error')
+    } finally {
+      setFilingSubmitting(false)
+    }
+  }
+
   // Filtering
   const filteredData = useMemo(() => {
-    return MOCK_REGISTRY.filter(item => {
+    return records.filter(item => {
       const matchSearch = item.subject.toLowerCase().includes(searchQuery.toLowerCase()) || 
                           item.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
                           item.source.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -347,13 +377,13 @@ export default function RecordsExecutivePage() {
 
   // Stats calculation
   const stats = useMemo(() => {
-    const total = MOCK_REGISTRY.length
-    const incoming = MOCK_REGISTRY.filter(i => i.direction === 'INCOMING').length
-    const outgoing = MOCK_REGISTRY.filter(i => i.direction === 'OUTGOING').length
-    const internal = MOCK_REGISTRY.filter(i => i.direction === 'INTERNAL').length
-    const confidential = MOCK_REGISTRY.filter(i => i.priority === 'CONFIDENTIAL').length
+    const total = records.length
+    const incoming = records.filter(i => i.direction === 'INCOMING').length
+    const outgoing = records.filter(i => i.direction === 'OUTGOING').length
+    const internal = records.filter(i => i.direction === 'INTERNAL').length
+    const confidential = records.filter(i => i.priority === 'CONFIDENTIAL').length
     return { total, incoming, outgoing, internal, confidential }
-  }, [])
+  }, [records])
 
   return (
     <div className="p-6 md:p-8 max-w-[1600px] mx-auto min-h-screen pb-24">
@@ -381,13 +411,16 @@ export default function RecordsExecutivePage() {
 
       {/* STATS */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-8">
-        <div className="card rounded-xl p-4 border border-white/5 flex flex-col gap-2 relative overflow-hidden group">
+        <button
+          onClick={() => setActiveView('filing')}
+          className="card rounded-xl p-4 border border-white/5 flex flex-col gap-2 relative overflow-hidden group text-left hover:border-uacc-gold/30 transition-colors cursor-pointer"
+        >
           <div className="flex justify-between items-start">
             <span className="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider">Pending Filing</span>
             <Inbox size={16} className="text-purple-400" />
           </div>
           <div className="text-2xl font-bold text-[var(--text-primary)] font-heading">{pendingCopiesCount}</div>
-        </div>
+        </button>
         <div className="card rounded-xl p-4 border border-white/5 flex flex-col gap-2 relative overflow-hidden group">
           <div className="flex justify-between items-start">
             <span className="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider">Total Registered</span>
@@ -443,13 +476,32 @@ export default function RecordsExecutivePage() {
         >
           <ArrowLeftRight size={16} /> Movement Tracker
         </button>
-        <button 
+        <button
+          onClick={() => setActiveView('filing')}
+          className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-colors whitespace-nowrap ${
+            activeView === 'filing' ? 'bg-uacc-gold text-[var(--text-primary)]' : 'border border-white/10 text-[var(--text-muted)] hover:bg-white/5'
+          }`}
+        >
+          <Inbox size={16} /> Filing Queue
+          {pendingCopiesCount > 0 && (
+            <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-purple-500/20 text-purple-300">{pendingCopiesCount}</span>
+          )}
+        </button>
+        <button
           onClick={() => setActiveView('analytics')}
           className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-colors whitespace-nowrap ${
             activeView === 'analytics' ? 'bg-uacc-gold text-[var(--text-primary)]' : 'border border-white/10 text-[var(--text-muted)] hover:bg-white/5'
           }`}
         >
           <BarChart2 size={16} /> Analytics
+        </button>
+        <button
+          onClick={() => setActiveView('files')}
+          className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-colors whitespace-nowrap ${
+            activeView === 'files' ? 'bg-uacc-gold text-[var(--text-primary)]' : 'border border-white/10 text-[var(--text-muted)] hover:bg-white/5'
+          }`}
+        >
+          <Folder size={16} /> Files
         </button>
       </div>
 
@@ -529,6 +581,7 @@ export default function RecordsExecutivePage() {
                     <th className="p-4 text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider hidden md:table-cell">Source → Dest</th>
                     <th className="p-4 text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider">Medium / Priority</th>
                     <th className="p-4 text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider">Status</th>
+                    <th className="p-4 text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider hidden lg:table-cell">File</th>
                     <th className="p-4 text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider text-right">Actions</th>
                   </tr>
                 </thead>
@@ -585,6 +638,18 @@ export default function RecordsExecutivePage() {
                             </div>
                           </div>
                         </td>
+                        <td className="p-4 hidden lg:table-cell">
+                          {row.recordsFile ? (
+                            <button
+                              onClick={(e) => { e.stopPropagation(); setFileDrillIn(row.recordsFile) }}
+                              className="inline-flex items-center gap-1.5 px-2 py-1 rounded-md text-[10px] font-bold bg-uacc-gold/10 text-uacc-gold border border-uacc-gold/20 hover:bg-uacc-gold/20 transition-colors"
+                            >
+                              <Folder size={11} /> {row.recordsFile.fileNumber}
+                            </button>
+                          ) : (
+                            <span className="text-[10px] text-[var(--text-faint)] italic">unfiled</span>
+                          )}
+                        </td>
                         <td className="p-4 text-right">
                           <div className="flex justify-end gap-2">
                             <button className="p-1.5 text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-white/10 rounded-md transition-colors"><Eye size={16} /></button>
@@ -595,7 +660,7 @@ export default function RecordsExecutivePage() {
                   })}
                   {filteredData.length === 0 && (
                     <tr>
-                      <td colSpan={7} className="p-8 text-center text-[var(--text-muted)]">No registry entries found matching your filters.</td>
+                      <td colSpan={8} className="p-8 text-center text-[var(--text-muted)]">No registry entries found matching your filters.</td>
                     </tr>
                   )}
                 </tbody>
@@ -630,6 +695,57 @@ export default function RecordsExecutivePage() {
         </div>
       )}
 
+      {/* VIEW: FILING QUEUE — every CirculationRecordsCopy auto-created per
+          circulation step, awaiting physical/digital filing by Records. */}
+      {activeView === 'filing' && (
+        <div className="space-y-6">
+          <div>
+            <h2 className="text-lg font-bold text-[var(--text-primary)]">Filing Queue</h2>
+            <p className="text-[var(--text-muted)] text-sm">Circulation steps awaiting filing — one copy per step, auto-generated as documents move</p>
+          </div>
+
+          <div className="card rounded-xl border border-white/5 overflow-hidden">
+            {filingQueueLoading ? (
+              <p className="p-8 text-center text-[var(--text-muted)]">Loading filing queue...</p>
+            ) : filingQueue.length === 0 ? (
+              <p className="p-8 text-center text-[var(--text-muted)]">Nothing pending filing right now.</p>
+            ) : (
+              <div className="divide-y divide-white/5">
+                {filingQueue.map((copy) => {
+                  const step = copy.step
+                  const stepRoman = STEP_ROMAN[step.stepNumber - 1] || step.stepNumber
+                  return (
+                    <div key={copy.id} className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:bg-white/[0.02] transition-colors">
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="w-5 h-5 rounded-full border border-uacc-gold/50 flex items-center justify-center text-[10px] font-bold text-uacc-gold flex-shrink-0">
+                            {stepRoman}
+                          </span>
+                          <p className="text-sm font-semibold text-[var(--text-primary)] truncate">{step.circulation?.title}</p>
+                        </div>
+                        <p className="text-xs text-[var(--text-secondary)] italic truncate">"{step.instruction}"</p>
+                        <div className="flex items-center flex-wrap gap-x-2 gap-y-1 mt-1.5 text-[10px] text-[var(--text-faint)]">
+                          <span className="font-semibold text-[var(--text-muted)]">{step.fromRole?.replace(/_/g, ' ')}</span>
+                          <ArrowLeftRight size={10} />
+                          <span className="font-semibold text-uacc-gold">{step.toRole?.replace(/_/g, ' ')}</span>
+                          <span>· {new Date(step.signedAt || copy.createdAt).toLocaleString('en-GB', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}</span>
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => openFileDialog(copy)}
+                        className="flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider bg-uacc-gold/10 text-uacc-gold border border-uacc-gold/25 hover:bg-uacc-gold/20 transition-colors flex-shrink-0 whitespace-nowrap"
+                      >
+                        <Folder size={13} /> File
+                      </button>
+                    </div>
+                  )
+                })}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* VIEW B: MOVEMENT TRACKER */}
       {activeView === 'movement' && (
         <div className="max-w-4xl mx-auto space-y-6">
@@ -637,7 +753,7 @@ export default function RecordsExecutivePage() {
             <h2 className="text-lg font-bold text-[var(--text-primary)]">Document Movement Log</h2>
           </div>
           <div className="space-y-4 relative before:absolute before:inset-0 before:ml-[23px] before:w-0.5 before:bg-white/10">
-            {MOCK_REGISTRY.map((row, idx) => {
+            {records.map((row, idx) => {
               const DirIcon = DIRECTION_META[row.direction].icon
               const borderColor = row.direction === 'INCOMING' ? 'border-emerald-500' : row.direction === 'OUTGOING' ? 'border-red-500' : 'border-uacc-gold'
               return (
@@ -788,6 +904,309 @@ export default function RecordsExecutivePage() {
           </div>
         </div>
       )}
+
+      {/* VIEW D: FILES — standalone RecordsFile management, independent of
+          registering any document. A file can sit empty, waiting for
+          entries to be filed into it later via the register modal's Link
+          to File field or the attach-to-file endpoint. */}
+      {activeView === 'files' && (
+        <div className="space-y-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-lg font-bold text-[var(--text-primary)]">Records Files</h2>
+              <p className="text-[var(--text-muted)] text-sm">Dossiers and folders — create one before documents exist to file into it</p>
+            </div>
+            <button
+              onClick={() => setNewFileModalOpen(true)}
+              className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold bg-uacc-gold text-[var(--text-primary)] hover:bg-uacc-gold/90 transition-colors shadow-lg shadow-uacc-gold/20"
+            >
+              <Plus size={16} /> New File
+            </button>
+          </div>
+
+          <div className="card rounded-xl border border-white/5 overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse data-table">
+                <thead>
+                  <tr className="bg-white/5 border-b border-white/10">
+                    <th className="p-4 text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider">File Number</th>
+                    <th className="p-4 text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider">Title</th>
+                    <th className="p-4 text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider hidden md:table-cell">Type</th>
+                    <th className="p-4 text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider text-center">Entries</th>
+                    <th className="p-4 text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider">Status</th>
+                    <th className="p-4 text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider hidden md:table-cell">Created</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-white/5">
+                  {filesLoading ? (
+                    <tr><td colSpan={6} className="p-8 text-center text-[var(--text-muted)]">Loading files...</td></tr>
+                  ) : files.length === 0 ? (
+                    <tr><td colSpan={6} className="p-8 text-center text-[var(--text-muted)]">No records files yet. Create one to get started.</td></tr>
+                  ) : (
+                    files.map((f) => (
+                      <tr key={f.id} onClick={() => setFileDrillIn(f)} className="hover:bg-white/[0.03] transition-colors cursor-pointer">
+                        <td className="p-4 whitespace-nowrap">
+                          <span className="text-xs font-heading font-bold text-uacc-gold">{f.fileNumber}</span>
+                        </td>
+                        <td className="p-4">
+                          <p className="text-sm text-[var(--text-primary)] font-medium">{f.title}</p>
+                          {f.description && <p className="text-[10px] text-[var(--text-faint)] mt-0.5 truncate max-w-[300px]">{f.description}</p>}
+                        </td>
+                        <td className="p-4 hidden md:table-cell">
+                          <span className="text-xs text-[var(--text-muted)]">{f.fileType || '—'}</span>
+                        </td>
+                        <td className="p-4 text-center">
+                          <span className="inline-flex items-center gap-1 text-xs font-bold text-uacc-gold bg-uacc-gold/10 px-2 py-0.5 rounded-full border border-uacc-gold/20">
+                            {f._count?.entries ?? 0}
+                          </span>
+                        </td>
+                        <td className="p-4">
+                          <span className={`inline-block px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider w-max ${
+                            f.status === 'ACTIVE' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' :
+                            f.status === 'ARCHIVED' ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20' :
+                            'bg-white/10 text-[var(--text-muted)] border border-white/10'
+                          }`}>
+                            {f.status}
+                          </span>
+                        </td>
+                        <td className="p-4 hidden md:table-cell">
+                          <span className="text-xs text-[var(--text-muted)]">{new Date(f.createdAt).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}</span>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* NEW FILE MODAL — standalone creation, independent of registering a document */}
+      <AnimatePresence>
+        {newFileModalOpen && (
+          <motion.div
+            className="fixed inset-0 z-50 flex items-center justify-center p-4"
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}
+          >
+            <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setNewFileModalOpen(false)}></div>
+            <motion.div
+              className="relative w-full max-w-md bg-[#0b1120] rounded-2xl shadow-2xl border border-white/10 flex flex-col max-h-[90vh]"
+              initial={{ opacity: 0, scale: 0.96, y: 12 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.96, y: 12 }}
+              transition={{ duration: 0.22 }}
+            >
+              <div className="p-5 border-b border-white/10 bg-white/[0.02] rounded-t-2xl flex justify-between items-center">
+                <h2 className="text-xl font-bold text-white">New Records File</h2>
+                <button onClick={() => setNewFileModalOpen(false)} className="p-2 text-white/50 hover:text-white hover:bg-white/5 rounded-full transition-colors">
+                  <X size={20} />
+                </button>
+              </div>
+              <div className="flex-1 overflow-y-auto p-6">
+                <form id="new-file-form" onSubmit={handleCreateFile} className="space-y-4">
+                  <div>
+                    <label className="block text-xs font-bold text-white/70 mb-1.5 uppercase tracking-wider">File Number</label>
+                    <input
+                      type="text" value={newFileForm.fileNumber}
+                      onChange={e => setNewFileForm({ ...newFileForm, fileNumber: e.target.value })}
+                      placeholder="Auto-suggested"
+                      className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2.5 text-sm text-white focus:outline-none focus:border-uacc-gold/50"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-white/70 mb-1.5 uppercase tracking-wider">Title *</label>
+                    <input
+                      type="text" required value={newFileForm.title}
+                      onChange={e => setNewFileForm({ ...newFileForm, title: e.target.value })}
+                      placeholder="e.g. Aircraft 5X-ABC — Maintenance Records"
+                      className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2.5 text-sm text-white focus:outline-none focus:border-uacc-gold/50"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-white/70 mb-1.5 uppercase tracking-wider">File Type</label>
+                    <input
+                      type="text" value={newFileForm.fileType}
+                      onChange={e => setNewFileForm({ ...newFileForm, fileType: e.target.value })}
+                      placeholder="Free text — e.g. Personal File, Asset File..."
+                      className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2.5 text-sm text-white focus:outline-none focus:border-uacc-gold/50"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-white/70 mb-1.5 uppercase tracking-wider">Description</label>
+                    <textarea
+                      value={newFileForm.description}
+                      onChange={e => setNewFileForm({ ...newFileForm, description: e.target.value })}
+                      placeholder="Optional notes about this file's scope"
+                      className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-sm text-white focus:outline-none focus:border-uacc-gold/50 resize-none h-20"
+                    />
+                  </div>
+                  {newFileError && <p className="text-xs text-uacc-red">{newFileError}</p>}
+                </form>
+              </div>
+              <div className="p-4 border-t border-white/10 bg-white/[0.02] rounded-b-2xl flex justify-end gap-3">
+                <button
+                  onClick={() => setNewFileModalOpen(false)} disabled={newFileSubmitting}
+                  className="px-6 py-2.5 rounded-lg border border-white/10 text-white/70 hover:text-white hover:bg-white/5 font-semibold text-sm transition-colors disabled:opacity-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  form="new-file-form" type="submit" disabled={newFileSubmitting}
+                  className="flex items-center gap-2 px-6 py-2.5 rounded-lg bg-uacc-gold text-white font-bold text-sm hover:bg-uacc-gold/90 transition-colors shadow-lg shadow-uacc-gold/20 disabled:opacity-50"
+                >
+                  <Folder size={16} /> {newFileSubmitting ? 'Creating...' : 'Create File'}
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* FILE DIALOG — confirm filing a circulation copy, optionally linking
+          it to a RecordsFile. Same search-and-pick UX as the register
+          modal's Link to File field, over the already-fetched `files` list. */}
+      <AnimatePresence>
+        {fileDialogCopy && (
+          <motion.div
+            className="fixed inset-0 z-50 flex items-center justify-center p-4"
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}
+          >
+            <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setFileDialogCopy(null)}></div>
+            <motion.div
+              className="relative w-full max-w-md bg-[#0b1120] rounded-2xl shadow-2xl border border-white/10 flex flex-col max-h-[80vh]"
+              initial={{ opacity: 0, scale: 0.96, y: 12 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.96, y: 12 }}
+              transition={{ duration: 0.22 }}
+            >
+              <div className="p-5 border-b border-white/10 bg-white/[0.02] rounded-t-2xl flex justify-between items-center">
+                <h2 className="text-lg font-bold text-white">Mark as Filed</h2>
+                <button onClick={() => setFileDialogCopy(null)} className="p-2 text-white/50 hover:text-white hover:bg-white/5 rounded-full transition-colors">
+                  <X size={20} />
+                </button>
+              </div>
+              <div className="flex-1 overflow-y-auto p-5 flex flex-col gap-3">
+                <p className="text-xs text-white/50">
+                  Optionally link this copy to a RecordsFile dossier before marking it filed.
+                </p>
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-white/30" size={15} />
+                  <input
+                    type="text"
+                    value={fileDialogSearch}
+                    onChange={(e) => setFileDialogSearch(e.target.value)}
+                    placeholder="Search file number or title..."
+                    className="w-full bg-white/5 border border-white/10 rounded-lg pl-9 pr-3 py-2 text-sm text-white focus:outline-none focus:border-uacc-gold/50"
+                  />
+                </div>
+                <div className="max-h-48 overflow-y-auto flex flex-col gap-1">
+                  {files
+                    .filter(f =>
+                      !fileDialogSearch.trim() ||
+                      f.fileNumber.toLowerCase().includes(fileDialogSearch.toLowerCase()) ||
+                      f.title.toLowerCase().includes(fileDialogSearch.toLowerCase())
+                    )
+                    .map(f => (
+                      <button
+                        key={f.id}
+                        type="button"
+                        onClick={() => setFileDialogSelectedId(f.id === fileDialogSelectedId ? '' : f.id)}
+                        className={`w-full text-left px-3 py-2 rounded-lg transition-colors flex items-center gap-2 ${
+                          fileDialogSelectedId === f.id ? 'bg-uacc-gold/15 border border-uacc-gold/30' : 'hover:bg-white/5 border border-transparent'
+                        }`}
+                      >
+                        <Folder size={14} className="text-uacc-gold flex-shrink-0" />
+                        <span className="min-w-0">
+                          <span className="block text-sm text-white font-medium truncate">{f.fileNumber}</span>
+                          <span className="block text-xs text-white/40 truncate">{f.title}</span>
+                        </span>
+                      </button>
+                    ))}
+                  {files.length === 0 && (
+                    <p className="text-xs text-white/40 text-center py-4">No files yet — you can still file without linking one.</p>
+                  )}
+                </div>
+              </div>
+              <div className="p-4 border-t border-white/10 bg-white/[0.02] rounded-b-2xl flex justify-end gap-3">
+                <button
+                  onClick={() => setFileDialogCopy(null)} disabled={filingSubmitting}
+                  className="px-6 py-2.5 rounded-lg border border-white/10 text-white/70 hover:text-white hover:bg-white/5 font-semibold text-sm transition-colors disabled:opacity-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleConfirmFiling} disabled={filingSubmitting}
+                  className="flex items-center gap-2 px-6 py-2.5 rounded-lg bg-uacc-gold text-white font-bold text-sm hover:bg-uacc-gold/90 transition-colors shadow-lg shadow-uacc-gold/20 disabled:opacity-50"
+                >
+                  <Check size={16} /> {filingSubmitting ? 'Filing...' : (fileDialogSelectedId ? 'Link & Mark Filed' : 'Mark Filed')}
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* FILE DRILL-IN — opened from a File chip in the register table or a
+          row in the Files tab. Entries are filtered client-side from the
+          already-fetched `records` list rather than a new endpoint. */}
+      <AnimatePresence>
+        {fileDrillIn && (
+          <motion.div
+            className="fixed inset-0 z-50 flex items-center justify-center p-4"
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}
+          >
+            <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setFileDrillIn(null)}></div>
+            <motion.div
+              className="relative w-full max-w-2xl bg-[#0b1120] rounded-2xl shadow-2xl border border-white/10 flex flex-col max-h-[85vh]"
+              initial={{ opacity: 0, scale: 0.96, y: 12 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.96, y: 12 }}
+              transition={{ duration: 0.22 }}
+            >
+              <div className="p-5 border-b border-white/10 bg-white/[0.02] rounded-t-2xl flex justify-between items-start">
+                <div>
+                  <div className="flex items-center gap-2 mb-1">
+                    <Folder size={18} className="text-uacc-gold" />
+                    <h2 className="text-xl font-bold text-white">{fileDrillIn.fileNumber}</h2>
+                    <span className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider ${
+                      fileDrillIn.status === 'ACTIVE' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' :
+                      fileDrillIn.status === 'ARCHIVED' ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20' :
+                      'bg-white/10 text-white/50 border border-white/10'
+                    }`}>
+                      {fileDrillIn.status}
+                    </span>
+                  </div>
+                  <p className="text-sm text-white/70">{fileDrillIn.title}</p>
+                  {fileDrillIn.fileType && <p className="text-[10px] text-white/40 uppercase tracking-wider mt-0.5">{fileDrillIn.fileType}</p>}
+                </div>
+                <button onClick={() => setFileDrillIn(null)} className="p-2 text-white/50 hover:text-white hover:bg-white/5 rounded-full transition-colors flex-shrink-0">
+                  <X size={20} />
+                </button>
+              </div>
+              <div className="flex-1 overflow-y-auto p-5">
+                <p className="text-[10px] font-bold text-white/40 uppercase tracking-widest mb-3">
+                  Entries in this file ({records.filter(r => r.recordsFile?.id === fileDrillIn.id).length})
+                </p>
+                <div className="flex flex-col gap-2">
+                  {records.filter(r => r.recordsFile?.id === fileDrillIn.id).map(r => (
+                    <button
+                      key={r.dbId}
+                      onClick={() => { setFileDrillIn(null); setSelectedEntry(r); setDetailPanelOpen(true) }}
+                      className="w-full text-left p-3 rounded-lg border border-white/5 bg-white/[0.02] hover:bg-white/[0.04] transition-colors flex items-center justify-between gap-3"
+                    >
+                      <div className="min-w-0">
+                        <p className="text-xs font-heading font-bold text-uacc-gold">{r.id}</p>
+                        <p className="text-sm text-white truncate">{r.subject}</p>
+                      </div>
+                      <span className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider flex-shrink-0 ${STATUS_META[r.status].class}`}>
+                        {STATUS_META[r.status].label}
+                      </span>
+                    </button>
+                  ))}
+                  {records.filter(r => r.recordsFile?.id === fileDrillIn.id).length === 0 && (
+                    <p className="text-sm text-white/40 text-center py-8">No entries filed into this dossier yet.</p>
+                  )}
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* DETAIL PANEL SLIDE-IN */}
       {detailPanelOpen && selectedEntry && (
@@ -1043,9 +1462,9 @@ export default function RecordsExecutivePage() {
             <div className="p-5 border-b border-white/10 bg-white/[0.02] rounded-t-2xl flex justify-between items-center">
               <div>
                 <h2 className="text-xl font-bold text-white">Register New Document</h2>
-                <span className="text-xs text-uacc-gold font-heading tracking-widest">REG-UACC-2026-0028 (Auto-assigned)</span>
+                <span className="text-xs text-uacc-gold font-heading tracking-widest">Registry No. auto-assigned on save</span>
               </div>
-              <button onClick={() => setRegisterModalOpen(false)} className="p-2 text-white/50 hover:text-white hover:bg-white/5 rounded-full transition-colors">
+              <button onClick={() => { setRegisterModalOpen(false); resetRegisterForm() }} className="p-2 text-white/50 hover:text-white hover:bg-white/5 rounded-full transition-colors">
                 <X size={20} />
               </button>
             </div>
@@ -1188,30 +1607,118 @@ export default function RecordsExecutivePage() {
 
                 <div>
                   <label className="block text-xs font-bold text-white/70 mb-1.5 uppercase tracking-wider">Attach Digital Copy (Optional)</label>
-                  <div className="border-2 border-dashed border-white/10 rounded-xl p-6 flex flex-col items-center justify-center text-center bg-white/[0.01] hover:bg-white/[0.02] transition-colors cursor-pointer">
+                  <input
+                    type="file"
+                    ref={fileInputRef}
+                    onChange={handleFileSelect}
+                    className="hidden"
+                    accept=".pdf,.jpg,.jpeg,.png,.docx"
+                  />
+                  <div
+                    onClick={() => fileInputRef.current?.click()}
+                    onDragOver={(e) => { e.preventDefault(); setIsDragging(true) }}
+                    onDragLeave={() => setIsDragging(false)}
+                    onDrop={handleDrop}
+                    className={`border-2 border-dashed rounded-xl p-6 flex flex-col items-center justify-center text-center transition-colors cursor-pointer ${
+                      isDragging ? 'border-uacc-gold bg-uacc-gold/5' : 'border-white/10 bg-white/[0.01] hover:bg-white/[0.02]'
+                    }`}
+                  >
                     <div className="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center mb-3 text-white/50">
-                      <Download size={20} />
+                      <UploadCloud size={20} />
                     </div>
                     <p className="text-sm text-white font-medium mb-1">Click to upload or drag and drop</p>
                     <p className="text-xs text-white/40">PDF, JPG, PNG or DOCX (max. 10MB)</p>
                   </div>
+                  {attachedFile && (
+                    <div className="flex items-center gap-2 mt-2 bg-uacc-gold/5 border border-uacc-gold/20 px-3 py-2 rounded-lg text-xs">
+                      <FileText size={14} className="text-uacc-gold shrink-0" />
+                      <span className="font-semibold text-white truncate flex-1">{attachedFile.name}</span>
+                      <button
+                        type="button"
+                        onClick={(e) => { e.stopPropagation(); setAttachedFile(null); if (fileInputRef.current) fileInputRef.current.value = '' }}
+                        className="text-white/40 hover:text-uacc-red transition-colors shrink-0"
+                      >
+                        <X size={14} />
+                      </button>
+                    </div>
+                  )}
                 </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-white/70 mb-1.5 uppercase tracking-wider">Link to File (Optional)</label>
+                  {linkMode === 'none' && (
+                    <div className="flex gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setFilePickerOpen(true)}
+                        className="flex-1 flex items-center gap-2 px-4 py-2.5 rounded-lg border border-white/10 bg-white/5 text-white/60 hover:text-white hover:bg-white/10 text-sm transition-colors"
+                      >
+                        <Folder size={15} /> Pick an existing file...
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setLinkMode('new')}
+                        className="flex items-center gap-2 px-4 py-2.5 rounded-lg border border-uacc-gold/30 bg-uacc-gold/10 text-uacc-gold hover:bg-uacc-gold/20 text-sm font-semibold transition-colors whitespace-nowrap"
+                      >
+                        <Plus size={15} /> Create New File
+                      </button>
+                    </div>
+                  )}
+
+                  {linkMode === 'existing' && (
+                    <div className="flex items-center justify-between gap-3 bg-uacc-gold/5 border border-uacc-gold/20 px-4 py-2.5 rounded-lg">
+                      <span className="text-sm text-white flex items-center gap-2 min-w-0">
+                        <Folder size={14} className="text-uacc-gold shrink-0" />
+                        <span className="truncate">
+                          {files.find(f => f.id === linkFileId)?.fileNumber} — {files.find(f => f.id === linkFileId)?.title}
+                        </span>
+                      </span>
+                      <button type="button" onClick={() => { setLinkMode('none'); setLinkFileId('') }} className="text-white/40 hover:text-uacc-red shrink-0">
+                        <X size={15} />
+                      </button>
+                    </div>
+                  )}
+
+                  {linkMode === 'new' && (
+                    <div className="rounded-lg p-4 flex flex-col gap-3 border border-uacc-gold/20 bg-uacc-gold/5">
+                      <div className="flex items-center justify-between">
+                        <p className="text-xs font-semibold text-uacc-gold uppercase tracking-wider">New Records File</p>
+                        <button type="button" onClick={() => { setLinkMode('none'); setNewLinkFileNumber(''); setNewLinkFileTitle('') }} className="text-white/40 hover:text-uacc-red">
+                          <X size={15} />
+                        </button>
+                      </div>
+                      <input
+                        type="text" value={newLinkFileNumber} onChange={e => setNewLinkFileNumber(e.target.value)}
+                        placeholder="File Number (leave blank to auto-assign)"
+                        className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-uacc-gold/50"
+                      />
+                      <input
+                        type="text" required value={newLinkFileTitle} onChange={e => setNewLinkFileTitle(e.target.value)}
+                        placeholder="File Title *"
+                        className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-uacc-gold/50"
+                      />
+                    </div>
+                  )}
+                </div>
+
+                {submitError && <p className="text-xs text-uacc-red">{submitError}</p>}
 
               </form>
             </div>
 
             <div className="p-4 border-t border-white/10 bg-white/[0.02] rounded-b-2xl flex justify-end gap-3">
-              <button 
-                onClick={() => setRegisterModalOpen(false)}
-                className="px-6 py-2.5 rounded-lg border border-white/10 text-white/70 hover:text-white hover:bg-white/5 font-semibold text-sm transition-colors"
+              <button
+                onClick={() => { setRegisterModalOpen(false); resetRegisterForm() }}
+                disabled={submitting}
+                className="px-6 py-2.5 rounded-lg border border-white/10 text-white/70 hover:text-white hover:bg-white/5 font-semibold text-sm transition-colors disabled:opacity-50"
               >
                 Cancel
               </button>
-              <button 
-                form="register-form" type="submit"
-                className="flex items-center gap-2 px-6 py-2.5 rounded-lg bg-uacc-gold text-white font-bold text-sm hover:bg-uacc-gold/90 transition-colors shadow-lg shadow-uacc-gold/20"
+              <button
+                form="register-form" type="submit" disabled={submitting}
+                className="flex items-center gap-2 px-6 py-2.5 rounded-lg bg-uacc-gold text-white font-bold text-sm hover:bg-uacc-gold/90 transition-colors shadow-lg shadow-uacc-gold/20 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                <BookOpen size={16} /> Register Document
+                <BookOpen size={16} /> {submitting ? 'Registering...' : 'Register Document'}
               </button>
             </div>
 
@@ -1220,11 +1727,78 @@ export default function RecordsExecutivePage() {
         )}
       </AnimatePresence>
 
+      {/* LINK TO FILE PICKER */}
+      <AnimatePresence>
+        {filePickerOpen && (
+          <motion.div
+            className="fixed inset-0 z-[60] flex items-center justify-center p-4"
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}
+          >
+            <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={() => { setFilePickerOpen(false); setFileSearchQuery('') }}></div>
+            <motion.div
+              className="relative w-full max-w-md bg-[#0b1120] rounded-2xl shadow-2xl border border-white/10 flex flex-col max-h-[70vh]"
+              initial={{ opacity: 0, scale: 0.96, y: 12 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.96, y: 12 }}
+              transition={{ duration: 0.22 }}
+            >
+              <div className="p-4 border-b border-white/10">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-white/30" size={15} />
+                  <input
+                    autoFocus
+                    type="text"
+                    value={fileSearchQuery}
+                    onChange={(e) => setFileSearchQuery(e.target.value)}
+                    placeholder="Search file number or title..."
+                    className="w-full bg-white/5 border border-white/10 rounded-lg pl-9 pr-3 py-2 text-sm text-white focus:outline-none focus:border-uacc-gold/50"
+                  />
+                </div>
+              </div>
+              <div className="flex-1 overflow-y-auto p-2">
+                {filesLoading ? (
+                  <p className="text-xs text-white/40 text-center py-6">Loading files...</p>
+                ) : (
+                  files
+                    .filter(f =>
+                      !fileSearchQuery.trim() ||
+                      f.fileNumber.toLowerCase().includes(fileSearchQuery.toLowerCase()) ||
+                      f.title.toLowerCase().includes(fileSearchQuery.toLowerCase())
+                    )
+                    .map(f => (
+                      <button
+                        key={f.id}
+                        type="button"
+                        onClick={() => {
+                          setLinkMode('existing'); setLinkFileId(f.id)
+                          setFilePickerOpen(false); setFileSearchQuery('')
+                        }}
+                        className="w-full text-left px-3 py-2.5 rounded-lg hover:bg-white/5 transition-colors flex items-center gap-2.5"
+                      >
+                        <Folder size={15} className="text-uacc-gold shrink-0" />
+                        <div className="min-w-0">
+                          <p className="text-sm text-white font-medium truncate">{f.fileNumber}</p>
+                          <p className="text-xs text-white/40 truncate">{f.title} · {f._count?.entries ?? 0} entries</p>
+                        </div>
+                      </button>
+                    ))
+                )}
+                {!filesLoading && files.length === 0 && (
+                  <p className="text-xs text-white/40 text-center py-6">No files yet — create one from the Files tab or the form.</p>
+                )}
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* TOAST NOTIFICATION */}
       {toast && (
         <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[70] animate-in fade-in slide-in-from-bottom-4 duration-300">
-          <div className="flex items-center gap-3 px-4 py-3 rounded-xl border shadow-xl backdrop-blur-md bg-green-500/10 border-green-500/20 text-green-400">
-            <Check size={18} />
+          <div className={`flex items-center gap-3 px-4 py-3 rounded-xl border shadow-xl backdrop-blur-md ${
+            toast.type === 'error'
+              ? 'bg-red-500/10 border-red-500/20 text-red-400'
+              : 'bg-green-500/10 border-green-500/20 text-green-400'
+          }`}>
+            {toast.type === 'error' ? <X size={18} /> : <Check size={18} />}
             <p className="text-sm font-medium">{toast.message}</p>
           </div>
         </div>

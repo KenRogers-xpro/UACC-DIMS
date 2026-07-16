@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { X, Download, FileText, Pencil, Send, Lock, MessageSquare, History, Eye, PenTool, Maximize2, Minimize2 } from 'lucide-react'
+import { X, Download, FileText, Pencil, Send, Lock, MessageSquare, History, Eye, PenTool, Maximize2, Minimize2, Paperclip, UploadCloud, User } from 'lucide-react'
 import Badge from '@/components/ui/Badge'
 import Button from '@/components/ui/Button'
 import EmptyState from '@/components/ui/EmptyState'
@@ -37,6 +37,7 @@ const TABS = [
   { key: 'preview', label: 'Preview', icon: Eye },
   { key: 'annotations', label: 'Annotations', icon: MessageSquare },
   { key: 'signatures', label: 'Signatures', icon: History },
+  { key: 'attachments', label: 'Attachments', icon: Paperclip },
 ]
 
 function getFileKind(document) {
@@ -84,6 +85,15 @@ export default function DocumentViewerModal({
   const [newAnnotationText, setNewAnnotationText] = useState('')
   const [newAnnotationType, setNewAnnotationType] = useState('COMMENT')
   const [postingAnnotation, setPostingAnnotation] = useState(false)
+
+  const [attachments, setAttachments] = useState([])
+  const [attachmentsLoading, setAttachmentsLoading] = useState(false)
+  const attachmentFileInputRef = useRef(null)
+  const [attachNote, setAttachNote] = useState('')
+  const [attaching, setAttaching] = useState(false)
+  const [attachError, setAttachError] = useState('')
+  const [attachmentPreview, setAttachmentPreview] = useState(null) // { id, url, mimeType, title } | null
+  const [attachmentPreviewLoading, setAttachmentPreviewLoading] = useState(false)
 
   const [circulation, setCirculation] = useState(undefined) // undefined = not fetched yet, null = none
   const [circulationLoading, setCirculationLoading] = useState(false)
@@ -133,6 +143,10 @@ export default function DocumentViewerModal({
       setTab('preview')
       setAnnotations([])
       setCirculation(undefined)
+      setAttachments([])
+      setAttachNote('')
+      setAttachError('')
+      setAttachmentPreview(null)
     }
   }, [document])
 
@@ -191,12 +205,34 @@ export default function DocumentViewerModal({
           .then(() => notifyNotificationsChanged())
           .catch(() => {})
       }
+
+      // Opening this modal for a circulation currently sitting with this
+      // user's role IS "looking at it" — mark it seen so it drops out of
+      // the Documents page's New Arrivals tab (see buildStateFilter in
+      // documents.routes.js), same NotificationRead table, its own
+      // NEW_ARRIVAL sourceType.
+      if (data?.status === 'IN_CIRCULATION' && data.currentHolderRole === currentUserRole) {
+        api.post(`/notifications/NEW_ARRIVAL/${data.id}/read`, {}).catch(() => {})
+      }
     } catch {
       setCirculation(null)
     } finally {
       setCirculationLoading(false)
     }
-  }, [document])
+  }, [document, currentUserRole])
+
+  const fetchAttachments = useCallback(async () => {
+    if (!circulation?.id) return
+    setAttachmentsLoading(true)
+    try {
+      const res = await api.get(`/circulation/${circulation.id}/attachments`)
+      setAttachments(res.attachments || res.data?.attachments || [])
+    } catch {
+      setAttachments([])
+    } finally {
+      setAttachmentsLoading(false)
+    }
+  }, [circulation?.id])
 
   useEffect(() => {
     if (!document) return
@@ -212,6 +248,48 @@ export default function DocumentViewerModal({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [document, isOpen])
 
+  // Attachments are fetched eagerly too, the same reasoning as circulation
+  // itself — the Annotations tab's unified trail needs "PO attached: ..."
+  // entries regardless of which tab is currently open.
+  useEffect(() => {
+    if (circulation?.id) fetchAttachments()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [circulation?.id])
+
+  const handleAttachFile = async (e) => {
+    const file = e.target.files?.[0]
+    if (!file || !circulation?.id) return
+    setAttaching(true)
+    setAttachError('')
+    try {
+      const fd = new FormData()
+      fd.append('file', file)
+      if (attachNote.trim()) fd.append('note', attachNote.trim())
+      const res = await api.post(`/circulation/${circulation.id}/attachments`, fd)
+      if (!res.success) throw new Error(res.message || 'Failed to attach document')
+      setAttachNote('')
+      if (attachmentFileInputRef.current) attachmentFileInputRef.current.value = ''
+      await fetchAttachments()
+    } catch (err) {
+      setAttachError(err.message || 'Failed to attach document')
+    } finally {
+      setAttaching(false)
+    }
+  }
+
+  const handlePreviewAttachment = async (att) => {
+    setAttachmentPreviewLoading(true)
+    setAttachmentPreview({ id: att.document.id, url: null, mimeType: att.document.mimeType, title: att.document.title })
+    try {
+      const url = await api.getBlob(`/documents/${att.document.id}/file`)
+      setAttachmentPreview({ id: att.document.id, url, mimeType: att.document.mimeType, title: att.document.title })
+    } catch {
+      setAttachmentPreview(null)
+    } finally {
+      setAttachmentPreviewLoading(false)
+    }
+  }
+
   if (!document) return null
 
   const isOwner = currentUserId != null && document.uploadedBy === currentUserId
@@ -224,6 +302,10 @@ export default function DocumentViewerModal({
   // sign button showing for a step that's already been signed.
   const latestStep = circulation?.steps?.[circulation.steps.length - 1]
   const canSign = circulation && circulation.status === 'IN_CIRCULATION' && circulation.currentHolderRole === currentUserRole && !latestStep?.signature
+  // Same currentHolderRole check as adding a step — attaching a supporting
+  // document is a "your turn" action, not gated on whether this step has
+  // been signed yet (unlike canSign).
+  const isCurrentHolder = circulation && circulation.status === 'IN_CIRCULATION' && circulation.currentHolderRole === currentUserRole
 
   const handleDownload = async () => {
     setDownloading(true)
@@ -574,10 +656,10 @@ export default function DocumentViewerModal({
                       <SkeletonLine height="h-16" />
                       <SkeletonLine height="h-16" />
                     </div>
-                  ) : annotations.length === 0 && !(circulation?.steps?.length) ? (
+                  ) : annotations.length === 0 && !(circulation?.steps?.length) && attachments.length === 0 ? (
                     <EmptyState icon={MessageSquare} title="No annotations yet" message="Comments, notes, and routing history for this document will appear here." />
                   ) : (
-                    <AnnotationTrail circulation={circulation} annotations={annotations} />
+                    <AnnotationTrail circulation={circulation} annotations={annotations} attachments={attachments} />
                   )}
                 </div>
               )}
@@ -601,6 +683,82 @@ export default function DocumentViewerModal({
                         </div>
                       )}
                       <SignaturesPanel circulation={circulation} />
+                    </>
+                  )}
+                </div>
+              )}
+
+              {tab === 'attachments' && (
+                <div className="flex flex-col gap-4 w-full max-w-3xl mx-auto">
+                  {circulationLoading ? (
+                    <div className="flex flex-col gap-2">
+                      <SkeletonLine height="h-16" />
+                      <SkeletonLine height="h-16" />
+                    </div>
+                  ) : !circulation ? (
+                    <EmptyState icon={Paperclip} title="No circulation yet" message="Supporting documents can be attached once this document is in circulation." />
+                  ) : (
+                    <>
+                      {isCurrentHolder && (
+                        <div className="rounded-lg p-4 flex flex-col gap-3 border" style={{ borderColor: 'var(--border-gold)', background: 'rgba(201,151,58,0.05)' }}>
+                          <p className="text-xs font-semibold flex items-center gap-1.5" style={{ color: 'var(--text-primary)' }}>
+                            <UploadCloud size={14} /> Attach Supporting Document
+                          </p>
+                          <input
+                            className="input-field w-full"
+                            placeholder="Note (optional) — e.g. Quotation from UPPC as requested"
+                            value={attachNote}
+                            onChange={(e) => setAttachNote(e.target.value)}
+                          />
+                          <input
+                            type="file"
+                            ref={attachmentFileInputRef}
+                            onChange={handleAttachFile}
+                            className="hidden"
+                          />
+                          <Button
+                            variant="outline"
+                            icon={UploadCloud}
+                            loading={attaching}
+                            onClick={() => attachmentFileInputRef.current?.click()}
+                            className="self-start"
+                          >
+                            Choose File
+                          </Button>
+                          {attachError && <p className="text-xs text-uacc-red">{attachError}</p>}
+                        </div>
+                      )}
+
+                      {attachmentsLoading ? (
+                        <div className="flex flex-col gap-2">
+                          <SkeletonLine height="h-14" />
+                          <SkeletonLine height="h-14" />
+                        </div>
+                      ) : attachments.length === 0 ? (
+                        <EmptyState icon={Paperclip} title="No attachments yet" message="Supporting documents attached during circulation will appear here." />
+                      ) : (
+                        <div className="flex flex-col gap-3">
+                          {attachments.map((att) => (
+                            <button
+                              key={att.id}
+                              onClick={() => handlePreviewAttachment(att)}
+                              className="w-full text-left p-3 rounded-lg border hover:bg-white/5 transition-colors flex items-start gap-3"
+                              style={{ borderColor: 'var(--border-subtle)' }}
+                            >
+                              <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5" style={{ background: 'rgba(201,151,58,0.1)', border: '1px solid rgba(201,151,58,0.2)' }}>
+                                <Paperclip size={14} className="text-uacc-gold" />
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <p className="text-sm font-semibold truncate" style={{ color: 'var(--text-primary)' }}>{att.document?.title}</p>
+                                {att.note && <p className="text-xs italic mt-0.5" style={{ color: 'var(--text-secondary)' }}>"{att.note}"</p>}
+                                <p className="text-[10px] mt-1 flex items-center gap-1" style={{ color: 'var(--text-faint)' }}>
+                                  <User size={10} /> {att.attachedBy?.name || 'Unknown'} · {new Date(att.createdAt).toLocaleString()}
+                                </p>
+                              </div>
+                            </button>
+                          ))}
+                        </div>
+                      )}
                     </>
                   )}
                 </div>
@@ -693,6 +851,48 @@ export default function DocumentViewerModal({
             onClose={() => setSigningOpen(false)}
             onSigned={() => fetchCirculation()}
           />
+
+          {/* Attachment preview lightbox — reuses the same auth-gated
+              blob-fetch pattern as the Preview tab, scoped to whichever
+              attachment was clicked. */}
+          <AnimatePresence>
+            {attachmentPreview && (
+              <motion.div
+                className="fixed inset-0 bg-black/80 z-[70] flex items-center justify-center p-4 backdrop-blur-sm"
+                initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}
+                onClick={() => setAttachmentPreview(null)}
+              >
+                <motion.div
+                  className="card rounded-2xl w-full max-w-3xl max-h-[85vh] flex flex-col bg-[var(--bg-surface)] shadow-2xl"
+                  initial={{ opacity: 0, scale: 0.96 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.96 }}
+                  transition={{ duration: 0.2 }}
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <div className="p-4 border-b flex items-center justify-between flex-shrink-0" style={{ borderColor: 'var(--border-subtle)' }}>
+                    <p className="text-sm font-semibold truncate" style={{ color: 'var(--text-primary)' }}>{attachmentPreview.title}</p>
+                    <button onClick={() => setAttachmentPreview(null)} className="p-1.5 rounded-lg hover:bg-white/5 flex-shrink-0" style={{ color: 'var(--text-muted)' }}>
+                      <X size={18} />
+                    </button>
+                  </div>
+                  <div className="flex-1 overflow-hidden flex items-center justify-center bg-black/20 min-h-[300px]">
+                    {attachmentPreviewLoading || !attachmentPreview.url ? (
+                      <SkeletonLine height="h-8" />
+                    ) : attachmentPreview.mimeType === 'application/pdf' ? (
+                      <iframe src={`${attachmentPreview.url}#view=FitH`} title={attachmentPreview.title} className="w-full h-full min-h-[70vh]" />
+                    ) : attachmentPreview.mimeType?.startsWith('image/') ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={attachmentPreview.url} alt={attachmentPreview.title} className="max-w-full max-h-[70vh] object-contain" />
+                    ) : (
+                      <div className="flex flex-col items-center gap-3 py-16 text-center px-6">
+                        <FileText size={40} style={{ color: 'var(--text-muted)' }} />
+                        <p className="text-sm" style={{ color: 'var(--text-muted)' }}>This file type can&apos;t be previewed inline.</p>
+                      </div>
+                    )}
+                  </div>
+                </motion.div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </motion.div>
       )}
     </AnimatePresence>

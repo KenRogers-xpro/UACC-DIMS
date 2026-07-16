@@ -2,7 +2,7 @@
 
 import React from 'react'
 import { motion } from 'framer-motion'
-import { ArrowRight, CheckCircle2, MessageSquare, StickyNote, ListChecks, Flag } from 'lucide-react'
+import { ArrowRight, CheckCircle2, MessageSquare, StickyNote, ListChecks, Flag, Paperclip } from 'lucide-react'
 import Badge from '@/components/ui/Badge'
 
 const STEP_ROMAN = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X']
@@ -23,9 +23,10 @@ const ANNOTATION_ICONS = {
  * separate tabs. SignaturesPanel is the deliberately separate, pure
  * proof-of-authenticity view — this component carries no hash/PIN data.
  */
-export default function AnnotationTrail({ circulation, annotations }) {
+export default function AnnotationTrail({ circulation, annotations, attachments }) {
   const steps = circulation?.steps || []
   const notes = annotations || []
+  const files = attachments || []
 
   const items = [
     ...steps.map((step) => ({
@@ -39,6 +40,12 @@ export default function AnnotationTrail({ circulation, annotations }) {
       id: `ann-${a.id}`,
       timestamp: a.createdAt,
       annotation: a,
+    })),
+    ...files.map((att) => ({
+      kind: 'ATTACHMENT',
+      id: `att-${att.id}`,
+      timestamp: att.createdAt,
+      attachment: att,
     })),
   ].sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp))
 
@@ -108,6 +115,37 @@ export default function AnnotationTrail({ circulation, annotations }) {
                     Signed: {step.fromUser?.name || step.fromUserId}
                   </span>
                 </div>
+              </div>
+            </motion.div>
+          )
+        }
+
+        if (item.kind === 'ATTACHMENT') {
+          const att = item.attachment
+          return (
+            <motion.div
+              key={item.id}
+              className="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group"
+              initial={{ opacity: 0, y: 24 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: '-40px' }}
+              transition={{ duration: 0.5, delay: idx * 0.08, ease: 'easeOut' }}
+            >
+              <div className="flex items-center justify-center w-6 h-6 rounded-full border border-uacc-gold/30 bg-[#0b1120] text-uacc-gold shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 z-10 absolute left-[-28px] top-4 md:static">
+                <Paperclip size={12} />
+              </div>
+
+              <div className="w-full md:w-[calc(50%-2rem)] card p-4 rounded-xl border border-uacc-gold/10 bg-uacc-gold/[0.03] hover:bg-uacc-gold/[0.05] transition-colors shadow-lg">
+                <div className="flex justify-between items-start mb-1.5">
+                  <span className="text-xs font-semibold text-uacc-gold">
+                    Attached: {att.document?.title}
+                  </span>
+                  <span className="text-[10px] text-(--text-faint) whitespace-nowrap">
+                    {new Date(att.createdAt).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' })}
+                  </span>
+                </div>
+                {att.note && <p className="text-sm text-(--text-secondary) italic">"{att.note}"</p>}
+                <p className="text-[10px] text-(--text-faint) mt-1">by {att.attachedBy?.name || 'Unknown'}</p>
               </div>
             </motion.div>
           )

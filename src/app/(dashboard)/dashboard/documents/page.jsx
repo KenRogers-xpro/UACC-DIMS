@@ -111,6 +111,7 @@ export default function DocumentsPage() {
   const [currentPage, setCurrentPage] = useState(1)
   const [uploadModalOpen, setUploadModalOpen] = useState(false)
   const [previewDoc, setPreviewDoc] = useState(null)
+  const [newArrivalsCount, setNewArrivalsCount] = useState(0)
 
   // UPLOAD FORM STATE
   const [newTitle, setNewTitle] = useState('')
@@ -180,6 +181,23 @@ export default function DocumentsPage() {
   useEffect(() => {
     refresh()
   }, [refresh])
+
+  // Tab badge — deliberately the SAME query the New Arrivals tab itself
+  // uses (state=NEW), not a separately-derived number, so the count and the
+  // list it describes can never drift apart. Independent of which tab is
+  // currently active so it stays accurate while browsing other tabs, and
+  // re-fetched whenever the viewer closes (opening a document is what marks
+  // an arrival seen).
+  const fetchNewArrivalsCount = useCallback(async () => {
+    try {
+      const res = await api.get('/documents?state=NEW&limit=1')
+      setNewArrivalsCount(res.data?.pagination?.total || 0)
+    } catch {
+      // silent — decorative badge
+    }
+  }, [])
+
+  useEffect(() => { fetchNewArrivalsCount() }, [fetchNewArrivalsCount, previewDoc])
 
   // Auto-dismiss toast
   useEffect(() => {
@@ -345,6 +363,11 @@ export default function DocumentsPage() {
             )}
             <tab.icon size={13} className="relative" />
             <span className="relative">{tab.label}</span>
+            {tab.key === 'new' && newArrivalsCount > 0 && (
+              <span className="relative text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-uacc-gold text-[#0b1120]">
+                {newArrivalsCount}
+              </span>
+            )}
           </button>
         ))}
       </div>
