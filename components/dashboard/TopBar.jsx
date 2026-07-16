@@ -2,7 +2,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Menu, Bell, ChevronLeft, ChevronRight, Search, FileText, MessageSquare, Megaphone, CheckCheck } from 'lucide-react'
+import { Menu, Bell, ChevronLeft, ChevronRight, Search, FileText, MessageSquare, Megaphone, CheckCheck, AlertTriangle } from 'lucide-react'
 import ThemeToggle from '@/components/ui/ThemeToggle'
 import StatusDot from '@/components/ui/StatusDot'
 import { useOnlineStatus } from '@/lib/useOnlineStatus'
@@ -45,7 +45,7 @@ export default function TopBar({ user, sidebarCollapsed, onToggleSidebar, onMobi
   const router = useRouter()
   const page = PAGE_TITLES[pathname] || { title: 'DIMS', sub: 'Uganda Air Cargo Corporation' }
   const { isUserOnline } = useOnlineStatus()
-  const { incoming, outgoing, unreadCount, refresh: refreshNotifications } = useNotifications()
+  const { incoming, outgoing, unreadCount, error: notifError, refresh: refreshNotifications } = useNotifications()
 
   const [notifOpen, setNotifOpen] = useState(false)
   const notifRef = useRef(null)
@@ -169,7 +169,19 @@ export default function TopBar({ user, sidebarCollapsed, onToggleSidebar, onMobi
                 </div>
 
                 <div className="max-h-96 overflow-y-auto">
-                  {incoming.length === 0 && outgoing.length === 0 ? (
+                  {notifError ? (
+                    <div className="px-4 py-8 flex flex-col items-center gap-2 text-center">
+                      <AlertTriangle size={22} className="text-uacc-red" />
+                      <p className="text-xs font-semibold" style={{ color: 'var(--text-primary)' }}>Couldn&apos;t load notifications</p>
+                      <p className="text-[11px]" style={{ color: 'var(--text-muted)' }}>{notifError}</p>
+                      <button
+                        onClick={refreshNotifications}
+                        className="mt-1 text-[10px] font-bold uppercase tracking-wider px-3 py-1.5 rounded-lg bg-uacc-gold/10 text-uacc-gold hover:bg-uacc-gold/20 transition-colors"
+                      >
+                        Retry
+                      </button>
+                    </div>
+                  ) : incoming.length === 0 && outgoing.length === 0 ? (
                     <div className="px-4 py-8 flex flex-col items-center gap-2 text-center">
                       <CheckCheck size={22} style={{ color: 'var(--text-faint)' }} />
                       <p className="text-xs" style={{ color: 'var(--text-muted)' }}>You&apos;re all caught up</p>
