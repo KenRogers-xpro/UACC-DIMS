@@ -1,7 +1,12 @@
 'use client'
 
 import React, { useState, useRef, useEffect } from 'react'
+import { useSearchParams, useRouter } from 'next/navigation'
 import { useAuth } from '@/lib/auth-context'
+import { useInsights } from '@/lib/useInsights'
+import api from '@/lib/api'
+import DocumentViewerModal from '@/components/documents/DocumentViewerModal'
+import EmptyState from '@/components/ui/EmptyState'
 import {
   Bot,
   User,
@@ -16,8 +21,20 @@ import {
   BarChart2,
   Menu,
   X,
-  BookOpen
+  BookOpen,
+  Lightbulb,
+  MessageSquare,
 } from 'lucide-react'
+
+function timeAgo(dateStr) {
+  const diffMs = Date.now() - new Date(dateStr).getTime()
+  const mins = Math.floor(diffMs / 60000)
+  if (mins < 1) return 'just now'
+  if (mins < 60) return `${mins}m ago`
+  const hours = Math.floor(mins / 60)
+  if (hours < 24) return `${hours}h ago`
+  return `${Math.floor(hours / 24)}d ago`
+}
 
 // ─── ROLE METADATA AND SUGGESTIONS ───────────────────────────────────────────
 
@@ -160,6 +177,8 @@ const getColorClass = (color) => {
 
 export default function AIAgentPage() {
   const { user } = useAuth()
+  const searchParams = useSearchParams()
+  const router = useRouter()
 
   if (!user) return null
   const userRole = user.role || 'GENERAL_MANAGER'
@@ -170,7 +189,33 @@ export default function AIAgentPage() {
   const [isTyping, setIsTyping] = useState(false)
   const [sessionStarted] = useState(new Date())
   const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false)
-  
+
+  const [activeTab, setActiveTab] = useState(searchParams.get('tab') === 'insights' ? 'insights' : 'chat')
+  const { insights, unseenCount, loading: insightsLoading, markSeen, dismiss } = useInsights()
+  const [previewDoc, setPreviewDoc] = useState(null)
+  const [openingInsightId, setOpeningInsightId] = useState(null)
+
+  // Deep link from the floating widget's popup ("View" -> ?tab=insights)
+  useEffect(() => {
+    const tab = searchParams.get('tab')
+    if (tab === 'insights') setActiveTab('insights')
+  }, [searchParams])
+
+  const openInsight = async (insight) => {
+    markSeen(insight.id)
+    if (insight.sourceType !== 'DOCUMENT') return
+    setOpeningInsightId(insight.id)
+    try {
+      const res = await api.get(`/documents/${insight.sourceId}`)
+      if (res.success) setPreviewDoc(res.data)
+    } catch {
+      // the document may have since been removed/become inaccessible —
+      // fail quietly, there's nothing actionable to show the user here
+    } finally {
+      setOpeningInsightId(null)
+    }
+  }
+
   const messagesEndRef = useRef(null)
   const inputRef = useRef(null)
 
@@ -222,20 +267,21 @@ export default function AIAgentPage() {
     }
 
     try {
-      const API_BASE = process.env.NEXT_PUBLIC_API_URL || ''
-      const res = await fetch(`${API_BASE}/ai`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ messages: updatedMessages }),
-      })
-      const data = await res.json()
+      // api.post() attaches the Authorization header this endpoint requires
+      // — a raw fetch() here (the previous code) never sent one, so every
+      // chat request 401'd before ever reaching the route handler, and the
+      // real cause was masked by the generic catch-all error below.
+      const data = await api.post('/ai', { messages: updatedMessages })
       if (data.success) {
+        // The actual response shape is { data: { response: { text } } } —
+        // data.message is just the human-readable "Success" status string
+        // success() always sets, not the model's reply.
+        const replyText = data.data?.response?.text
+        if (!replyText) throw new Error('AI response was empty')
         const aiMessage = {
           id: updatedMessages.length + 1,
           role: 'ai',
-          text: data.message,
+          text: replyText,
           timestamp: new Date().toLocaleTimeString('en-UG', {
             hour: '2-digit', minute: '2-digit'
           }),
@@ -243,14 +289,14 @@ export default function AIAgentPage() {
         }
         setMessages(prev => [...prev, aiMessage])
       } else {
-        throw new Error(data.error || 'Failed to generate response')
+        throw new Error(data.message || 'Failed to generate response')
       }
     } catch (error) {
       console.error('AI Agent page error:', error)
       const errMessage = {
         id: updatedMessages.length + 1,
         role: 'ai',
-        text: `Error communicating with AI Agent: ${error.message || 'Server error'}. Make sure ANTHROPIC_API_KEY is configured in .env.local.`,
+        text: `Error communicating with the AI Agent: ${error.message || 'Server error'}. Please try again in a moment.`,
         timestamp: new Date().toLocaleTimeString('en-UG', {
           hour: '2-digit', minute: '2-digit'
         }),
@@ -424,8 +470,88 @@ export default function AIAgentPage() {
         </p>
       </div>
 
+      {/* Chat / Insights tabs */}
+      <div className="flex gap-1 mb-6 card rounded-xl p-1.5 w-fit">
+        <button
+          onClick={() => { setActiveTab('chat'); router.replace('/dashboard/ai-agent') }}
+          className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-semibold uppercase tracking-wider transition-colors ${
+            activeTab === 'chat' ? 'bg-uacc-gold/10 text-uacc-gold' : 'text-[var(--text-muted)] hover:bg-white/5'
+          }`}
+        >
+          <MessageSquare size={13} /> Chat
+        </button>
+        <button
+          onClick={() => { setActiveTab('insights'); router.replace('/dashboard/ai-agent?tab=insights') }}
+          className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-semibold uppercase tracking-wider transition-colors relative ${
+            activeTab === 'insights' ? 'bg-uacc-gold/10 text-uacc-gold' : 'text-[var(--text-muted)] hover:bg-white/5'
+          }`}
+        >
+          <Lightbulb size={13} /> Insights
+          {unseenCount > 0 && (
+            <span className="ml-0.5 min-w-[16px] h-4 px-1 flex items-center justify-center rounded-full bg-uacc-red text-white text-[9px] font-bold">
+              {unseenCount > 9 ? '9+' : unseenCount}
+            </span>
+          )}
+        </button>
+      </div>
+
+      {activeTab === 'insights' ? (
+        <div className="max-w-3xl">
+          {insightsLoading && insights.length === 0 ? (
+            <div className="card rounded-xl p-8 text-center text-sm text-[var(--text-muted)]">Loading insights...</div>
+          ) : insights.length === 0 ? (
+            <div className="card rounded-xl">
+              <EmptyState
+                icon={Lightbulb}
+                title="No insights yet"
+                message="When the agent can't find a good answer to something you ask, it'll let you know here if a relevant document shows up later."
+              />
+            </div>
+          ) : (
+            <div className="flex flex-col gap-3">
+              {insights.map((insight) => {
+                const unseen = !insight.seenAt
+                return (
+                  <div
+                    key={insight.id}
+                    className={`card rounded-xl p-4 border transition-colors ${unseen ? 'border-uacc-gold/40 bg-uacc-gold/[0.03]' : 'border-white/5'}`}
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex items-center gap-2 min-w-0">
+                        {unseen && <span className="w-1.5 h-1.5 rounded-full bg-uacc-gold flex-shrink-0" />}
+                        <Lightbulb size={14} className="text-uacc-gold flex-shrink-0" />
+                        <h3 className="font-bold text-sm text-[var(--text-primary)] truncate">{insight.title}</h3>
+                      </div>
+                      <button
+                        onClick={() => dismiss(insight.id)}
+                        className="p-1 rounded hover:bg-white/10 text-[var(--text-faint)] hover:text-[var(--text-primary)] flex-shrink-0"
+                        title="Dismiss"
+                      >
+                        <X size={14} />
+                      </button>
+                    </div>
+                    <p className="text-sm text-[var(--text-secondary)] mt-2 leading-relaxed">{insight.body}</p>
+                    <div className="flex items-center justify-between mt-3">
+                      <span className="text-[10px] text-[var(--text-faint)]">{timeAgo(insight.createdAt)}</span>
+                      {insight.sourceType === 'DOCUMENT' && (
+                        <button
+                          onClick={() => openInsight(insight)}
+                          disabled={openingInsightId === insight.id}
+                          className="text-[10px] font-bold uppercase tracking-wider text-uacc-gold hover:underline disabled:opacity-50"
+                        >
+                          {openingInsightId === insight.id ? 'Opening...' : 'Open document'}
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          )}
+        </div>
+      ) : (
       <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
-        
+
         {/* Left Sidebar - Desktop Only */}
         <div className="hidden md:block md:col-span-4 lg:col-span-3">
           <SidebarContent />
@@ -434,7 +560,7 @@ export default function AIAgentPage() {
         {/* Right Main Area - Chat Interface */}
         <div className="md:col-span-8 lg:col-span-9">
           <div className="card rounded-xl overflow-hidden flex flex-col h-[calc(100vh-220px)] min-h-[500px] border border-white/5 bg-white/[0.01]">
-            
+
             {/* Chat Header */}
             <div className={`flex items-center justify-between px-6 py-4 border-b ${meta.borderColor} bg-white/[0.02]`}>
               <div className="flex items-center gap-3">
@@ -572,17 +698,20 @@ export default function AIAgentPage() {
           </div>
         </div>
       </div>
+      )}
 
       {/* Mobile Floating Action Button */}
-      <button 
-        className="md:hidden fixed bottom-6 right-6 w-14 h-14 bg-uacc-gold text-white rounded-full shadow-lg flex items-center justify-center hover:scale-105 transition-transform z-40"
-        onClick={() => setMobileDrawerOpen(true)}
-      >
-        <Menu size={24} />
-      </button>
+      {activeTab === 'chat' && (
+        <button
+          className="md:hidden fixed bottom-6 right-6 w-14 h-14 bg-uacc-gold text-white rounded-full shadow-lg flex items-center justify-center hover:scale-105 transition-transform z-40"
+          onClick={() => setMobileDrawerOpen(true)}
+        >
+          <Menu size={24} />
+        </button>
+      )}
 
       {/* Mobile Drawer */}
-      {mobileDrawerOpen && (
+      {activeTab === 'chat' && mobileDrawerOpen && (
         <div className="md:hidden fixed inset-0 z-50 flex flex-col justify-end">
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setMobileDrawerOpen(false)}></div>
           <div className="relative w-full bg-gray-900 border-t border-white/10 rounded-t-2xl p-6 h-[80vh] overflow-y-auto flex flex-col">
@@ -596,6 +725,16 @@ export default function AIAgentPage() {
           </div>
         </div>
       )}
+
+      <DocumentViewerModal
+        document={previewDoc}
+        isOpen={!!previewDoc}
+        onClose={() => setPreviewDoc(null)}
+        currentUserId={user?.id}
+        currentUserRole={user?.role}
+        onSave={async () => {}}
+        onSubmit={async () => {}}
+      />
 
     </div>
   )

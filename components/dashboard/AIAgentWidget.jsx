@@ -2,7 +2,9 @@
 
 import React, { useState, useRef, useEffect } from 'react'
 import { useAuth } from '@/lib/auth-context'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
+import { useInsights } from '@/lib/useInsights'
+import api from '@/lib/api'
 import {
   Bot,
   User,
@@ -12,8 +14,11 @@ import {
   Clock,
   ShieldCheck,
   Minimize2,
-  Sparkles
+  Sparkles,
+  Lightbulb,
 } from 'lucide-react'
+
+const INSIGHT_POPUP_DURATION_MS = 8000
 
 // ─── ROLE METADATA AND SUGGESTIONS ───────────────────────────────────────────
 
@@ -95,6 +100,7 @@ const ROLE_AGENT_META = {
 export default function AIAgentWidget() {
   const { user } = useAuth()
   const pathname = usePathname()
+  const router = useRouter()
 
   // Do not show the floating widget on the full AI Agent chat page itself
   if (pathname === '/dashboard/ai-agent') return null
@@ -108,7 +114,21 @@ export default function AIAgentWidget() {
   const [inputValue, setInputValue] = useState('')
   const [isTyping, setIsTyping] = useState(false)
   const [unread, setUnread] = useState(true)
-  
+
+  const { unseenCount, justArrived, markSeen, consumeJustArrived } = useInsights()
+  const [insightPopup, setInsightPopup] = useState(null)
+
+  // A justArrived insight pops a toast above the icon, then auto-dismisses.
+  // Never re-shown once consumed here — useInsights only sets justArrived
+  // for an id it hasn't already handed out this session.
+  useEffect(() => {
+    if (!justArrived) return
+    setInsightPopup(justArrived)
+    consumeJustArrived()
+    const timer = setTimeout(() => setInsightPopup(null), INSIGHT_POPUP_DURATION_MS)
+    return () => clearTimeout(timer)
+  }, [justArrived, consumeJustArrived])
+
   const messagesEndRef = useRef(null)
   const inputRef = useRef(null)
 
@@ -155,19 +175,18 @@ export default function AIAgentWidget() {
     }
 
     try {
-      const res = await fetch('/api/ai', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ messages: updatedMessages }),
-      })
-      const data = await res.json()
+      // fetch('/api/ai') used to hit this frontend's own origin (no such
+      // route exists here — the real one lives on the Express backend) and
+      // never sent an Authorization header either, so this always failed
+      // before ever reaching the actual AI endpoint. api.post() fixes both.
+      const data = await api.post('/ai', { messages: updatedMessages })
       if (data.success) {
+        const replyText = data.data?.response?.text
+        if (!replyText) throw new Error('AI response was empty')
         const aiMessage = {
           id: updatedMessages.length + 1,
           role: 'ai',
-          text: data.message,
+          text: replyText,
           timestamp: new Date().toLocaleTimeString('en-UG', {
             hour: '2-digit', minute: '2-digit'
           }),
@@ -175,14 +194,14 @@ export default function AIAgentWidget() {
         }
         setMessages(prev => [...prev, aiMessage])
       } else {
-        throw new Error(data.error || 'Failed to generate response')
+        throw new Error(data.message || 'Failed to generate response')
       }
     } catch (error) {
       console.error('AI Agent widget error:', error)
       const errMessage = {
         id: updatedMessages.length + 1,
         role: 'ai',
-        text: `Error communicating with AI Agent: ${error.message || 'Server error'}. Please verify system configurations.`,
+        text: `Error communicating with the AI Agent: ${error.message || 'Server error'}. Please try again in a moment.`,
         timestamp: new Date().toLocaleTimeString('en-UG', {
           hour: '2-digit', minute: '2-digit'
         }),
@@ -422,6 +441,38 @@ export default function AIAgentWidget() {
         </div>
       )}
 
+      {/* ── Insight popup — anchored above the floating icon, auto-dismisses ── */}
+      {insightPopup && !isOpen && (
+        <div
+          className="mb-3 w-72 max-w-[calc(100vw-2rem)] rounded-xl border bg-slate-950/95 backdrop-blur-md shadow-2xl p-3 animate-in fade-in slide-in-from-bottom-2"
+          style={{ borderColor: 'var(--border-gold, rgba(201,151,58,0.3))' }}
+        >
+          <div className="flex items-start justify-between gap-2">
+            <div className="flex items-center gap-1.5 min-w-0">
+              <Lightbulb size={13} className="text-uacc-gold flex-shrink-0" />
+              <span className="text-xs font-bold text-white truncate">{insightPopup.title}</span>
+            </div>
+            <button
+              onClick={() => setInsightPopup(null)}
+              className="p-0.5 rounded hover:bg-white/10 text-white/40 hover:text-white flex-shrink-0"
+            >
+              <X size={12} />
+            </button>
+          </div>
+          <p className="text-[11px] text-white/70 mt-1.5 leading-relaxed line-clamp-3">{insightPopup.body}</p>
+          <button
+            onClick={() => {
+              markSeen(insightPopup.id)
+              setInsightPopup(null)
+              router.push('/dashboard/ai-agent?tab=insights')
+            }}
+            className="mt-2 text-[10px] font-bold uppercase tracking-wider text-uacc-gold hover:underline"
+          >
+            View
+          </button>
+        </div>
+      )}
+
       {/* ── Pulsing Floating Action Button ── */}
       <button
         onClick={toggleWidget}
@@ -429,30 +480,31 @@ export default function AIAgentWidget() {
           isOpen ? 'bg-slate-900 border-white/15' : 'bg-uacc-gold/25 border-uacc-gold/45 hover:bg-uacc-gold/35'
         }`}
         style={{
-          boxShadow: isOpen 
-            ? '0 4px 20px rgba(0,0,0,0.6)' 
+          boxShadow: isOpen
+            ? '0 4px 20px rgba(0,0,0,0.6)'
             : '0 0 25px rgba(201,151,58,0.25), 0 4px 15px rgba(0,0,0,0.4)',
         }}
       >
         {/* Glow pulsing ring for unread notification */}
-        {!isOpen && unread && (
+        {!isOpen && (unread || unseenCount > 0) && (
           <span className="absolute -inset-0.5 rounded-full border border-uacc-gold/40 animate-ping opacity-60"></span>
         )}
-        
+
         {isOpen ? (
           <ChevronDown size={22} className="text-white animate-fade-in" />
         ) : (
           <Bot size={24} className="text-uacc-gold animate-bounce" style={{ animationDuration: '4s' }} />
         )}
-        
-        {/* Small badge */}
-        {!isOpen && unread && (
+
+        {/* Small badge — unseen insight count takes priority over the
+            generic "new chat welcome" indicator when there is one */}
+        {!isOpen && (unseenCount > 0 || unread) && (
           <span className="absolute top-0 right-0 w-3.5 h-3.5 bg-red-500 rounded-full border border-slate-900 flex items-center justify-center text-[8px] font-bold text-white">
-            1
+            {unseenCount > 0 ? (unseenCount > 9 ? '9+' : unseenCount) : 1}
           </span>
         )}
       </button>
-      
+
     </div>
   )
 }
