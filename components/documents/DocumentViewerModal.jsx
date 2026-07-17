@@ -40,6 +40,42 @@ const TABS = [
   { key: 'attachments', label: 'Attachments', icon: Paperclip },
 ]
 
+// Secondary, clearly-optional multi-select — deliberately smaller/quieter
+// than the primary "To" role select above it. Excludes the primary
+// recipient, since cc'ing the same role you're already sending to is
+// meaningless (they're already the actionable holder, not an informed-only
+// copy). Toggling never touches toRole/forwardToRole — the caller passes
+// its own [ccRoles, setCcRoles] pair.
+function CcPicker({ excludeRole, value, onChange }) {
+  const toggle = (role) => {
+    onChange(value.includes(role) ? value.filter((r) => r !== role) : [...value, role])
+  }
+  return (
+    <div>
+      <label className="block text-[10px] uppercase tracking-wider font-semibold mb-1.5" style={{ color: 'var(--text-muted)' }}>
+        Cc <span className="normal-case font-normal">(optional — informed only, no action required)</span>
+      </label>
+      <div className="flex flex-wrap gap-1.5">
+        {SUBMIT_ROLES.filter((r) => r.value !== excludeRole).map((r) => {
+          const active = value.includes(r.value)
+          return (
+            <button
+              key={r.value}
+              type="button"
+              onClick={() => toggle(r.value)}
+              className={`text-[10px] font-medium px-2 py-1 rounded-full border transition-colors ${
+                active ? 'bg-uacc-gold/15 border-uacc-gold/40 text-uacc-gold' : 'border-(--border-default) text-(--text-muted) hover:text-(--text-secondary)'
+              }`}
+            >
+              {r.label}
+            </button>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
 function getFileKind(document) {
   const mimeType = document?.mimeType || ''
   if (mimeType === 'application/pdf') return 'pdf'
@@ -76,6 +112,7 @@ export default function DocumentViewerModal({
   const [saving, setSaving] = useState(false)
   const [showSubmitForm, setShowSubmitForm] = useState(false)
   const [toRole, setToRole] = useState(SUBMIT_ROLES[0].value)
+  const [ccRoles, setCcRoles] = useState([])
   const [instruction, setInstruction] = useState('')
   const [form, setForm] = useState({ title: '', description: '', category: 'OTHER' })
   const [saveError, setSaveError] = useState('')
@@ -84,6 +121,7 @@ export default function DocumentViewerModal({
   const [annotationsLoading, setAnnotationsLoading] = useState(false)
   const [newAnnotationText, setNewAnnotationText] = useState('')
   const [newAnnotationType, setNewAnnotationType] = useState('COMMENT')
+  const [newAnnotationCcRoles, setNewAnnotationCcRoles] = useState([])
   const [postingAnnotation, setPostingAnnotation] = useState(false)
 
   const [attachments, setAttachments] = useState([])
@@ -126,6 +164,7 @@ export default function DocumentViewerModal({
 
   const [showForwardForm, setShowForwardForm] = useState(false)
   const [forwardToRole, setForwardToRole] = useState(SUBMIT_ROLES[0].value)
+  const [forwardCcRoles, setForwardCcRoles] = useState([])
   const [forwardInstruction, setForwardInstruction] = useState('')
   const [forwarding, setForwarding] = useState(false)
   const { addStep } = useCirculation()
@@ -306,6 +345,10 @@ export default function DocumentViewerModal({
   // document is a "your turn" action, not gated on whether this step has
   // been signed yet (unlike canSign).
   const isCurrentHolder = circulation && circulation.status === 'IN_CIRCULATION' && circulation.currentHolderRole === currentUserRole
+  // Cc'd roles are informed-only — never currentHolderRole, so canSign/
+  // isCurrentHolder above already exclude them from every action naturally.
+  // This just drives the "copied, no action required" badge.
+  const isCcRecipient = Boolean(circulation?.steps?.some((s) => s.ccRoles?.includes(currentUserRole)))
 
   const handleDownload = async () => {
     setDownloading(true)
@@ -341,7 +384,7 @@ export default function DocumentViewerModal({
     setSubmitting(true)
     setSaveError('')
     try {
-      await onSubmit(document.id, toRole, instruction)
+      await onSubmit(document.id, toRole, instruction, ccRoles.filter((r) => r !== toRole))
       setShowSubmitForm(false)
     } catch (err) {
       setSaveError(err.message || 'Failed to submit document')
@@ -363,6 +406,7 @@ export default function DocumentViewerModal({
     try {
       await addStep(circulation.id, {
         toRole: forwardToRole,
+        ccRoles: forwardCcRoles.filter((r) => r !== forwardToRole),
         instruction: forwardInstruction || `Forwarded "${document.title}" for review.`,
         stepType: 'FORWARD',
       })
@@ -384,8 +428,10 @@ export default function DocumentViewerModal({
       await api.post(`/documents/${document.id}/annotations`, {
         text: newAnnotationText.trim(),
         type: newAnnotationType,
+        ccRoles: newAnnotationCcRoles,
       })
       setNewAnnotationText('')
+      setNewAnnotationCcRoles([])
       await fetchAnnotations()
     } catch {
       // surfaced inline below via annotations staying unchanged
@@ -458,8 +504,14 @@ export default function DocumentViewerModal({
             {/* Circulation status strip — persistently visible across all
                 three tabs (not buried inside one), so it sits between the
                 header and the tab bar rather than inside the tab body. */}
-            <div className="px-5 py-2 flex-shrink-0 border-b" style={{ borderColor: 'var(--border-subtle)' }}>
+            <div className="px-5 py-2 flex-shrink-0 border-b flex items-center gap-3" style={{ borderColor: 'var(--border-subtle)' }}>
               <CirculationLiveTracker circulationId={circulation?.id} />
+              {isCcRecipient && (
+                <span className="inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded shrink-0"
+                      style={{ background: 'rgba(255,255,255,0.06)', color: 'var(--text-muted)', border: '1px solid var(--border-subtle)' }}>
+                  You were copied — no action required
+                </span>
+              )}
             </div>
 
             {/* Tabs */}
@@ -603,6 +655,7 @@ export default function DocumentViewerModal({
                             ))}
                           </select>
                         </div>
+                        <CcPicker excludeRole={toRole} value={ccRoles} onChange={setCcRoles} />
                         <div>
                           <label className="block text-[10px] uppercase tracking-wider font-semibold mb-1.5" style={{ color: 'var(--text-muted)' }}>
                             Instruction (optional)
@@ -625,25 +678,28 @@ export default function DocumentViewerModal({
 
               {tab === 'annotations' && (
                 <div className="flex flex-col gap-4 w-full max-w-3xl mx-auto">
-                  <form onSubmit={handlePostAnnotation} className="flex items-start gap-3 w-full">
-                    <select
-                      className="input-field w-40 shrink-0 py-2 px-2 text-xs"
-                      value={newAnnotationType}
-                      onChange={(e) => setNewAnnotationType(e.target.value)}
-                    >
-                      {ANNOTATION_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
-                    </select>
-                    {/* Textarea, not a single-line input — real annotations
-                        ("Sir, audit has no objection, forwarded for your
-                        further consideration") are sentences. */}
-                    <textarea
-                      className="input-field flex-1 min-w-0 resize-none"
-                      rows={2}
-                      placeholder="Add a comment or note..."
-                      value={newAnnotationText}
-                      onChange={(e) => setNewAnnotationText(e.target.value)}
-                    />
-                    <Button type="submit" variant="primary" size="sm" loading={postingAnnotation} className="shrink-0">Add</Button>
+                  <form onSubmit={handlePostAnnotation} className="flex flex-col gap-2 w-full">
+                    <div className="flex items-start gap-3 w-full">
+                      <select
+                        className="input-field w-40 shrink-0 py-2 px-2 text-xs"
+                        value={newAnnotationType}
+                        onChange={(e) => setNewAnnotationType(e.target.value)}
+                      >
+                        {ANNOTATION_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
+                      </select>
+                      {/* Textarea, not a single-line input — real annotations
+                          ("Sir, audit has no objection, forwarded for your
+                          further consideration") are sentences. */}
+                      <textarea
+                        className="input-field flex-1 min-w-0 resize-none"
+                        rows={2}
+                        placeholder="Add a comment or note..."
+                        value={newAnnotationText}
+                        onChange={(e) => setNewAnnotationText(e.target.value)}
+                      />
+                      <Button type="submit" variant="primary" size="sm" loading={postingAnnotation} className="shrink-0">Add</Button>
+                    </div>
+                    <CcPicker value={newAnnotationCcRoles} onChange={setNewAnnotationCcRoles} />
                   </form>
 
                   {/* Unified trail — CirculationStep routing history and
@@ -782,6 +838,7 @@ export default function DocumentViewerModal({
                       {SUBMIT_ROLES.map((r) => <option key={r.value} value={r.value}>{r.label}</option>)}
                     </select>
                   </div>
+                  <CcPicker excludeRole={forwardToRole} value={forwardCcRoles} onChange={setForwardCcRoles} />
                   <div>
                     <label className="block text-[10px] uppercase tracking-wider font-semibold mb-1.5" style={{ color: 'var(--text-muted)' }}>
                       Instruction (optional)

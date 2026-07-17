@@ -286,8 +286,8 @@ export default function DocumentsPage() {
     setPreviewDoc(updated)
   }
 
-  const handleSubmitDoc = async (id, toRole, instruction) => {
-    const result = await submitDocument(id, toRole, instruction)
+  const handleSubmitDoc = async (id, toRole, instruction, ccRoles) => {
+    const result = await submitDocument(id, toRole, instruction, ccRoles)
     refresh()
     setPreviewDoc(result?.document || null)
   }

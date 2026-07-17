@@ -92,9 +92,13 @@ export default function CirculationLiveTracker({ circulationId }) {
     ? [steps[0].fromRole, ...steps.map((s) => s.toRole)]
     : [circulation.currentHolderRole]
   const isClosed = circulation.status === 'CLOSED'
+  // Deduped across every step — informed-only roles, shown once regardless
+  // of how many hops actually cc'd them.
+  const ccRoles = [...new Set(steps.flatMap((s) => s.ccRoles || []))]
 
   return (
-    <div className="flex items-center gap-1 overflow-x-auto py-1">
+    <div className="flex flex-col gap-1 py-1">
+    <div className="flex items-center gap-1 overflow-x-auto">
       {sequence.map((role, idx) => {
         const Icon = ROLE_ICONS[role] || User
         const isLast = idx === sequence.length - 1
@@ -132,6 +136,12 @@ export default function CirculationLiveTracker({ circulationId }) {
       <span className="ml-2 text-[10px] whitespace-nowrap flex-shrink-0" style={{ color: 'var(--text-muted)' }}>
         {isClosed ? 'Closed' : `With ${roleLabel(circulation.currentHolderRole)}`}
       </span>
+    </div>
+    {ccRoles.length > 0 && (
+      <span className="text-[10px]" style={{ color: 'var(--text-faint)' }}>
+        Cc: {ccRoles.map(roleLabel).join(', ')}
+      </span>
+    )}
     </div>
   )
 }

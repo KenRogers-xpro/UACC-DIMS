@@ -86,6 +86,12 @@ export default function AnnotationTrail({ circulation, annotations, attachments 
                   </span>
                 </div>
 
+                {step.ccRoles?.length > 0 && (
+                  <p className="text-[10px] text-(--text-faint) uppercase tracking-wider">
+                    Cc: {step.ccRoles.map((r) => r.replace(/_/g, ' ')).join(', ')}
+                  </p>
+                )}
+
                 <p className="text-sm text-(--text-secondary) mt-2 italic border-l-2 border-white/10 pl-3">
                   "{step.instruction}"
                 </p>
@@ -181,6 +187,11 @@ export default function AnnotationTrail({ circulation, annotations, attachments 
                 </span>
               </div>
               <p className="text-sm text-(--text-secondary)">{a.text}</p>
+              {a.ccRoles?.length > 0 && (
+                <p className="text-[10px] text-(--text-faint) uppercase tracking-wider mt-1.5">
+                  Cc: {a.ccRoles.map((r) => r.replace(/_/g, ' ')).join(', ')}
+                </p>
+              )}
             </div>
           </motion.div>
         )
