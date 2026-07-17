@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback, useRef } from 'react'
+import { createPortal } from 'react-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { X, Download, FileText, Pencil, Send, Lock, MessageSquare, History, Eye, PenTool, Maximize2, Minimize2, Paperclip, UploadCloud, User } from 'lucide-react'
 import Badge from '@/components/ui/Badge'
@@ -105,6 +106,18 @@ export default function DocumentViewerModal({
   onSave,
   onSubmit,
 }) {
+  // Portals to document.body (via window.document — this component's own
+  // `document` prop shadows the global, same reason the rest of this file
+  // already says window.document.addEventListener/exitFullscreen instead of
+  // the bare global) only after mount, since document.body doesn't exist
+  // during SSR and rendering the portal target before hydration would
+  // mismatch. Without this, the modal rendered inline inside <main>, which
+  // meant any ancestor between it and the viewport (page transitions,
+  // scroll containers, etc.) could silently confine its `position: fixed`
+  // instead of the true viewport — the "cut off / not scrolling" bug.
+  const [mounted, setMounted] = useState(false)
+  useEffect(() => { setMounted(true) }, [])
+
   const [tab, setTab] = useState('preview')
 
   const [editing, setEditing] = useState(false)
@@ -440,7 +453,9 @@ export default function DocumentViewerModal({
     }
   }
 
-  return (
+  if (!mounted) return null
+
+  return createPortal(
     <AnimatePresence>
       {isOpen && (
         <motion.div
@@ -952,6 +967,7 @@ export default function DocumentViewerModal({
           </AnimatePresence>
         </motion.div>
       )}
-    </AnimatePresence>
+    </AnimatePresence>,
+    window.document.body
   )
 }
