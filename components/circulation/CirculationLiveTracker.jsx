@@ -49,7 +49,15 @@ export default function CirculationLiveTracker({ circulationId }) {
     }
     try {
       const res = await api.get(`/circulation/${circulationId}`)
-      setCirculation(res.data?.circulation || res.data || null)
+      // GET /api/circulation/:id is one of the raw circulation.routes.js
+      // endpoints — unlike most of the API, it doesn't go through the
+      // shared success() helper, so the payload sits at the top-level
+      // `circulation` key, not nested under `data`. res.data is always
+      // undefined here; reading only that silently rendered "Not yet
+      // circulated" for every circulation regardless of whether one
+      // actually existed. lib/useCirculation.js's fetchTimeline already
+      // handles this correctly — mirroring that fallback order here.
+      setCirculation(res.circulation || res.data?.circulation || res.data || null)
     } catch {
       // silent — this is a decorative preview, shouldn't disrupt the row/panel it's embedded in
     }
