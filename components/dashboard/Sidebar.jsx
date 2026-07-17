@@ -2,7 +2,9 @@
 import { usePathname } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
+import { useState, useEffect, useCallback } from 'react'
 import { useAuth } from '@/lib/auth-context'
+import api from '@/lib/api'
 import { motion } from 'framer-motion'
 import {
   LayoutDashboard,
@@ -51,6 +53,14 @@ const NAV_ITEMS = [
     roles: ['GENERAL_MANAGER', 'DEPARTMENT_HEAD', 'STAFF',
             'IT_ADMINISTRATOR', 'INTERNAL_AUDITOR', 'RECORDS_EXECUTIVE'],
     badge: 'NEW',
+  },
+  {
+    label: 'My Drafts',
+    href: '/dashboard/drafts',
+    icon: FileText,
+    roles: ['GENERAL_MANAGER', 'DEPARTMENT_HEAD', 'STAFF',
+            'IT_ADMINISTRATOR', 'INTERNAL_AUDITOR', 'RECORDS_EXECUTIVE',
+            'HR_MANAGER', 'FINANCE_DIRECTOR', 'MARKETING_OFFICER'],
   },
   {
     label: 'Procurement',
@@ -118,7 +128,7 @@ const PA_NAV_ITEMS = [
   { label: 'Dashboard',      href: '/dashboard',                icon: LayoutDashboard },
   { label: 'GM Inbox',       href: '/dashboard/pa-inbox',        icon: Inbox },
   { label: 'Schedule',       href: '/dashboard/schedule',        icon: CalendarClock },
-  { label: 'Drafts',         href: '/dashboard/drafts',          icon: FileText },
+  { label: 'My Drafts',      href: '/dashboard/drafts',          icon: FileText },
   { label: 'Documents',      href: '/dashboard/documents',       icon: FolderOpen },
   { label: 'Messages',       href: '/dashboard/messages',        icon: MessageSquare },
   { label: 'Announcements',  href: '/dashboard/announcements',   icon: Megaphone },
@@ -126,7 +136,9 @@ const PA_NAV_ITEMS = [
 
 const PO_NAV_ITEMS = [
   { label: 'Dashboard',      href: '/dashboard',                 icon: LayoutDashboard },
+  { label: 'Documents',      href: '/dashboard/documents',       icon: FolderOpen },
   { label: 'Procurement',    href: '/dashboard/procurement',     icon: ClipboardList },
+  { label: 'My Drafts',      href: '/dashboard/drafts',          icon: FileText },
   { label: 'Activity Logs',  href: '/dashboard/activity-logs',   icon: Clock },
   { label: 'Messages',       href: '/dashboard/messages',        icon: MessageSquare },
   { label: 'Announcements',  href: '/dashboard/announcements',   icon: Megaphone },
@@ -137,6 +149,7 @@ const CS_NAV_ITEMS = [
   { label: 'Dashboard',      href: '/dashboard',                 icon: LayoutDashboard },
   { label: 'Documents',      href: '/dashboard/documents',       icon: FolderOpen },
   { label: 'Records',        href: '/dashboard/records',         icon: BookOpen },
+  { label: 'My Drafts',      href: '/dashboard/drafts',          icon: FileText },
   { label: 'Messages',       href: '/dashboard/messages',        icon: MessageSquare },
   { label: 'Announcements',  href: '/dashboard/announcements',   icon: Megaphone },
 ]
@@ -156,11 +169,42 @@ const ROLE_META = {
   CORPORATION_SECRETARY: { label: 'Corporation Secretary',  color: 'text-sky-400',      dot: 'bg-sky-400' },
 }
 
+const DRAFTS_POLL_INTERVAL_MS = 20000
+
+// Mirrors the derivation pattern in useNotifications: the badge count is
+// computed here from the same list a user would see on /dashboard/drafts,
+// never as a separately-tracked number — otherwise the sidebar and the
+// drafts page can disagree about what's actually unreviewed.
+function useUnreviewedDraftsCount() {
+  const [count, setCount] = useState(0)
+
+  const refresh = useCallback(async () => {
+    try {
+      const res = await api.get('/drafts/mine')
+      const drafts = res?.data || []
+      setCount(drafts.filter((d) => d.origin === 'AI_GENERATED' && !d.reviewedAt).length)
+    } catch {
+      // Transient failure — leave the last-known-good count in place.
+    }
+  }, [])
+
+  useEffect(() => {
+    refresh()
+    const interval = setInterval(() => {
+      if (document.visibilityState === 'visible') refresh()
+    }, DRAFTS_POLL_INTERVAL_MS)
+    return () => clearInterval(interval)
+  }, [refresh])
+
+  return count
+}
+
 export default function Sidebar({ user, collapsed, mobileOpen, onMobileClose }) {
   const pathname = usePathname()
   const { logout } = useAuth()
   const userRole = user?.role || 'STAFF'
   const roleMeta = ROLE_META[userRole] || ROLE_META.STAFF
+  const unreviewedDrafts = useUnreviewedDraftsCount()
 
   const mainNav = userRole === 'GM_PERSONAL_ASSISTANT'
     ? PA_NAV_ITEMS
@@ -188,6 +232,7 @@ export default function Sidebar({ user, collapsed, mobileOpen, onMobileClose }) 
           pathname={pathname}
           collapsed={collapsed}
           onSignOut={logout}
+          unreviewedDrafts={unreviewedDrafts}
         />
       </aside>
 
@@ -207,6 +252,7 @@ export default function Sidebar({ user, collapsed, mobileOpen, onMobileClose }) 
           collapsed={false}
           onSignOut={logout}
           onMobileClose={onMobileClose}
+          unreviewedDrafts={unreviewedDrafts}
           isMobile
         />
       </aside>
@@ -216,7 +262,7 @@ export default function Sidebar({ user, collapsed, mobileOpen, onMobileClose }) 
 
 function SidebarContent({
   user, roleMeta, mainNav, showSettings, pathname,
-  collapsed, onSignOut, onMobileClose, isMobile = false,
+  collapsed, onSignOut, onMobileClose, isMobile = false, unreviewedDrafts = 0,
 }) {
   return (
     <div className="flex flex-col h-full">
@@ -317,6 +363,12 @@ function SidebarContent({
             const Icon = item.icon
             const isActive = pathname === item.href ||
               (item.href !== '/dashboard' && pathname.startsWith(item.href))
+            // Drafts' badge is a live count, not the static 'NEW'/'AI'
+            // labels other items use — derived the same way it's rendered
+            // on /dashboard/drafts itself (see useUnreviewedDraftsCount).
+            const badge = item.href === '/dashboard/drafts'
+              ? (unreviewedDrafts > 0 ? String(unreviewedDrafts) : null)
+              : item.badge
 
             return (
               <motion.li 
@@ -351,14 +403,14 @@ function SidebarContent({
                                        tracking-wide truncate">
                         {item.label}
                       </span>
-                      {item.badge && (
+                      {badge && (
                         <span className={`text-[8px] font-bold px-1.5 py-0.5 rounded
                                           font-heading tracking-wider leading-none
-                                          ${item.badge === 'AI'
+                                          ${badge === 'AI'
                                             ? 'bg-uacc-gold/15 text-uacc-gold border border-uacc-gold/25'
                                             : 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/25'
                                           }`}>
-                          {item.badge}
+                          {badge}
                         </span>
                       )}
                     </>
