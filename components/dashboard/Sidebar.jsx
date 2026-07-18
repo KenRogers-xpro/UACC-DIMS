@@ -116,7 +116,9 @@ const NAV_ITEMS = [
     label: 'AI Agent',
     href: '/dashboard/ai-agent',
     icon: Bot,
-    roles: ['GENERAL_MANAGER', 'DEPARTMENT_HEAD', 'IT_ADMINISTRATOR'],
+    roles: ['GENERAL_MANAGER', 'DEPARTMENT_HEAD', 'STAFF',
+            'IT_ADMINISTRATOR', 'INTERNAL_AUDITOR', 'RECORDS_EXECUTIVE',
+            'HR_MANAGER', 'FINANCE_DIRECTOR', 'MARKETING_OFFICER'],
     badge: 'AI',
   },
 ]
@@ -132,6 +134,7 @@ const PA_NAV_ITEMS = [
   { label: 'Documents',      href: '/dashboard/documents',       icon: FolderOpen },
   { label: 'Messages',       href: '/dashboard/messages',        icon: MessageSquare },
   { label: 'Announcements',  href: '/dashboard/announcements',   icon: Megaphone },
+  { label: 'AI Agent',       href: '/dashboard/ai-agent',        icon: Bot, badge: 'AI' },
 ]
 
 const PO_NAV_ITEMS = [
@@ -142,6 +145,7 @@ const PO_NAV_ITEMS = [
   { label: 'Activity Logs',  href: '/dashboard/activity-logs',   icon: Clock },
   { label: 'Messages',       href: '/dashboard/messages',        icon: MessageSquare },
   { label: 'Announcements',  href: '/dashboard/announcements',   icon: Megaphone },
+  { label: 'AI Agent',       href: '/dashboard/ai-agent',        icon: Bot, badge: 'AI' },
 ]
 
 // Governance-scoped nav — deliberately no procurement/finance modules.
@@ -152,6 +156,7 @@ const CS_NAV_ITEMS = [
   { label: 'My Drafts',      href: '/dashboard/drafts',          icon: FileText },
   { label: 'Messages',       href: '/dashboard/messages',        icon: MessageSquare },
   { label: 'Announcements',  href: '/dashboard/announcements',   icon: Megaphone },
+  { label: 'AI Agent',       href: '/dashboard/ai-agent',        icon: Bot, badge: 'AI' },
 ]
 
 const ROLE_META = {
