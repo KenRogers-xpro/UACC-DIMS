@@ -105,6 +105,7 @@ export default function DocumentViewerModal({
   currentUserRole,
   onSave,
   onSubmit,
+  initialTab = 'preview',
 }) {
   // Portals to document.body (via window.document — this component's own
   // `document` prop shadows the global, same reason the rest of this file
@@ -192,7 +193,7 @@ export default function DocumentViewerModal({
       setEditing(false)
       setShowSubmitForm(false)
       setSaveError('')
-      setTab('preview')
+      setTab(initialTab)
       setAnnotations([])
       setCirculation(undefined)
       setAttachments([])

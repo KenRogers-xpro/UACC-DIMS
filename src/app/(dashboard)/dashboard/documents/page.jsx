@@ -111,7 +111,13 @@ export default function DocumentsPage() {
   const [currentPage, setCurrentPage] = useState(1)
   const [uploadModalOpen, setUploadModalOpen] = useState(false)
   const [previewDoc, setPreviewDoc] = useState(null)
+  const [viewerInitialTab, setViewerInitialTab] = useState('preview')
   const [newArrivalsCount, setNewArrivalsCount] = useState(0)
+  // Bumped whenever the viewer closes after being opened from a New
+  // Arrivals "Take Action" click — DocumentsAwaitingAction re-fetches its
+  // own list on change, so a viewed (or acted-on) item drops out promptly
+  // instead of waiting for its own next unrelated poll.
+  const [inboxRefreshKey, setInboxRefreshKey] = useState(0)
 
   // UPLOAD FORM STATE
   const [newTitle, setNewTitle] = useState('')
@@ -147,8 +153,12 @@ export default function DocumentsPage() {
     setCurrentPage(1)
   }, [searchTerm, categoryFilter, departmentFilter, activeTab])
 
-  // Fetch from the real API whenever filters/page change
+  // Fetch from the real API whenever filters/page change. New Arrivals has
+  // no generic table to feed (see the render below) — DocumentsAwaitingAction
+  // fetches its own data, so there's nothing here worth a request for.
   const refresh = useCallback(async () => {
+    if (activeTab === 'new') return
+
     const noOtherFilters = categoryFilter === 'All' && departmentFilter === 'All'
     // Semantic (RAG) search only applies to the free-text query, and only
     // when no category/department filter narrows things further — those
@@ -214,6 +224,34 @@ export default function DocumentsPage() {
   const totalCount = pagination?.total || 0
 
   // HANDLERS
+  // Every entry point into the viewer goes through this, so the internal
+  // tab it lands on is always explicit rather than whatever was left over
+  // from a previous open.
+  const openViewer = (doc, tab = 'preview') => {
+    setViewerInitialTab(tab)
+    setPreviewDoc(doc)
+  }
+
+  const handleCloseViewer = () => {
+    setPreviewDoc(null)
+    setInboxRefreshKey((k) => k + 1)
+  }
+
+  // Take Action (from the New Arrivals awaiting-action panel) — resolve the
+  // circulation's source document and open the full viewer on its
+  // Signatures tab, rather than jumping straight to a bare signing dialog
+  // with no document context visible.
+  const handleTakeAction = async (circulationItem) => {
+    const docId = parseInt(circulationItem.sourceId, 10)
+    if (!Number.isInteger(docId)) return
+    try {
+      const res = await api.get(`/documents/${docId}`)
+      if (res.success) openViewer(res.data, 'signatures')
+    } catch {
+      // silent — the panel itself stays put if the fetch fails
+    }
+  }
+
   const handleUploadAreaClick = () => {
     if (fileInputRef.current) {
       fileInputRef.current.click()
@@ -272,7 +310,7 @@ export default function DocumentsPage() {
 
       refresh()
       // Open the new document immediately so there's no dead end after upload
-      setPreviewDoc(created)
+      openViewer(created)
     } catch (err) {
       setUploadError(err.message || 'Failed to upload document')
     } finally {
@@ -283,13 +321,13 @@ export default function DocumentsPage() {
   const handleSaveEdit = async (id, data) => {
     const updated = await updateDocument(id, data)
     refresh()
-    setPreviewDoc(updated)
+    openViewer(updated)
   }
 
   const handleSubmitDoc = async (id, toRole, instruction, ccRoles) => {
     const result = await submitDocument(id, toRole, instruction, ccRoles)
     refresh()
-    setPreviewDoc(result?.document || null)
+    openViewer(result?.document || null)
   }
 
   const handleDownload = async (doc) => {
@@ -374,9 +412,18 @@ export default function DocumentsPage() {
 
       {/* Circulation-inbox panel — only shown under the New Arrivals tab,
           not globally on every dashboard anymore */}
-      {activeTab === 'new' && <DocumentsAwaitingAction />}
+      {activeTab === 'new' && (
+        <DocumentsAwaitingAction onTakeAction={handleTakeAction} refreshKey={inboxRefreshKey} />
+      )}
 
-      {/* FILTER BAR CARD */}
+      {/* FILTER BAR + generic table — New Arrivals' complete content is the
+          awaiting-action panel above; the shared search/filter/table below
+          queries state=NEW too, but that's a narrower, differently-shaped
+          set (see buildStateFilter vs GET /circulation/inbox) and stacking
+          both showed a contradictory "0 of 0 documents" under 4 real items.
+          The other three tabs are unaffected. */}
+      {activeTab !== 'new' && (
+      <>
       <div className="card rounded-xl p-4 flex flex-col gap-3">
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
           {/* Search Input */}
@@ -509,7 +556,7 @@ export default function DocumentsPage() {
                         <td><span className="text-xs" style={{ color: 'var(--text-secondary)' }}>{formatDate(doc.createdAt)}</span></td>
                         <td>
                           <div className="flex items-center justify-end gap-1.5">
-                            <button className="p-1.5 hover:text-uacc-gold text-[var(--text-muted)] transition-colors cursor-pointer" title="View" onClick={() => setPreviewDoc(doc)}><Eye size={16} /></button>
+                            <button className="p-1.5 hover:text-uacc-gold text-[var(--text-muted)] transition-colors cursor-pointer" title="View" onClick={() => openViewer(doc)}><Eye size={16} /></button>
                             <button onClick={() => handleDownload(doc)} className="p-1.5 hover:text-blue-400 text-[var(--text-muted)] transition-colors cursor-pointer" title="Download"><Download size={16} /></button>
                             <button className="p-1.5 hover:text-uacc-red text-[var(--text-muted)] transition-colors cursor-pointer" title="Delete" onClick={() => handleDelete(doc)}><Trash2 size={16} /></button>
                           </div>
@@ -553,7 +600,7 @@ export default function DocumentsPage() {
                         <span className="text-xs" style={{ color: 'var(--text-muted)' }}>{doc.uploader?.name || 'Unknown'}</span>
                       </div>
                       <div className="flex items-center gap-2">
-                        <button className="p-2 hover:text-uacc-gold text-[var(--text-muted)] transition-colors cursor-pointer rounded-lg hover:bg-white/5" onClick={() => setPreviewDoc(doc)}><Eye size={15} /></button>
+                        <button className="p-2 hover:text-uacc-gold text-[var(--text-muted)] transition-colors cursor-pointer rounded-lg hover:bg-white/5" onClick={() => openViewer(doc)}><Eye size={15} /></button>
                         <button onClick={() => handleDownload(doc)} className="p-2 hover:text-blue-400 text-[var(--text-muted)] transition-colors cursor-pointer rounded-lg hover:bg-white/5" title="Download"><Download size={15} /></button>
                         <button className="p-2 hover:text-uacc-red text-[var(--text-muted)] transition-colors cursor-pointer rounded-lg hover:bg-white/5" onClick={() => handleDelete(doc)}><Trash2 size={15} /></button>
                       </div>
@@ -596,6 +643,8 @@ export default function DocumentsPage() {
           </div>
         )}
       </div>
+      </>
+      )}
 
       {/* UPLOAD DOCUMENT MODAL */}
       <AnimatePresence>
@@ -770,11 +819,12 @@ export default function DocumentsPage() {
       <DocumentViewerModal
         document={previewDoc}
         isOpen={!!previewDoc}
-        onClose={() => setPreviewDoc(null)}
+        onClose={handleCloseViewer}
         currentUserId={user?.id}
         currentUserRole={user?.role}
         onSave={handleSaveEdit}
         onSubmit={handleSubmitDoc}
+        initialTab={viewerInitialTab}
       />
 
       {/* SUCCESS TOAST ALERT */}

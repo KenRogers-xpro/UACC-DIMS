@@ -1,19 +1,21 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect } from 'react'
 import { FileText, ArrowRight } from 'lucide-react'
 import { useCirculation } from '@/lib/useCirculation'
-import { useAuth } from '@/lib/auth-context'
 import Button from '@/components/ui/Button'
-import SigningModal from '@/components/circulation/SigningModal'
 import CirculationLiveTracker from '@/components/circulation/CirculationLiveTracker'
 
-export default function DocumentsAwaitingAction() {
+// Take Action now opens the full DocumentViewerModal (on its Signatures
+// tab) rather than SigningModal directly — onTakeAction is the parent's
+// callback to resolve the circulation's source document and open that
+// shared viewer. SigningModal itself hasn't gone anywhere; it's still
+// wired into the viewer's Signatures tab as the "Sign This Step" flow.
+export default function DocumentsAwaitingAction({ onTakeAction, refreshKey }) {
   const { inbox, loading, fetchInbox } = useCirculation()
-  const { user } = useAuth()
-  const [signingCirculationId, setSigningCirculationId] = useState(null)
 
   useEffect(() => {
     fetchInbox()
-  }, [fetchInbox])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [fetchInbox, refreshKey])
 
   if (loading && inbox.length === 0) return null
   if (inbox.length === 0) return null
@@ -47,7 +49,7 @@ export default function DocumentsAwaitingAction() {
             </div>
             <Button
               size="sm"
-              onClick={() => setSigningCirculationId(doc.id)}
+              onClick={() => onTakeAction?.(doc)}
               className="shrink-0 flex items-center gap-2 bg-uacc-gold/10 hover:bg-uacc-gold/20 text-uacc-gold border border-uacc-gold/30"
             >
               Take Action <ArrowRight size={14} />
@@ -55,14 +57,6 @@ export default function DocumentsAwaitingAction() {
           </div>
         ))}
       </div>
-
-      <SigningModal
-        circulationId={signingCirculationId}
-        currentUserRole={user?.role}
-        isOpen={!!signingCirculationId}
-        onClose={() => setSigningCirculationId(null)}
-        onSigned={() => fetchInbox()}
-      />
     </div>
   )
 }
