@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import Image from 'next/image'
 import { motion, AnimatePresence } from 'framer-motion'
+import api from '@/lib/api'
 import {
   FolderOpen,
   ClipboardList,
@@ -71,14 +72,6 @@ const MOCK_DEPT_PERFORMANCE = [
   { dept: 'GM Office',    logsSubmitted: 45,  avgHours: 3.8, compliance: 85 },
 ]
 
-const MOCK_AUDIT_LOGS = [
-  { timestamp: '2026-06-25 14:32', user: 'Patrick Katusabe', action: 'Approved Procurement Request #PR-042', ipAddress: '192.168.1.45' },
-  { timestamp: '2026-06-25 11:15', user: 'Staff Operations', action: 'Uploaded Document: Cargo SOP v2', ipAddress: '192.168.1.12' },
-  { timestamp: '2026-06-24 09:45', user: 'Head Engineering', action: 'Submitted Weekly Flight Log', ipAddress: '192.168.2.18' },
-  { timestamp: '2026-06-23 16:20', user: 'Lt. Gen. Lakara', action: 'Signed Agreement: ADS Agreement', ipAddress: '192.168.1.2' },
-  { timestamp: '2026-06-22 10:05', user: 'Patrick Katusabe', action: 'Generated Monthly Procurement Report', ipAddress: '192.168.1.45' },
-]
-
 const REPORT_TYPES = [
   { value: 'PROCUREMENT_SUMMARY',  label: 'Procurement Summary Report' },
   { value: 'ACTIVITY_LOG_REPORT',  label: 'Activity Log Report' },
@@ -126,6 +119,18 @@ export default function ReportsPage() {
   const [toast, setToast] = useState(null)
   const [previewOpen, setPreviewOpen] = useState(false)
 
+  // LIVE REPORT DATA — populated by handlePreview for the three report types
+  // that now hit the real backend, plus AUDIT_SUMMARY. ACTIVITY_LOG_REPORT
+  // has no backend aggregation yet and keeps using MOCK_ACTIVITY_TREND below
+  // (flagged with a "Sample Data" badge in the modal so it's never mistaken
+  // for one of the live ones sitting right next to it).
+  const [previewProcurement, setPreviewProcurement] = useState([])
+  const [previewDocsByDept, setPreviewDocsByDept] = useState([])
+  const [previewDeptPerformance, setPreviewDeptPerformance] = useState([])
+  const [previewAuditLogs, setPreviewAuditLogs] = useState([])
+  const [previewLoading, setPreviewLoading] = useState(false)
+  const [previewFetchError, setPreviewFetchError] = useState(null)
+
   // TOAST EFFECT
   useEffect(() => {
     if (toast) {
@@ -134,17 +139,76 @@ export default function ReportsPage() {
     }
   }, [toast])
 
-  const handleExport = () => {
-    setGenerating(true)
-    setTimeout(() => {
-      setGenerating(false)
-      setToast({ type: 'success', message: 'Report exported successfully. Check your downloads.' })
-      if (previewOpen) setPreviewOpen(false)
-    }, 2500)
+  const buildReportParams = () => {
+    const params = new URLSearchParams({ dateFrom, dateTo })
+    if (department !== 'ALL') params.set('department', department)
+    return params
   }
 
-  const handlePreview = () => {
+  const handlePreview = async () => {
+    // Open immediately for responsiveness, but the modal itself shows a
+    // loading state (see previewLoading below) rather than briefly flashing
+    // whatever was fetched for a *previous* report type/filter combination.
     setPreviewOpen(true)
+    setPreviewFetchError(null)
+
+    if (reportType === 'ACTIVITY_LOG_REPORT') {
+      return // sample-data-only report, nothing to fetch
+    }
+
+    setPreviewLoading(true)
+    try {
+      const params = buildReportParams()
+      if (reportType === 'PROCUREMENT_SUMMARY') {
+        const res = await api.get(`/reports/procurement-summary?${params}`)
+        if (!res.success) throw new Error(res.message || 'Failed to load procurement summary')
+        setPreviewProcurement(res.data || [])
+      } else if (reportType === 'DOCUMENT_INVENTORY') {
+        const res = await api.get(`/reports/documents-by-department?${params}`)
+        if (!res.success) throw new Error(res.message || 'Failed to load document inventory')
+        setPreviewDocsByDept(res.data || [])
+      } else if (reportType === 'DEPT_PERFORMANCE') {
+        const res = await api.get(`/reports/department-performance?${params}`)
+        if (!res.success) throw new Error(res.message || 'Failed to load department performance')
+        setPreviewDeptPerformance(res.data || [])
+      } else if (reportType === 'AUDIT_SUMMARY') {
+        const res = await api.get(`/reports/audit-summary?${params}`)
+        if (!res.success) throw new Error(res.message || 'Failed to load audit summary')
+        setPreviewAuditLogs(res.data || [])
+      }
+    } catch (err) {
+      setPreviewFetchError(err.message || 'Failed to load report data')
+    } finally {
+      setPreviewLoading(false)
+    }
+  }
+
+  const handleExport = async () => {
+    if (reportType === 'ACTIVITY_LOG_REPORT') {
+      setToast({ type: 'info', message: "Export isn't available yet for this report — it's still running on sample data." })
+      return
+    }
+
+    setGenerating(true)
+    try {
+      const params = buildReportParams()
+      params.set('reportType', reportType)
+      params.set('format', 'pdf')
+
+      const url = await api.getBlob(`/reports/export?${params}`)
+      const link = window.document.createElement('a')
+      link.href = url
+      link.download = `UACC_${reportType}_${dateFrom}_to_${dateTo}.pdf`
+      link.click()
+      URL.revokeObjectURL(url)
+
+      setToast({ type: 'success', message: 'Report exported successfully. Check your downloads.' })
+      if (previewOpen) setPreviewOpen(false)
+    } catch (err) {
+      setToast({ type: 'error', message: err.message || 'Failed to export report' })
+    } finally {
+      setGenerating(false)
+    }
   }
 
   const formatDept = (dept) =>
@@ -423,8 +487,29 @@ export default function ReportsPage() {
               </div>
 
               {/* Data Presentation */}
-              <h4 className="text-gray-700 font-bold text-sm uppercase tracking-wider mb-3">Data Overview</h4>
-              {reportType === 'PROCUREMENT_SUMMARY' && (
+              <div className="flex items-center justify-between mb-3">
+                <h4 className="text-gray-700 font-bold text-sm uppercase tracking-wider">Data Overview</h4>
+                {reportType === 'ACTIVITY_LOG_REPORT' && (
+                  <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-700 border border-amber-300 uppercase tracking-wider">
+                    Sample Data
+                  </span>
+                )}
+              </div>
+
+              {reportType !== 'ACTIVITY_LOG_REPORT' && previewLoading && (
+                <div className="flex items-center justify-center gap-2 py-16 text-gray-400 text-sm">
+                  <Loader2 size={16} className="animate-spin" />
+                  Loading report data...
+                </div>
+              )}
+
+              {reportType !== 'ACTIVITY_LOG_REPORT' && !previewLoading && previewFetchError && (
+                <div className="py-10 text-center text-sm text-uacc-red">
+                  {previewFetchError}
+                </div>
+              )}
+
+              {reportType === 'PROCUREMENT_SUMMARY' && !previewLoading && !previewFetchError && (
                 <div className="overflow-x-auto">
                 <table className="w-full text-left border-collapse border border-gray-200">
                   <thead className="bg-gray-50">
@@ -437,7 +522,9 @@ export default function ReportsPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {MOCK_MONTHLY_PROCUREMENT.map((row, i) => (
+                    {previewProcurement.length === 0 ? (
+                      <tr><td colSpan={5} className="p-6 text-center text-sm text-gray-400">No procurement activity in this range.</td></tr>
+                    ) : previewProcurement.map((row, i) => (
                       <tr key={i} className="border-b border-gray-200 text-sm text-gray-700 hover:bg-gray-50/50">
                         <td className="p-3 font-semibold border-r border-gray-200">{row.month}</td>
                         <td className="p-3 border-r border-gray-200 text-center">{row.submitted}</td>
@@ -474,7 +561,7 @@ export default function ReportsPage() {
                 </div>
               )}
 
-              {reportType === 'DOCUMENT_INVENTORY' && (
+              {reportType === 'DOCUMENT_INVENTORY' && !previewLoading && !previewFetchError && (
                 <div className="overflow-x-auto">
                 <table className="w-full text-left border-collapse border border-gray-200">
                   <thead className="bg-gray-50">
@@ -484,10 +571,12 @@ export default function ReportsPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {MOCK_DOCS_BY_DEPT.map((row, i) => (
+                    {previewDocsByDept.length === 0 ? (
+                      <tr><td colSpan={2} className="p-6 text-center text-sm text-gray-400">No documents uploaded in this range.</td></tr>
+                    ) : previewDocsByDept.map((row, i) => (
                       <tr key={i} className="border-b border-gray-200 text-sm text-gray-700 hover:bg-gray-50/50">
-                        <td className="p-3 font-semibold border-r border-gray-200">{row.dept}</td>
-                        <td className="p-3 text-center font-bold text-gray-900">{row.count} docs</td>
+                        <td className="p-3 font-semibold border-r border-gray-200">{row.name}</td>
+                        <td className="p-3 text-center font-bold text-gray-900">{row.value} docs</td>
                       </tr>
                     ))}
                   </tbody>
@@ -495,7 +584,7 @@ export default function ReportsPage() {
                 </div>
               )}
 
-              {reportType === 'DEPT_PERFORMANCE' && (
+              {reportType === 'DEPT_PERFORMANCE' && !previewLoading && !previewFetchError && (
                 <div className="overflow-x-auto">
                 <table className="w-full text-left border-collapse border border-gray-200">
                   <thead className="bg-gray-50">
@@ -503,13 +592,23 @@ export default function ReportsPage() {
                       <th className="p-3 border-r border-gray-200">Department</th>
                       <th className="p-3 border-r border-gray-200 text-center">Logs Submitted</th>
                       <th className="p-3 border-r border-gray-200 text-center">Avg Hours/Log</th>
-                      <th className="p-3 text-center">Compliance</th>
+                      <th className="p-3 text-center">
+                        <span
+                          className="inline-flex items-center gap-1 cursor-help"
+                          title="Assumption pending confirmation: distinct user-days with ≥1 activity log ÷ (active dept staff × weekdays in range) × 100. A different definition would produce different numbers — flag to Ken before this goes in front of the GM or EDRM material."
+                        >
+                          Compliance
+                          <Info size={11} className="text-gray-400" />
+                        </span>
+                      </th>
                     </tr>
                   </thead>
                   <tbody>
-                    {MOCK_DEPT_PERFORMANCE.map((row, i) => (
+                    {previewDeptPerformance.length === 0 ? (
+                      <tr><td colSpan={4} className="p-6 text-center text-sm text-gray-400">No activity logs in this range.</td></tr>
+                    ) : previewDeptPerformance.map((row, i) => (
                       <tr key={i} className="border-b border-gray-200 text-sm text-gray-700 hover:bg-gray-50/50">
-                        <td className="p-3 font-semibold border-r border-gray-200">{row.dept}</td>
+                        <td className="p-3 font-semibold border-r border-gray-200">{formatDept(row.department)}</td>
                         <td className="p-3 border-r border-gray-200 text-center">{row.logsSubmitted}</td>
                         <td className="p-3 border-r border-gray-200 text-center">{row.avgHours.toFixed(1)} hrs</td>
                         <td className="p-3 text-center">
@@ -526,7 +625,7 @@ export default function ReportsPage() {
                 </div>
               )}
 
-              {reportType === 'AUDIT_SUMMARY' && (
+              {reportType === 'AUDIT_SUMMARY' && !previewLoading && !previewFetchError && (
                 <div className="overflow-x-auto">
                 <table className="w-full text-left border-collapse border border-gray-200">
                   <thead className="bg-gray-50">
@@ -538,12 +637,16 @@ export default function ReportsPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {MOCK_AUDIT_LOGS.map((row, i) => (
-                      <tr key={i} className="border-b border-gray-200 text-sm text-gray-700 hover:bg-gray-50/50">
-                        <td className="p-3 font-semibold border-r border-gray-200 whitespace-nowrap">{row.timestamp}</td>
-                        <td className="p-3 border-r border-gray-200 whitespace-nowrap">{row.user}</td>
-                        <td className="p-3 border-r border-gray-200">{row.action}</td>
-                        <td className="p-3 text-center font-mono text-xs text-gray-500 whitespace-nowrap">{row.ipAddress}</td>
+                    {previewAuditLogs.length === 0 ? (
+                      <tr><td colSpan={4} className="p-6 text-center text-sm text-gray-400">No audit activity in this range.</td></tr>
+                    ) : previewAuditLogs.map((log) => (
+                      <tr key={log.id} className="border-b border-gray-200 text-sm text-gray-700 hover:bg-gray-50/50">
+                        <td className="p-3 font-semibold border-r border-gray-200 whitespace-nowrap">
+                          {new Date(log.createdAt).toLocaleString('en-UG', { dateStyle: 'medium', timeStyle: 'short' })}
+                        </td>
+                        <td className="p-3 border-r border-gray-200 whitespace-nowrap">{log.user?.name || 'Unknown user'}</td>
+                        <td className="p-3 border-r border-gray-200">{log.description}</td>
+                        <td className="p-3 text-center font-mono text-xs text-gray-500 whitespace-nowrap">{log.ipAddress || '—'}</td>
                       </tr>
                     ))}
                   </tbody>
