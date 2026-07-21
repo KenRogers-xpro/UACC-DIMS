@@ -15,6 +15,7 @@ import {
   ChevronLeft,
   ChevronRight,
   CheckCircle,
+  XCircle,
   FileText,
   Sparkles,
   Sparkle,
@@ -131,6 +132,13 @@ export default function DocumentsPage() {
   // TOAST STATE
   const [toastVisible, setToastVisible] = useState(false)
   const [toastMessage, setToastMessage] = useState('')
+  const [toastType, setToastType] = useState('success')
+
+  const showToast = (message, type = 'success') => {
+    setToastMessage(message)
+    setToastType(type)
+    setToastVisible(true)
+  }
 
   const fileInputRef = useRef(null)
   const itemsPerPage = 8
@@ -294,8 +302,7 @@ export default function DocumentsPage() {
       const created = await uploadDocument(fd)
 
       // Trigger Success Toast
-      setToastMessage('Document uploaded — it stays private to you until you submit it.')
-      setToastVisible(true)
+      showToast('Document uploaded — it stays private to you until you submit it.')
 
       // Close Modal
       setUploadModalOpen(false)
@@ -343,26 +350,26 @@ export default function DocumentsPage() {
       link.click()
       URL.revokeObjectURL(url)
     } catch (err) {
-      setToastMessage(err.message || 'Failed to download document')
-      setToastVisible(true)
+      showToast(err.message || 'Failed to download document', 'error')
     }
   }
 
   const handleDelete = async (doc) => {
     try {
       await deleteDocument(doc.id)
-      setToastMessage(`Deleted: ${doc.title}`)
-      setToastVisible(true)
+      showToast(`Deleted: ${doc.title}`)
       refresh()
     } catch (err) {
-      setToastMessage(err.message || 'Failed to delete document')
-      setToastVisible(true)
+      // 409 (circulation history — see documents.routes.js) lands here with
+      // the backend's exact message, same as any other delete failure — not
+      // a generic "something went wrong", and rendered as an error toast
+      // (see toastType below) so it doesn't read as a success.
+      showToast(err.message || 'Failed to delete document', 'error')
     }
   }
 
   const triggerActionMessage = (actionName, docTitle) => {
-    setToastMessage(`Action "${actionName}" triggered for: ${docTitle}`)
-    setToastVisible(true)
+    showToast(`Action "${actionName}" triggered for: ${docTitle}`)
   }
 
   return (
@@ -827,20 +834,28 @@ export default function DocumentsPage() {
         initialTab={viewerInitialTab}
       />
 
-      {/* SUCCESS TOAST ALERT */}
+      {/* TOAST ALERT — styling switches on toastType so a blocked/failed
+          action (e.g. the 409 from deleting a document with circulation
+          history) reads as an error, not a green checkmark implying it
+          succeeded. */}
       <div
         className={`fixed bottom-6 right-6 z-50 transition-all duration-300 transform ${
           toastVisible ? 'translate-x-0 opacity-100' : 'translate-x-12 opacity-0 pointer-events-none'
         }`}
       >
         <div
-          className="card rounded-xl px-5 py-4 flex items-center gap-3 border border-emerald-500/20"
+          className={`card rounded-xl px-5 py-4 flex items-center gap-3 border ${
+            toastType === 'error' ? 'border-uacc-red/30' : 'border-emerald-500/20'
+          }`}
           style={{
             background: 'var(--bg-surface)',
             boxShadow: 'var(--shadow-card)'
           }}
         >
-          <CheckCircle size={18} className="text-emerald-400 flex-shrink-0" />
+          {toastType === 'error'
+            ? <XCircle size={18} className="text-uacc-red flex-shrink-0" />
+            : <CheckCircle size={18} className="text-emerald-400 flex-shrink-0" />
+          }
           <span className="text-xs font-semibold text-(--text-primary)">
             {toastMessage}
           </span>
