@@ -138,9 +138,12 @@ export default function RecordsExecutivePage() {
   const [newFileSubmitting, setNewFileSubmitting] = useState(false)
   const [newFileError, setNewFileError] = useState('')
 
-  // Filing Queue — PENDING_FILING circulation copies
+  // Filing Queue — PENDING_FILING circulation copies. One real package per
+  // CLOSED-and-sent-to-file circulation now (see circulation.routes.js
+  // POST /:id/send-to-file) — expandedPackageId tracks which one is open.
   const [filingQueue, setFilingQueue] = useState([])
   const [filingQueueLoading, setFilingQueueLoading] = useState(false)
+  const [expandedPackageId, setExpandedPackageId] = useState(null)
   const [fileDialogCopy, setFileDialogCopy] = useState(null)
   const [fileDialogSelectedId, setFileDialogSelectedId] = useState('')
   const [fileDialogSearch, setFileDialogSearch] = useState('')
@@ -331,6 +334,19 @@ export default function RecordsExecutivePage() {
     setFileDialogCopy(copy)
     setFileDialogSelectedId('')
     setFileDialogSearch('')
+  }
+
+  // Same auth-gated blob-fetch pattern as documents/page.jsx handleDownload —
+  // works for both Cloudinary-backed and legacy Postgres-backed documents,
+  // rather than assuming every document has a directly linkable URL.
+  const handleOpenFiledDocument = async (doc) => {
+    if (!doc) return
+    try {
+      const url = await api.getBlob(`/documents/${doc.id}/file`)
+      window.open(url, '_blank', 'noopener,noreferrer')
+    } catch (err) {
+      showToast(err.message || 'Failed to open document', 'error')
+    }
   }
 
   const handleConfirmFiling = async () => {
@@ -695,13 +711,16 @@ export default function RecordsExecutivePage() {
         </div>
       )}
 
-      {/* VIEW: FILING QUEUE — every CirculationRecordsCopy auto-created per
-          circulation step, awaiting physical/digital filing by Records. */}
+      {/* VIEW: FILING QUEUE — one real package per CLOSED circulation that its
+          current holder explicitly sent to file (see circulation.routes.js
+          POST /:id/send-to-file). No more "one entry per step" — every item
+          here is a whole document package: the real source document plus
+          its complete step trail, expandable. */}
       {activeView === 'filing' && (
         <div className="space-y-6">
           <div>
             <h2 className="text-lg font-bold text-[var(--text-primary)]">Filing Queue</h2>
-            <p className="text-[var(--text-muted)] text-sm">Circulation steps awaiting filing — one copy per step, auto-generated as documents move</p>
+            <p className="text-[var(--text-muted)] text-sm">Closed documents sent to file, awaiting filing into a dossier</p>
           </div>
 
           <div className="card rounded-xl border border-white/5 overflow-hidden">
@@ -712,31 +731,107 @@ export default function RecordsExecutivePage() {
             ) : (
               <div className="divide-y divide-white/5">
                 {filingQueue.map((copy) => {
-                  const step = copy.step
-                  const stepRoman = STEP_ROMAN[step.stepNumber - 1] || step.stepNumber
+                  const circulation = copy.circulation
+                  const doc = copy.document
+                  const steps = circulation?.steps || []
+                  const lastStep = steps[steps.length - 1]
+                  const attachmentsByStep = new Map(
+                    (circulation?.attachments || []).map((a) => [a.circulationStepId, a])
+                  )
+                  const isExpanded = expandedPackageId === copy.id
+
                   return (
-                    <div key={copy.id} className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:bg-white/[0.02] transition-colors">
-                      <div className="min-w-0 flex-1">
-                        <div className="flex items-center gap-2 mb-1">
-                          <span className="w-5 h-5 rounded-full border border-uacc-gold/50 flex items-center justify-center text-[10px] font-bold text-uacc-gold flex-shrink-0">
-                            {stepRoman}
-                          </span>
-                          <p className="text-sm font-semibold text-[var(--text-primary)] truncate">{step.circulation?.title}</p>
-                        </div>
-                        <p className="text-xs text-[var(--text-secondary)] italic truncate">"{step.instruction}"</p>
-                        <div className="flex items-center flex-wrap gap-x-2 gap-y-1 mt-1.5 text-[10px] text-[var(--text-faint)]">
-                          <span className="font-semibold text-[var(--text-muted)]">{step.fromRole?.replace(/_/g, ' ')}</span>
-                          <ArrowLeftRight size={10} />
-                          <span className="font-semibold text-uacc-gold">{step.toRole?.replace(/_/g, ' ')}</span>
-                          <span>· {new Date(step.signedAt || copy.createdAt).toLocaleString('en-GB', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}</span>
+                    <div key={copy.id} className="hover:bg-white/[0.02] transition-colors">
+                      {/* Package header — the document itself */}
+                      <div className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                        <button
+                          onClick={() => setExpandedPackageId(isExpanded ? null : copy.id)}
+                          className="min-w-0 flex-1 flex items-center gap-3 text-left cursor-pointer"
+                        >
+                          <ChevronDown
+                            size={16}
+                            className={`flex-shrink-0 text-[var(--text-faint)] transition-transform ${isExpanded ? 'rotate-180' : ''}`}
+                          />
+                          <div className="min-w-0">
+                            <p className="text-sm font-semibold text-[var(--text-primary)] truncate">{circulation?.title || 'Untitled'}</p>
+                            <div className="flex items-center flex-wrap gap-x-2 gap-y-1 mt-1 text-[10px] text-[var(--text-faint)]">
+                              <span className="font-semibold text-[var(--text-muted)]">From {circulation?.originator?.name || 'Unknown'}</span>
+                              <span>· Closed {new Date(lastStep?.signedAt || copy.createdAt).toLocaleString('en-GB', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}</span>
+                              <span>· {steps.length} step{steps.length === 1 ? '' : 's'}</span>
+                            </div>
+                          </div>
+                        </button>
+                        <div className="flex items-center gap-2 flex-shrink-0">
+                          {doc && (
+                            <button
+                              onClick={() => handleOpenFiledDocument(doc)}
+                              className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-bold uppercase tracking-wider bg-white/5 text-[var(--text-secondary)] border border-white/10 hover:bg-white/10 transition-colors whitespace-nowrap cursor-pointer"
+                            >
+                              <Eye size={13} /> Document
+                            </button>
+                          )}
+                          <button
+                            onClick={() => openFileDialog(copy)}
+                            className="flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider bg-uacc-gold/10 text-uacc-gold border border-uacc-gold/25 hover:bg-uacc-gold/20 transition-colors flex-shrink-0 whitespace-nowrap cursor-pointer"
+                          >
+                            <Folder size={13} /> File
+                          </button>
                         </div>
                       </div>
-                      <button
-                        onClick={() => openFileDialog(copy)}
-                        className="flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider bg-uacc-gold/10 text-uacc-gold border border-uacc-gold/25 hover:bg-uacc-gold/20 transition-colors flex-shrink-0 whitespace-nowrap"
-                      >
-                        <Folder size={13} /> File
-                      </button>
+
+                      {/* Package body — the full ordered step trail */}
+                      {isExpanded && (
+                        <div className="px-4 pb-4 pl-[52px] space-y-2">
+                          {!doc && circulation?.sourceType && (
+                            <p className="text-xs text-[var(--text-faint)] italic mb-2">
+                              Source: {circulation.sourceType.replace(/_/g, ' ').toLowerCase()} (no viewable document on file)
+                            </p>
+                          )}
+                          {steps.map((step) => {
+                            const stepRoman = STEP_ROMAN[step.stepNumber - 1] || step.stepNumber
+                            const attachment = attachmentsByStep.get(step.id)
+                            return (
+                              <div key={step.id} className="bg-white/[0.02] border border-white/5 rounded-lg p-3">
+                                <div className="flex items-start justify-between gap-3">
+                                  <div className="flex items-center gap-2 min-w-0">
+                                    <span className="w-5 h-5 rounded-full border border-uacc-gold/50 flex items-center justify-center text-[10px] font-bold text-uacc-gold flex-shrink-0">
+                                      {stepRoman}
+                                    </span>
+                                    <span className="text-xs font-semibold text-[var(--text-primary)] truncate">
+                                      {step.fromUser?.name || step.fromRole?.replace(/_/g, ' ')}
+                                    </span>
+                                    {step.decision && (
+                                      <span className="px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider bg-uacc-gold/10 text-uacc-gold border border-uacc-gold/20 flex-shrink-0">
+                                        {step.decision.replace(/_/g, ' ')}
+                                      </span>
+                                    )}
+                                    {step.signature && (
+                                      <span className="text-[9px] font-bold uppercase tracking-wider text-emerald-400 flex-shrink-0">Signed</span>
+                                    )}
+                                  </div>
+                                  <span className="text-[10px] text-[var(--text-faint)] flex-shrink-0 whitespace-nowrap">
+                                    {new Date(step.signedAt).toLocaleString('en-GB', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                                  </span>
+                                </div>
+                                <p className="text-xs text-[var(--text-secondary)] italic mt-1.5">&ldquo;{step.instruction}&rdquo;</p>
+                                <div className="flex items-center flex-wrap gap-2 mt-1.5 text-[10px] text-[var(--text-faint)]">
+                                  <span className="font-semibold text-[var(--text-muted)]">{step.fromRole?.replace(/_/g, ' ')}</span>
+                                  <ArrowLeftRight size={10} />
+                                  <span className="font-semibold text-uacc-gold">{step.toRole?.replace(/_/g, ' ')}</span>
+                                </div>
+                                {attachment && (
+                                  <button
+                                    onClick={() => handleOpenFiledDocument(attachment.document)}
+                                    className="flex items-center gap-1.5 mt-2 text-[10px] font-bold uppercase tracking-wider text-uacc-gold hover:underline cursor-pointer"
+                                  >
+                                    <Download size={11} /> {attachment.document?.title || 'Attachment'}
+                                  </button>
+                                )}
+                              </div>
+                            )
+                          })}
+                        </div>
+                      )}
                     </div>
                   )
                 })}

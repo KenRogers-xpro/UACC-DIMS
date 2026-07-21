@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { createPortal } from 'react-dom'
 import { motion, AnimatePresence } from 'framer-motion'
-import { X, Download, FileText, Pencil, Send, Lock, MessageSquare, History, Eye, PenTool, Maximize2, Minimize2, Paperclip, UploadCloud, User } from 'lucide-react'
+import { X, Download, FileText, Pencil, Send, Lock, MessageSquare, History, Eye, PenTool, Maximize2, Minimize2, Paperclip, UploadCloud, User, FolderCheck } from 'lucide-react'
 import Badge from '@/components/ui/Badge'
 import Button from '@/components/ui/Button'
 import EmptyState from '@/components/ui/EmptyState'
@@ -181,7 +181,9 @@ export default function DocumentViewerModal({
   const [forwardCcRoles, setForwardCcRoles] = useState([])
   const [forwardInstruction, setForwardInstruction] = useState('')
   const [forwarding, setForwarding] = useState(false)
-  const { addStep } = useCirculation()
+  const { addStep, sendToFile } = useCirculation()
+  const [sendingToFile, setSendingToFile] = useState(false)
+  const [sendToFileError, setSendToFileError] = useState('')
 
   useEffect(() => {
     if (document) {
@@ -363,6 +365,10 @@ export default function DocumentViewerModal({
   // isCurrentHolder above already exclude them from every action naturally.
   // This just drives the "copied, no action required" badge.
   const isCcRecipient = Boolean(circulation?.steps?.some((s) => s.ccRoles?.includes(currentUserRole)))
+  // Visible only to whoever closed it (currentHolderRole doesn't change
+  // after CLOSED — see circulation.routes.js), and only until it's actually
+  // been sent — never a re-offer once circulation.recordsCopy exists.
+  const canSendToFile = circulation && circulation.status === 'CLOSED' && circulation.currentHolderRole === currentUserRole && !circulation.recordsCopy
 
   const handleDownload = async () => {
     setDownloading(true)
@@ -431,6 +437,20 @@ export default function DocumentViewerModal({
       setSaveError(err.message || 'Failed to forward document')
     } finally {
       setForwarding(false)
+    }
+  }
+
+  const handleSendToFile = async () => {
+    if (!circulation?.id) return
+    setSendingToFile(true)
+    setSendToFileError('')
+    try {
+      await sendToFile(circulation.id)
+      await fetchCirculation()
+    } catch (err) {
+      setSendToFileError(err.message || 'Failed to send to file')
+    } finally {
+      setSendingToFile(false)
     }
   }
 
@@ -873,10 +893,18 @@ export default function DocumentViewerModal({
             )}
 
             {/* Footer actions */}
+            {sendToFileError && !editing && !showSubmitForm && !showForwardForm && (
+              <p className="px-5 pt-3 text-xs text-uacc-red flex-shrink-0">{sendToFileError}</p>
+            )}
             <div className="p-5 border-t flex items-center justify-end gap-3 flex-shrink-0" style={{ borderColor: 'var(--border-subtle)' }}>
               {!editing && !showSubmitForm && !showForwardForm && (
                 <Button variant="outline" icon={Download} onClick={handleDownload} loading={downloading}>
                   Download
+                </Button>
+              )}
+              {!editing && !showSubmitForm && !showForwardForm && canSendToFile && (
+                <Button variant="primary" icon={FolderCheck} onClick={handleSendToFile} loading={sendingToFile}>
+                  Send to File
                 </Button>
               )}
               {canEdit && !editing && !showSubmitForm && (
