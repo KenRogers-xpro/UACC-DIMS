@@ -3,7 +3,7 @@
 import React, { useState, useRef, useEffect } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { useAuth } from '@/lib/auth-context'
-import { useInsights } from '@/lib/useInsights'
+import { useInsights, buildAskAboutMessage } from '@/lib/useInsights'
 import api from '@/lib/api'
 import DocumentViewerModal from '@/components/documents/DocumentViewerModal'
 import EmptyState from '@/components/ui/EmptyState'
@@ -194,12 +194,37 @@ export default function AIAgentPage() {
   const { insights, unseenCount, loading: insightsLoading, markSeen, dismiss } = useInsights()
   const [previewDoc, setPreviewDoc] = useState(null)
   const [openingInsightId, setOpeningInsightId] = useState(null)
+  const consumedAskMessage = useRef(false)
 
   // Deep link from the floating widget's popup ("View" -> ?tab=insights)
   useEffect(() => {
     const tab = searchParams.get('tab')
     if (tab === 'insights') setActiveTab('insights')
   }, [searchParams])
+
+  // Deep link from either "Ask AI about this" entry point (the floating
+  // widget's popup, which has to navigate here since it doesn't render on
+  // this page at all) -> ?tab=chat&askMessage=... . Guarded by a ref, not
+  // just clearing the query param, because sendMessage() below is async and
+  // messages.length changes multiple times (user message, then AI reply)
+  // before router.replace's navigation actually lands — without the ref this
+  // effect would refire on those intermediate renders and send it again.
+  useEffect(() => {
+    const askMessage = searchParams.get('askMessage')
+    if (askMessage && !consumedAskMessage.current && messages.length > 0) {
+      consumedAskMessage.current = true
+      setActiveTab('chat')
+      sendMessage(askMessage)
+      router.replace('/dashboard/ai-agent')
+    }
+  }, [searchParams, messages.length])
+
+  const askAbout = (insight) => {
+    markSeen(insight.id)
+    setActiveTab('chat')
+    router.replace('/dashboard/ai-agent')
+    sendMessage(buildAskAboutMessage(insight))
+  }
 
   const openInsight = async (insight) => {
     markSeen(insight.id)
@@ -534,13 +559,21 @@ export default function AIAgentPage() {
                     <div className="flex items-center justify-between mt-3">
                       <span className="text-[10px] text-[var(--text-faint)]">{timeAgo(insight.createdAt)}</span>
                       {insight.sourceType === 'DOCUMENT' && (
-                        <button
-                          onClick={() => openInsight(insight)}
-                          disabled={openingInsightId === insight.id}
-                          className="text-[10px] font-bold uppercase tracking-wider text-uacc-gold hover:underline disabled:opacity-50"
-                        >
-                          {openingInsightId === insight.id ? 'Opening...' : 'Open document'}
-                        </button>
+                        <div className="flex items-center gap-3">
+                          <button
+                            onClick={() => askAbout(insight)}
+                            className="text-[10px] font-bold uppercase tracking-wider text-(--text-muted) hover:text-(--text-primary) hover:underline"
+                          >
+                            Ask AI about this
+                          </button>
+                          <button
+                            onClick={() => openInsight(insight)}
+                            disabled={openingInsightId === insight.id}
+                            className="text-[10px] font-bold uppercase tracking-wider text-uacc-gold hover:underline disabled:opacity-50"
+                          >
+                            {openingInsightId === insight.id ? 'Opening...' : 'Open document'}
+                          </button>
+                        </div>
                       )}
                     </div>
                   </div>

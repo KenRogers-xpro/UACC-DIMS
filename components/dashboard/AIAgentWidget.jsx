@@ -3,7 +3,7 @@
 import React, { useState, useRef, useEffect } from 'react'
 import { useAuth } from '@/lib/auth-context'
 import { usePathname, useRouter } from 'next/navigation'
-import { useInsights } from '@/lib/useInsights'
+import { useInsights, buildAskAboutMessage } from '@/lib/useInsights'
 import api from '@/lib/api'
 import {
   Bot,
@@ -460,16 +460,32 @@ export default function AIAgentWidget() {
             </button>
           </div>
           <p className="text-[11px] text-white/70 mt-1.5 leading-relaxed line-clamp-3">{insightPopup.body}</p>
-          <button
-            onClick={() => {
-              markSeen(insightPopup.id)
-              setInsightPopup(null)
-              router.push('/dashboard/ai-agent?tab=insights')
-            }}
-            className="mt-2 text-[10px] font-bold uppercase tracking-wider text-uacc-gold hover:underline"
-          >
-            View
-          </button>
+          <div className="flex items-center gap-3 mt-2">
+            <button
+              onClick={() => {
+                markSeen(insightPopup.id)
+                setInsightPopup(null)
+                router.push('/dashboard/ai-agent?tab=insights')
+              }}
+              className="text-[10px] font-bold uppercase tracking-wider text-uacc-gold hover:underline"
+            >
+              View
+            </button>
+            {insightPopup.sourceType === 'DOCUMENT' && (
+              <button
+                onClick={() => {
+                  markSeen(insightPopup.id)
+                  const message = buildAskAboutMessage(insightPopup)
+                  setInsightPopup(null)
+                  const params = new URLSearchParams({ tab: 'chat', askMessage: message })
+                  router.push(`/dashboard/ai-agent?${params.toString()}`)
+                }}
+                className="text-[10px] font-bold uppercase tracking-wider text-white/70 hover:text-white hover:underline"
+              >
+                Ask AI about this
+              </button>
+            )}
+          </div>
         </div>
       )}
 
