@@ -484,9 +484,6 @@ export default function LandingPage() {
                 <p className="text-sm md:text-base leading-relaxed" style={{ color: 'var(--text-muted)' }}>
                   Upload, categorize, search, and retrieve official documents instantly — replacing physical filing cabinets with full-text search and role-based access control.
                 </p>
-                <span className="text-xs text-uacc-gold font-semibold uppercase tracking-wider mt-2 group-hover:translate-x-2 transition-transform duration-300 inline-flex items-center gap-1.5">
-                  Hover Accent: Gold <span>→</span>
-                </span>
               </div>
             </div>
           </motion.div>
@@ -514,9 +511,6 @@ export default function LandingPage() {
                 <p className="text-sm md:text-base leading-relaxed" style={{ color: 'var(--text-muted)' }}>
                   Automatic multi-stage routing through Department Head, Procurement Officer, and General Manager, with vendor and budget verification at every stage.
                 </p>
-                <span className="text-xs text-uacc-red font-semibold uppercase tracking-wider mt-2 group-hover:translate-x-2 transition-transform duration-300 inline-flex items-center gap-1.5">
-                  Hover Accent: Red <span>→</span>
-                </span>
               </div>
             </div>
           </motion.div>
@@ -544,9 +538,6 @@ export default function LandingPage() {
                 <p className="text-sm md:text-base leading-relaxed" style={{ color: 'var(--text-muted)' }}>
                   Replace handwritten departmental logbooks with timestamped digital entries — searchable, cross-referenceable, and exportable as PDF for audit purposes.
                 </p>
-                <span className="text-xs text-uacc-gold font-semibold uppercase tracking-wider mt-2 group-hover:translate-x-2 transition-transform duration-300 inline-flex items-center gap-1.5">
-                  Hover Accent: Gold <span>→</span>
-                </span>
               </div>
             </div>
           </motion.div>
@@ -574,9 +565,6 @@ export default function LandingPage() {
                 <p className="text-sm md:text-base leading-relaxed" style={{ color: 'var(--text-muted)' }}>
                   Live metrics, interactive charts, and one-click PDF report generation — giving management instant operational visibility across all departments.
                 </p>
-                <span className="text-xs text-uacc-red font-semibold uppercase tracking-wider mt-2 group-hover:translate-x-2 transition-transform duration-300 inline-flex items-center gap-1.5">
-                  Hover Accent: Red <span>→</span>
-                </span>
               </div>
             </div>
           </motion.div>
