@@ -22,6 +22,7 @@ import {
   Inbox,
   Repeat,
   Archive,
+  Library,
 } from 'lucide-react'
 import { useAuth } from '@/lib/auth-context'
 import { useDocuments } from '@/lib/useDocuments'
@@ -39,6 +40,11 @@ const STATE_TABS = [
   { key: 'pending', label: 'Pending My Action', state: 'PENDING', icon: Inbox },
   { key: 'circulating', label: 'In Circulation', state: 'IN_CIRCULATION', icon: Repeat },
   { key: 'stored', label: 'Stored / Closed', state: 'STORED', icon: Archive },
+  // Bulk-ingested reference material (records.routes.js POST /bulk-ingest)
+  // — deliberately excluded from every other tab (see buildStateFilter in
+  // documents.routes.js) so it doesn't clutter action queues, but it's a
+  // real, searchable, openable document, not a dead end.
+  { key: 'archived', label: 'Archive', state: 'ARCHIVED', icon: Library },
 ]
 
 const CATEGORIES = ['All', 'POLICY', 'REPORT', 'MEMO', 'CONTRACT', 'FORM', 'OTHER']

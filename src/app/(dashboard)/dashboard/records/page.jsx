@@ -7,7 +7,7 @@ import {
   ArrowDownCircle, ArrowUpCircle, ArrowRightCircle, Lock,
   Search, FileText, Mail, MessageSquare, MapPin, Eye, Edit,
   Printer, Check, X, Calendar, Inbox, ChevronRight, Folder,
-  UploadCloud, ChevronDown,
+  UploadCloud, ChevronDown, Library, Loader2, AlertCircle, Trash2,
 } from 'lucide-react'
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, Legend, ResponsiveContainer,
@@ -51,6 +51,21 @@ const DIRECTIONS = ['ALL', 'INCOMING', 'OUTGOING', 'INTERNAL']
 const STATUSES   = ['ALL', 'PENDING', 'DISPATCHED', 'RECEIVED', 'ACTIONED', 'CLOSED']
 const PRIORITIES = ['ALL', 'NORMAL', 'HIGH', 'CONFIDENTIAL']
 const MEDIUMS    = ['ALL', 'PHYSICAL', 'EMAIL', 'BOTH']
+
+// Bulk Ingest — matches the DocumentCategory/Department enums used
+// elsewhere (see documents/page.jsx's own CATEGORIES/DEPARTMENTS).
+// Confidentiality is accepted and recorded but not access-enforced yet —
+// see records.routes.js POST /bulk-ingest for why.
+const BULK_CATEGORIES = ['POLICY', 'REPORT', 'MEMO', 'CONTRACT', 'FORM', 'OTHER']
+const BULK_DEPARTMENTS = [
+  'GENERAL_MANAGER_OFFICE', 'FINANCE_AND_ADMINISTRATION', 'ENGINEERING', 'PILOTS',
+  'OPERATIONS', 'HUMAN_RESOURCES', 'FINANCE_AND_ACCOUNTS', 'MARKETING',
+]
+const BULK_CONFIDENTIALITY = ['PUBLIC', 'INTERNAL', 'CONFIDENTIAL', 'RESTRICTED']
+
+function titleFromFilename(filename) {
+  return filename.replace(/\.[^/.]+$/, '').replace(/[_-]+/g, ' ').trim()
+}
 
 const STATUS_META = {
   PENDING:    { label: 'Pending',    class: 'bg-amber-500/10 text-amber-500 border border-amber-500/20' },
@@ -273,6 +288,14 @@ export default function RecordsExecutivePage() {
   const [fileDrillInLoading, setFileDrillInLoading] = useState(false)
   const [expandedDossierPackageId, setExpandedDossierPackageId] = useState(null)
 
+  // Bulk Ingest — each row uploads individually (one file per request, see
+  // records.routes.js POST /bulk-ingest) so progress/failure renders
+  // per-file rather than as one all-or-nothing batch.
+  const [bulkFiles, setBulkFiles] = useState([])
+  const [bulkDragging, setBulkDragging] = useState(false)
+  const [bulkIngesting, setBulkIngesting] = useState(false)
+  const bulkFileInputRef = useRef(null)
+
   const ROWS_PER_PAGE = 8
 
   const emptyFormData = {
@@ -492,6 +515,72 @@ export default function RecordsExecutivePage() {
     }
   }
 
+  const addBulkFiles = (fileList) => {
+    const newRows = Array.from(fileList).map((file) => ({
+      localId: `${file.name}-${file.size}-${file.lastModified}-${Math.random().toString(36).slice(2)}`,
+      file,
+      title: titleFromFilename(file.name),
+      category: 'OTHER',
+      department: 'GENERAL_MANAGER_OFFICE',
+      confidentiality: 'INTERNAL',
+      originalDate: '',
+      sourceNote: '',
+      status: 'pending', // pending | uploading | success | error
+      message: '',
+      documentId: null,
+    }))
+    setBulkFiles((prev) => [...prev, ...newRows])
+  }
+
+  const updateBulkFile = (localId, patch) => {
+    setBulkFiles((prev) => prev.map((r) => (r.localId === localId ? { ...r, ...patch } : r)))
+  }
+
+  const removeBulkFile = (localId) => {
+    setBulkFiles((prev) => prev.filter((r) => r.localId !== localId))
+  }
+
+  const handleBulkFileSelect = (e) => {
+    if (e.target.files?.length) addBulkFiles(e.target.files)
+    e.target.value = ''
+  }
+
+  const handleBulkDrop = (e) => {
+    e.preventDefault()
+    setBulkDragging(false)
+    if (e.dataTransfer.files?.length) addBulkFiles(e.dataTransfer.files)
+  }
+
+  // Sequential, not parallel — keeps Cloudinary/embedding load predictable
+  // and lets each row's status pill update as it actually happens, rather
+  // than every row flipping to "uploading" at once with no real signal of
+  // progress. Already-succeeded rows are skipped so a partial-failure batch
+  // can be safely re-run.
+  const handleIngestAll = async () => {
+    setBulkIngesting(true)
+    for (const row of bulkFiles) {
+      if (row.status === 'success') continue
+      updateBulkFile(row.localId, { status: 'uploading', message: '' })
+      try {
+        const fd = new FormData()
+        fd.append('file', row.file)
+        fd.append('title', row.title.trim() || titleFromFilename(row.file.name))
+        fd.append('category', row.category)
+        fd.append('department', row.department)
+        fd.append('confidentiality', row.confidentiality)
+        if (row.originalDate) fd.append('originalDate', row.originalDate)
+        if (row.sourceNote.trim()) fd.append('sourceNote', row.sourceNote.trim())
+
+        const res = await api.post('/records/bulk-ingest', fd)
+        if (!res.success) throw new Error(res.message || 'Failed to ingest')
+        updateBulkFile(row.localId, { status: 'success', message: 'Archived', documentId: res.data?.id || null })
+      } catch (err) {
+        updateBulkFile(row.localId, { status: 'error', message: err.message || 'Failed to ingest' })
+      }
+    }
+    setBulkIngesting(false)
+  }
+
   const handleConfirmFiling = async () => {
     if (!fileDialogCopy) return
     setFilingSubmitting(true)
@@ -661,6 +750,14 @@ export default function RecordsExecutivePage() {
           }`}
         >
           <Folder size={16} /> Files
+        </button>
+        <button
+          onClick={() => setActiveView('bulk-ingest')}
+          className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-colors whitespace-nowrap ${
+            activeView === 'bulk-ingest' ? 'bg-uacc-gold text-[var(--text-primary)]' : 'border border-white/10 text-[var(--text-muted)] hover:bg-white/5'
+          }`}
+        >
+          <UploadCloud size={16} /> Bulk Ingest
         </button>
       </div>
 
@@ -1122,6 +1219,159 @@ export default function RecordsExecutivePage() {
               </table>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* VIEW: BULK INGEST — digitizing a physical archive backlog. Each row
+          uploads individually via POST /records/bulk-ingest; lands as
+          status: 'ARCHIVED', origin: 'BULK_INGESTED' — searchable reference
+          material, kept out of every action queue. */}
+      {activeView === 'bulk-ingest' && (
+        <div className="space-y-6">
+          <div>
+            <h2 className="text-lg font-bold text-[var(--text-primary)]">Bulk Ingest</h2>
+            <p className="text-[var(--text-muted)] text-sm">Digitize a physical archive backlog — each file becomes a searchable, reference-only archived document.</p>
+          </div>
+
+          <div
+            onDragOver={(e) => { e.preventDefault(); setBulkDragging(true) }}
+            onDragLeave={() => setBulkDragging(false)}
+            onDrop={handleBulkDrop}
+            onClick={() => bulkFileInputRef.current?.click()}
+            className={`card rounded-xl border-2 border-dashed p-8 flex flex-col items-center justify-center gap-2 cursor-pointer transition-colors ${
+              bulkDragging ? 'border-uacc-gold bg-uacc-gold/5' : 'border-white/10 hover:border-white/20'
+            }`}
+          >
+            <UploadCloud size={28} className="text-uacc-gold" />
+            <p className="text-sm text-[var(--text-secondary)]">Drag and drop files here, or click to browse</p>
+            <p className="text-xs text-[var(--text-faint)]">Select multiple files at once</p>
+            <input ref={bulkFileInputRef} type="file" multiple className="hidden" onChange={handleBulkFileSelect} />
+          </div>
+
+          {bulkFiles.length > 0 && (
+            <div className="card rounded-xl border border-white/5 overflow-hidden">
+              <div className="divide-y divide-white/5">
+                {bulkFiles.map((row) => (
+                  <div key={row.localId} className="p-4 flex flex-col gap-3">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <FileText size={15} className="text-uacc-gold flex-shrink-0" />
+                        <span className="text-xs text-[var(--text-faint)] truncate">{row.file.name}</span>
+                      </div>
+                      <div className="flex items-center gap-2 flex-shrink-0">
+                        {row.status === 'pending' && (
+                          <span className="px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider bg-white/5 text-[var(--text-faint)] border border-white/10">Pending</span>
+                        )}
+                        {row.status === 'uploading' && (
+                          <span className="flex items-center gap-1 px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider bg-blue-500/10 text-blue-400 border border-blue-500/20">
+                            <Loader2 size={10} className="animate-spin" /> Ingesting
+                          </span>
+                        )}
+                        {row.status === 'success' && (
+                          <span className="flex items-center gap-1 px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                            <Check size={10} /> Archived
+                          </span>
+                        )}
+                        {row.status === 'error' && (
+                          <span className="flex items-center gap-1 px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider bg-uacc-red/10 text-uacc-red border border-uacc-red/20">
+                            <AlertCircle size={10} /> Failed
+                          </span>
+                        )}
+                        {row.status !== 'uploading' && row.status !== 'success' && (
+                          <button
+                            onClick={() => removeBulkFile(row.localId)}
+                            className="p-1 text-[var(--text-faint)] hover:text-uacc-red transition-colors cursor-pointer"
+                            title="Remove"
+                          >
+                            <Trash2 size={13} />
+                          </button>
+                        )}
+                      </div>
+                    </div>
+
+                    {row.status === 'error' && (
+                      <p className="text-xs text-uacc-red">{row.message}</p>
+                    )}
+
+                    {row.status !== 'success' && (
+                      <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                        <input
+                          className="input-field text-xs col-span-2 md:col-span-3"
+                          placeholder="Title"
+                          value={row.title}
+                          disabled={row.status === 'uploading'}
+                          onChange={(e) => updateBulkFile(row.localId, { title: e.target.value })}
+                        />
+                        <select
+                          className="input-field text-xs"
+                          value={row.category}
+                          disabled={row.status === 'uploading'}
+                          onChange={(e) => updateBulkFile(row.localId, { category: e.target.value })}
+                        >
+                          {BULK_CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
+                        </select>
+                        <select
+                          className="input-field text-xs"
+                          value={row.department}
+                          disabled={row.status === 'uploading'}
+                          onChange={(e) => updateBulkFile(row.localId, { department: e.target.value })}
+                        >
+                          {BULK_DEPARTMENTS.map((d) => <option key={d} value={d}>{d.replace(/_/g, ' ')}</option>)}
+                        </select>
+                        <select
+                          className="input-field text-xs"
+                          value={row.confidentiality}
+                          disabled={row.status === 'uploading'}
+                          onChange={(e) => updateBulkFile(row.localId, { confidentiality: e.target.value })}
+                        >
+                          {BULK_CONFIDENTIALITY.map((c) => <option key={c} value={c}>{c}</option>)}
+                        </select>
+                        <input
+                          type="date"
+                          className="input-field text-xs"
+                          value={row.originalDate}
+                          disabled={row.status === 'uploading'}
+                          onChange={(e) => updateBulkFile(row.localId, { originalDate: e.target.value })}
+                          style={{ colorScheme: 'dark' }}
+                        />
+                        <input
+                          className="input-field text-xs col-span-2"
+                          placeholder="Source note (e.g. Building B archive, box 14)"
+                          value={row.sourceNote}
+                          disabled={row.status === 'uploading'}
+                          onChange={(e) => updateBulkFile(row.localId, { sourceNote: e.target.value })}
+                        />
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+
+              <div className="p-4 border-t border-white/10 bg-white/[0.02] flex items-center justify-between gap-3 flex-wrap">
+                <span className="text-xs text-[var(--text-muted)]">
+                  {bulkFiles.filter((r) => r.status === 'success').length} of {bulkFiles.length} archived
+                </span>
+                <div className="flex items-center gap-2">
+                  {bulkFiles.some((r) => r.status === 'success') && (
+                    <a
+                      href="/dashboard/documents?tab=archived"
+                      className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-bold uppercase tracking-wider bg-white/5 text-[var(--text-secondary)] border border-white/10 hover:bg-white/10 transition-colors whitespace-nowrap"
+                    >
+                      <Library size={13} /> View in archive
+                    </a>
+                  )}
+                  <button
+                    onClick={handleIngestAll}
+                    disabled={bulkIngesting || bulkFiles.every((r) => r.status === 'success') || bulkFiles.some((r) => !r.title.trim())}
+                    className="flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider bg-uacc-gold text-[var(--text-primary)] hover:bg-uacc-gold/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                  >
+                    {bulkIngesting ? <Loader2 size={13} className="animate-spin" /> : <UploadCloud size={13} />}
+                    {bulkIngesting ? 'Ingesting...' : 'Ingest All'}
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       )}
 
