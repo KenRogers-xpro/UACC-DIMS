@@ -109,6 +109,118 @@ const ANALYTICS_DATA = {
   ],
 }
 
+// Shared by the Filing Queue and the RecordsFile dossier detail modal — both
+// surfaces show the exact same kind of thing (a CLOSED circulation package:
+// real source document + full step trail) and are meant to look identical,
+// so users learn one mental model instead of two. onFileClick is omitted in
+// the dossier context (items there are already FILED — nothing to file).
+function CirculationPackageCard({ copy, isExpanded, onToggleExpand, onOpenDocument, onFileClick }) {
+  const circulation = copy.circulation
+  const doc = copy.document
+  const steps = circulation?.steps || []
+  const lastStep = steps[steps.length - 1]
+  const attachmentsByStep = new Map(
+    (circulation?.attachments || []).map((a) => [a.circulationStepId, a])
+  )
+
+  return (
+    <div className="border border-white/5 rounded-xl overflow-hidden bg-white/[0.01] hover:bg-white/[0.02] transition-colors">
+      {/* Package header — the document itself */}
+      <div className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <button
+          onClick={onToggleExpand}
+          className="min-w-0 flex-1 flex items-center gap-3 text-left cursor-pointer"
+        >
+          <ChevronDown
+            size={16}
+            className={`flex-shrink-0 text-[var(--text-faint)] transition-transform ${isExpanded ? 'rotate-180' : ''}`}
+          />
+          <div className="min-w-0">
+            <p className="text-sm font-semibold text-[var(--text-primary)] truncate">{circulation?.title || 'Untitled'}</p>
+            <div className="flex items-center flex-wrap gap-x-2 gap-y-1 mt-1 text-[10px] text-[var(--text-faint)]">
+              <span className="font-semibold text-[var(--text-muted)]">From {circulation?.originator?.name || 'Unknown'}</span>
+              <span>· Closed {new Date(lastStep?.signedAt || copy.createdAt).toLocaleString('en-GB', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}</span>
+              <span>· {steps.length} step{steps.length === 1 ? '' : 's'}</span>
+            </div>
+          </div>
+        </button>
+        <div className="flex items-center gap-2 flex-shrink-0">
+          {doc && (
+            <button
+              onClick={() => onOpenDocument(doc)}
+              className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-bold uppercase tracking-wider bg-white/5 text-[var(--text-secondary)] border border-white/10 hover:bg-white/10 transition-colors whitespace-nowrap cursor-pointer"
+            >
+              <Eye size={13} /> Document
+            </button>
+          )}
+          {onFileClick && (
+            <button
+              onClick={onFileClick}
+              className="flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider bg-uacc-gold/10 text-uacc-gold border border-uacc-gold/25 hover:bg-uacc-gold/20 transition-colors flex-shrink-0 whitespace-nowrap cursor-pointer"
+            >
+              <Folder size={13} /> File
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* Package body — the full ordered step trail */}
+      {isExpanded && (
+        <div className="px-4 pb-4 pl-[52px] space-y-2">
+          {!doc && circulation?.sourceType && (
+            <p className="text-xs text-[var(--text-faint)] italic mb-2">
+              Source: {circulation.sourceType.replace(/_/g, ' ').toLowerCase()} (no viewable document on file)
+            </p>
+          )}
+          {steps.map((step) => {
+            const stepRoman = STEP_ROMAN[step.stepNumber - 1] || step.stepNumber
+            const attachment = attachmentsByStep.get(step.id)
+            return (
+              <div key={step.id} className="bg-white/[0.02] border border-white/5 rounded-lg p-3">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <span className="w-5 h-5 rounded-full border border-uacc-gold/50 flex items-center justify-center text-[10px] font-bold text-uacc-gold flex-shrink-0">
+                      {stepRoman}
+                    </span>
+                    <span className="text-xs font-semibold text-[var(--text-primary)] truncate">
+                      {step.fromUser?.name || step.fromRole?.replace(/_/g, ' ')}
+                    </span>
+                    {step.decision && (
+                      <span className="px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider bg-uacc-gold/10 text-uacc-gold border border-uacc-gold/20 flex-shrink-0">
+                        {step.decision.replace(/_/g, ' ')}
+                      </span>
+                    )}
+                    {step.signature && (
+                      <span className="text-[9px] font-bold uppercase tracking-wider text-emerald-400 flex-shrink-0">Signed</span>
+                    )}
+                  </div>
+                  <span className="text-[10px] text-[var(--text-faint)] flex-shrink-0 whitespace-nowrap">
+                    {new Date(step.signedAt).toLocaleString('en-GB', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                  </span>
+                </div>
+                <p className="text-xs text-[var(--text-secondary)] italic mt-1.5">&ldquo;{step.instruction}&rdquo;</p>
+                <div className="flex items-center flex-wrap gap-2 mt-1.5 text-[10px] text-[var(--text-faint)]">
+                  <span className="font-semibold text-[var(--text-muted)]">{step.fromRole?.replace(/_/g, ' ')}</span>
+                  <ArrowLeftRight size={10} />
+                  <span className="font-semibold text-uacc-gold">{step.toRole?.replace(/_/g, ' ')}</span>
+                </div>
+                {attachment && (
+                  <button
+                    onClick={() => onOpenDocument(attachment.document)}
+                    className="flex items-center gap-1.5 mt-2 text-[10px] font-bold uppercase tracking-wider text-uacc-gold hover:underline cursor-pointer"
+                  >
+                    <Download size={11} /> {attachment.document?.title || 'Attachment'}
+                  </button>
+                )}
+              </div>
+            )
+          })}
+        </div>
+      )}
+    </div>
+  )
+}
+
 export default function RecordsExecutivePage() {
   const [activeView, setActiveView] = useState('register')
   const [searchQuery, setSearchQuery] = useState('')
@@ -150,8 +262,16 @@ export default function RecordsExecutivePage() {
   const [filingSubmitting, setFilingSubmitting] = useState(false)
 
   // File drill-in — the per-file view opened from a File chip in the
-  // register table or a row in the Files tab.
+  // register table or a row in the Files tab. Contents come from a real
+  // fetch (GET /records/files/:id) rather than filtering the already-loaded
+  // `records` list client-side — that old filter only ever matched
+  // RegistryEntry.recordsFileId, so a circulation package filed into the
+  // same dossier (a different model, CirculationRecordsCopy.recordsFileId)
+  // was invisible to it. See records.routes.js for the two separate paths.
   const [fileDrillIn, setFileDrillIn] = useState(null)
+  const [fileDrillInDetail, setFileDrillInDetail] = useState(null)
+  const [fileDrillInLoading, setFileDrillInLoading] = useState(false)
+  const [expandedDossierPackageId, setExpandedDossierPackageId] = useState(null)
 
   const ROWS_PER_PAGE = 8
 
@@ -234,6 +354,29 @@ export default function RecordsExecutivePage() {
   }, [])
 
   useEffect(() => { fetchFilingQueue() }, [fetchFilingQueue])
+
+  // Fetch the dossier's real contents whenever the drill-in modal opens for
+  // a given file — see the fileDrillInDetail declaration above for why this
+  // replaced the old client-side records.filter().
+  useEffect(() => {
+    if (!fileDrillIn) return
+    let cancelled = false
+    setFileDrillInLoading(true)
+    api.get(`/records/files/${fileDrillIn.id}`)
+      .then((res) => { if (!cancelled) setFileDrillInDetail(res.data || null) })
+      .catch((err) => { console.error('Failed to fetch file contents', err); if (!cancelled) setFileDrillInDetail(null) })
+      .finally(() => { if (!cancelled) setFileDrillInLoading(false) })
+    return () => { cancelled = true }
+  }, [fileDrillIn])
+
+  // Closing needs to reset the fetched detail too (not just the trigger),
+  // done here in the event handler rather than reactively in the effect
+  // above — see closeFileDrillIn's three call sites in the modal below.
+  const closeFileDrillIn = () => {
+    setFileDrillIn(null)
+    setFileDrillInDetail(null)
+    setExpandedDossierPackageId(null)
+  }
 
   const showToast = (message, type = 'success') => {
     setToast({ type, message })
@@ -723,118 +866,23 @@ export default function RecordsExecutivePage() {
             <p className="text-[var(--text-muted)] text-sm">Closed documents sent to file, awaiting filing into a dossier</p>
           </div>
 
-          <div className="card rounded-xl border border-white/5 overflow-hidden">
+          <div className="card rounded-xl border border-white/5 p-3">
             {filingQueueLoading ? (
               <p className="p-8 text-center text-[var(--text-muted)]">Loading filing queue...</p>
             ) : filingQueue.length === 0 ? (
               <p className="p-8 text-center text-[var(--text-muted)]">Nothing pending filing right now.</p>
             ) : (
-              <div className="divide-y divide-white/5">
-                {filingQueue.map((copy) => {
-                  const circulation = copy.circulation
-                  const doc = copy.document
-                  const steps = circulation?.steps || []
-                  const lastStep = steps[steps.length - 1]
-                  const attachmentsByStep = new Map(
-                    (circulation?.attachments || []).map((a) => [a.circulationStepId, a])
-                  )
-                  const isExpanded = expandedPackageId === copy.id
-
-                  return (
-                    <div key={copy.id} className="hover:bg-white/[0.02] transition-colors">
-                      {/* Package header — the document itself */}
-                      <div className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                        <button
-                          onClick={() => setExpandedPackageId(isExpanded ? null : copy.id)}
-                          className="min-w-0 flex-1 flex items-center gap-3 text-left cursor-pointer"
-                        >
-                          <ChevronDown
-                            size={16}
-                            className={`flex-shrink-0 text-[var(--text-faint)] transition-transform ${isExpanded ? 'rotate-180' : ''}`}
-                          />
-                          <div className="min-w-0">
-                            <p className="text-sm font-semibold text-[var(--text-primary)] truncate">{circulation?.title || 'Untitled'}</p>
-                            <div className="flex items-center flex-wrap gap-x-2 gap-y-1 mt-1 text-[10px] text-[var(--text-faint)]">
-                              <span className="font-semibold text-[var(--text-muted)]">From {circulation?.originator?.name || 'Unknown'}</span>
-                              <span>· Closed {new Date(lastStep?.signedAt || copy.createdAt).toLocaleString('en-GB', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}</span>
-                              <span>· {steps.length} step{steps.length === 1 ? '' : 's'}</span>
-                            </div>
-                          </div>
-                        </button>
-                        <div className="flex items-center gap-2 flex-shrink-0">
-                          {doc && (
-                            <button
-                              onClick={() => handleOpenFiledDocument(doc)}
-                              className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-bold uppercase tracking-wider bg-white/5 text-[var(--text-secondary)] border border-white/10 hover:bg-white/10 transition-colors whitespace-nowrap cursor-pointer"
-                            >
-                              <Eye size={13} /> Document
-                            </button>
-                          )}
-                          <button
-                            onClick={() => openFileDialog(copy)}
-                            className="flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider bg-uacc-gold/10 text-uacc-gold border border-uacc-gold/25 hover:bg-uacc-gold/20 transition-colors flex-shrink-0 whitespace-nowrap cursor-pointer"
-                          >
-                            <Folder size={13} /> File
-                          </button>
-                        </div>
-                      </div>
-
-                      {/* Package body — the full ordered step trail */}
-                      {isExpanded && (
-                        <div className="px-4 pb-4 pl-[52px] space-y-2">
-                          {!doc && circulation?.sourceType && (
-                            <p className="text-xs text-[var(--text-faint)] italic mb-2">
-                              Source: {circulation.sourceType.replace(/_/g, ' ').toLowerCase()} (no viewable document on file)
-                            </p>
-                          )}
-                          {steps.map((step) => {
-                            const stepRoman = STEP_ROMAN[step.stepNumber - 1] || step.stepNumber
-                            const attachment = attachmentsByStep.get(step.id)
-                            return (
-                              <div key={step.id} className="bg-white/[0.02] border border-white/5 rounded-lg p-3">
-                                <div className="flex items-start justify-between gap-3">
-                                  <div className="flex items-center gap-2 min-w-0">
-                                    <span className="w-5 h-5 rounded-full border border-uacc-gold/50 flex items-center justify-center text-[10px] font-bold text-uacc-gold flex-shrink-0">
-                                      {stepRoman}
-                                    </span>
-                                    <span className="text-xs font-semibold text-[var(--text-primary)] truncate">
-                                      {step.fromUser?.name || step.fromRole?.replace(/_/g, ' ')}
-                                    </span>
-                                    {step.decision && (
-                                      <span className="px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider bg-uacc-gold/10 text-uacc-gold border border-uacc-gold/20 flex-shrink-0">
-                                        {step.decision.replace(/_/g, ' ')}
-                                      </span>
-                                    )}
-                                    {step.signature && (
-                                      <span className="text-[9px] font-bold uppercase tracking-wider text-emerald-400 flex-shrink-0">Signed</span>
-                                    )}
-                                  </div>
-                                  <span className="text-[10px] text-[var(--text-faint)] flex-shrink-0 whitespace-nowrap">
-                                    {new Date(step.signedAt).toLocaleString('en-GB', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
-                                  </span>
-                                </div>
-                                <p className="text-xs text-[var(--text-secondary)] italic mt-1.5">&ldquo;{step.instruction}&rdquo;</p>
-                                <div className="flex items-center flex-wrap gap-2 mt-1.5 text-[10px] text-[var(--text-faint)]">
-                                  <span className="font-semibold text-[var(--text-muted)]">{step.fromRole?.replace(/_/g, ' ')}</span>
-                                  <ArrowLeftRight size={10} />
-                                  <span className="font-semibold text-uacc-gold">{step.toRole?.replace(/_/g, ' ')}</span>
-                                </div>
-                                {attachment && (
-                                  <button
-                                    onClick={() => handleOpenFiledDocument(attachment.document)}
-                                    className="flex items-center gap-1.5 mt-2 text-[10px] font-bold uppercase tracking-wider text-uacc-gold hover:underline cursor-pointer"
-                                  >
-                                    <Download size={11} /> {attachment.document?.title || 'Attachment'}
-                                  </button>
-                                )}
-                              </div>
-                            )
-                          })}
-                        </div>
-                      )}
-                    </div>
-                  )
-                })}
+              <div className="flex flex-col gap-2">
+                {filingQueue.map((copy) => (
+                  <CirculationPackageCard
+                    key={copy.id}
+                    copy={copy}
+                    isExpanded={expandedPackageId === copy.id}
+                    onToggleExpand={() => setExpandedPackageId(expandedPackageId === copy.id ? null : copy.id)}
+                    onOpenDocument={handleOpenFiledDocument}
+                    onFileClick={() => openFileDialog(copy)}
+                  />
+                ))}
               </div>
             )}
           </div>
@@ -1239,15 +1287,24 @@ export default function RecordsExecutivePage() {
       </AnimatePresence>
 
       {/* FILE DRILL-IN — opened from a File chip in the register table or a
-          row in the Files tab. Entries are filtered client-side from the
-          already-fetched `records` list rather than a new endpoint. */}
+          row in the Files tab. Contents come from GET /records/files/:id
+          (see the fileDrillInDetail effect above), not a client-side filter
+          over the already-loaded `records` list — that old filter only
+          ever matched RegistryEntry.recordsFileId, so a circulation package
+          filed into the same dossier (a different model,
+          CirculationRecordsCopy.recordsFileId) was invisible to it. */}
       <AnimatePresence>
-        {fileDrillIn && (
+        {fileDrillIn && (() => {
+          const registryEntries = (fileDrillInDetail?.registryEntries || []).map(adaptRecord)
+          const circulationPackages = fileDrillInDetail?.circulationPackages || []
+          const totalEntries = fileDrillInDetail?.totalEntries ?? 0
+
+          return (
           <motion.div
             className="fixed inset-0 z-50 flex items-center justify-center p-4"
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}
           >
-            <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setFileDrillIn(null)}></div>
+            <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={closeFileDrillIn}></div>
             <motion.div
               className="relative w-full max-w-2xl bg-[#0b1120] rounded-2xl shadow-2xl border border-white/10 flex flex-col max-h-[85vh]"
               initial={{ opacity: 0, scale: 0.96, y: 12 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.96, y: 12 }}
@@ -1269,38 +1326,73 @@ export default function RecordsExecutivePage() {
                   <p className="text-sm text-white/70">{fileDrillIn.title}</p>
                   {fileDrillIn.fileType && <p className="text-[10px] text-white/40 uppercase tracking-wider mt-0.5">{fileDrillIn.fileType}</p>}
                 </div>
-                <button onClick={() => setFileDrillIn(null)} className="p-2 text-white/50 hover:text-white hover:bg-white/5 rounded-full transition-colors flex-shrink-0">
+                <button onClick={closeFileDrillIn} className="p-2 text-white/50 hover:text-white hover:bg-white/5 rounded-full transition-colors flex-shrink-0">
                   <X size={20} />
                 </button>
               </div>
               <div className="flex-1 overflow-y-auto p-5">
                 <p className="text-[10px] font-bold text-white/40 uppercase tracking-widest mb-3">
-                  Entries in this file ({records.filter(r => r.recordsFile?.id === fileDrillIn.id).length})
+                  Entries in this file ({fileDrillInLoading ? '…' : totalEntries})
                 </p>
-                <div className="flex flex-col gap-2">
-                  {records.filter(r => r.recordsFile?.id === fileDrillIn.id).map(r => (
-                    <button
-                      key={r.dbId}
-                      onClick={() => { setFileDrillIn(null); setSelectedEntry(r); setDetailPanelOpen(true) }}
-                      className="w-full text-left p-3 rounded-lg border border-white/5 bg-white/[0.02] hover:bg-white/[0.04] transition-colors flex items-center justify-between gap-3"
-                    >
-                      <div className="min-w-0">
-                        <p className="text-xs font-heading font-bold text-uacc-gold">{r.id}</p>
-                        <p className="text-sm text-white truncate">{r.subject}</p>
+
+                {fileDrillInLoading ? (
+                  <p className="text-sm text-white/40 text-center py-8">Loading...</p>
+                ) : (
+                  <div className="space-y-6">
+                    {registryEntries.length > 0 && (
+                      <div>
+                        <p className="text-[9px] font-bold text-white/30 uppercase tracking-widest mb-2">
+                          Registered entries ({registryEntries.length})
+                        </p>
+                        <div className="flex flex-col gap-2">
+                          {registryEntries.map(r => (
+                            <button
+                              key={r.dbId}
+                              onClick={() => { closeFileDrillIn(); setSelectedEntry(r); setDetailPanelOpen(true) }}
+                              className="w-full text-left p-3 rounded-lg border border-white/5 bg-white/[0.02] hover:bg-white/[0.04] transition-colors flex items-center justify-between gap-3"
+                            >
+                              <div className="min-w-0">
+                                <p className="text-xs font-heading font-bold text-uacc-gold">{r.id}</p>
+                                <p className="text-sm text-white truncate">{r.subject}</p>
+                              </div>
+                              <span className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider flex-shrink-0 ${STATUS_META[r.status].class}`}>
+                                {STATUS_META[r.status].label}
+                              </span>
+                            </button>
+                          ))}
+                        </div>
                       </div>
-                      <span className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider flex-shrink-0 ${STATUS_META[r.status].class}`}>
-                        {STATUS_META[r.status].label}
-                      </span>
-                    </button>
-                  ))}
-                  {records.filter(r => r.recordsFile?.id === fileDrillIn.id).length === 0 && (
-                    <p className="text-sm text-white/40 text-center py-8">No entries filed into this dossier yet.</p>
-                  )}
-                </div>
+                    )}
+
+                    {circulationPackages.length > 0 && (
+                      <div>
+                        <p className="text-[9px] font-bold text-white/30 uppercase tracking-widest mb-2">
+                          Filed circulation packages ({circulationPackages.length})
+                        </p>
+                        <div className="flex flex-col gap-2">
+                          {circulationPackages.map(copy => (
+                            <CirculationPackageCard
+                              key={copy.id}
+                              copy={copy}
+                              isExpanded={expandedDossierPackageId === copy.id}
+                              onToggleExpand={() => setExpandedDossierPackageId(expandedDossierPackageId === copy.id ? null : copy.id)}
+                              onOpenDocument={handleOpenFiledDocument}
+                            />
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {registryEntries.length === 0 && circulationPackages.length === 0 && (
+                      <p className="text-sm text-white/40 text-center py-8">No entries filed into this dossier yet.</p>
+                    )}
+                  </div>
+                )}
               </div>
             </motion.div>
           </motion.div>
-        )}
+          )
+        })()}
       </AnimatePresence>
 
       {/* DETAIL PANEL SLIDE-IN */}
