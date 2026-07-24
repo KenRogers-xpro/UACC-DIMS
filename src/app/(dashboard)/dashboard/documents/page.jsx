@@ -552,7 +552,14 @@ export default function DocumentsPage() {
                               <span className="block font-bold text-(--text-primary) truncate max-w-[260px]" title={doc.title}>
                                 {doc.title}
                               </span>
-                              <span className="text-[10px]" style={{ color: 'var(--text-muted)' }}>{formatFileSize(doc.fileSize)}</span>
+                              <div className="flex items-center gap-1.5">
+                                <span className="text-[10px]" style={{ color: 'var(--text-muted)' }}>{formatFileSize(doc.fileSize)}</span>
+                                {doc.status === 'ARCHIVED' && (
+                                  doc.recordsFile
+                                    ? <span className="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-uacc-gold/10 text-uacc-gold border border-uacc-gold/20">In file: {doc.recordsFile.fileNumber}</span>
+                                    : <span className="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-white/5 text-(--text-faint) border border-white/10">Unfiled</span>
+                                )}
+                              </div>
                             </div>
                           </div>
                         </td>
@@ -604,6 +611,11 @@ export default function DocumentsPage() {
                       <span className="text-[10px] px-2 py-0.5 rounded bg-white/5 border border-white/10" style={{ color: 'var(--text-muted)' }}>
                         {formatDept(doc.department)}
                       </span>
+                      {doc.status === 'ARCHIVED' && (
+                        doc.recordsFile
+                          ? <span className="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-uacc-gold/10 text-uacc-gold border border-uacc-gold/20">In file: {doc.recordsFile.fileNumber}</span>
+                          : <span className="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-white/5 text-(--text-faint) border border-white/10">Unfiled</span>
+                      )}
                     </div>
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
