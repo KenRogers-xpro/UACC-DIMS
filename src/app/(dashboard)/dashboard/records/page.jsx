@@ -276,6 +276,15 @@ export default function RecordsExecutivePage() {
   const [fileDialogSelectedId, setFileDialogSelectedId] = useState('')
   const [fileDialogSearch, setFileDialogSearch] = useState('')
   const [filingSubmitting, setFilingSubmitting] = useState(false)
+  // Inline "+ Create new file" within the Mark as Filed dialog itself — a
+  // second, lighter-weight creation path than the standalone New Records
+  // File modal, so RE never has to abandon the filing flow to go make a
+  // dossier first.
+  const [fileDialogCreatingNew, setFileDialogCreatingNew] = useState(false)
+  const [fileDialogNewTitle, setFileDialogNewTitle] = useState('')
+  const [fileDialogNewNumber, setFileDialogNewNumber] = useState('')
+  const [fileDialogNewSubmitting, setFileDialogNewSubmitting] = useState(false)
+  const [fileDialogNewError, setFileDialogNewError] = useState('')
 
   // File drill-in — the per-file view opened from a File chip in the
   // register table or a row in the Files tab. Contents come from a real
@@ -519,6 +528,37 @@ export default function RecordsExecutivePage() {
     setFileDialogCopy(copy)
     setFileDialogSelectedId('')
     setFileDialogSearch('')
+    setFileDialogCreatingNew(false)
+    setFileDialogNewTitle('')
+    setFileDialogNewNumber('')
+    setFileDialogNewError('')
+  }
+
+  // Lighter-weight than handleCreateFile (the standalone New Records File
+  // modal) — no fileType/description, just title + optional number, reusing
+  // the exact same POST /records/files endpoint and its own newFileNumber
+  // fallback (generateNextFileNumber()) rather than inventing a second
+  // numbering scheme here.
+  const handleCreateFileInline = async () => {
+    if (!fileDialogNewTitle.trim()) return
+    setFileDialogNewSubmitting(true)
+    setFileDialogNewError('')
+    try {
+      const res = await api.post('/records/files', {
+        title: fileDialogNewTitle.trim(),
+        fileNumber: fileDialogNewNumber.trim() || undefined,
+      })
+      if (!res.success) throw new Error(res.message || 'Failed to create file')
+      await fetchFiles()
+      setFileDialogSelectedId(res.data.id)
+      setFileDialogCreatingNew(false)
+      setFileDialogNewTitle('')
+      setFileDialogNewNumber('')
+    } catch (err) {
+      setFileDialogNewError(err.message || 'Failed to create file')
+    } finally {
+      setFileDialogNewSubmitting(false)
+    }
   }
 
   // Same auth-gated blob-fetch pattern as documents/page.jsx handleDownload —
@@ -1564,6 +1604,58 @@ export default function RecordsExecutivePage() {
                     className="w-full bg-white/5 border border-white/10 rounded-lg pl-9 pr-3 py-2 text-sm text-white focus:outline-none focus:border-uacc-gold/50"
                   />
                 </div>
+
+                {/* "+ Create new file" — always visible regardless of search,
+                    styled distinctly (dashed border) so it never reads as a
+                    real dossier row. Toggles an inline form rather than a
+                    second modal, so this stays one dialog. */}
+                {!fileDialogCreatingNew ? (
+                  <button
+                    type="button"
+                    onClick={() => setFileDialogCreatingNew(true)}
+                    className="w-full flex items-center gap-2 px-3 py-2 rounded-lg border border-dashed border-white/20 text-white/50 hover:text-uacc-gold hover:border-uacc-gold/40 transition-colors text-sm"
+                  >
+                    <Plus size={14} /> Create new file
+                  </button>
+                ) : (
+                  <div className="flex flex-col gap-2 p-3 rounded-lg border border-dashed border-uacc-gold/30 bg-uacc-gold/[0.03]">
+                    <input
+                      type="text"
+                      autoFocus
+                      value={fileDialogNewTitle}
+                      onChange={(e) => setFileDialogNewTitle(e.target.value)}
+                      placeholder="File title (required)"
+                      className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-uacc-gold/50"
+                    />
+                    <input
+                      type="text"
+                      value={fileDialogNewNumber}
+                      onChange={(e) => setFileDialogNewNumber(e.target.value)}
+                      placeholder="File number (optional — auto-assigned if left blank)"
+                      className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-uacc-gold/50"
+                    />
+                    {fileDialogNewError && <p className="text-xs text-uacc-red">{fileDialogNewError}</p>}
+                    <div className="flex justify-end gap-2 mt-1">
+                      <button
+                        type="button"
+                        onClick={() => { setFileDialogCreatingNew(false); setFileDialogNewError('') }}
+                        disabled={fileDialogNewSubmitting}
+                        className="px-3 py-1.5 rounded-lg text-xs text-white/60 hover:text-white transition-colors disabled:opacity-50"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleCreateFileInline}
+                        disabled={fileDialogNewSubmitting || !fileDialogNewTitle.trim()}
+                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-uacc-gold text-white font-semibold text-xs hover:bg-uacc-gold/90 transition-colors disabled:opacity-50"
+                      >
+                        <Check size={13} /> {fileDialogNewSubmitting ? 'Creating...' : 'Create & Select'}
+                      </button>
+                    </div>
+                  </div>
+                )}
+
                 <div className="max-h-48 overflow-y-auto flex flex-col gap-1">
                   {files
                     .filter(f =>
