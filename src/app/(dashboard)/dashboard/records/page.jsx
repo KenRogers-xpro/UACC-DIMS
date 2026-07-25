@@ -14,6 +14,7 @@ import {
   PieChart, Pie, Cell
 } from 'recharts'
 import api from '@/lib/api'
+import FileIntoDossierModal from '@/components/records/FileIntoDossierModal'
 
 // Adapts a real RegistryEntry (from GET/POST /api/records) into the flat
 // display shape this page's JSX already expects — `id` stays the display-
@@ -306,8 +307,6 @@ export default function RecordsExecutivePage() {
   // handleCreateFile.
   const [archiveFileTarget, setArchiveFileTarget] = useState(null) // { localId, id, title } | null
   const [archivePickerOpen, setArchivePickerOpen] = useState(false)
-  const [archivePickerSearch, setArchivePickerSearch] = useState('')
-  const [archiveFiling, setArchiveFiling] = useState(false)
 
   const ROWS_PER_PAGE = 8
 
@@ -604,12 +603,18 @@ export default function RecordsExecutivePage() {
   const openArchivePicker = (row) => {
     setArchiveFileTarget({ localId: row.localId, id: row.documentId, title: row.title || row.file.name })
     setArchivePickerOpen(true)
-    setArchivePickerSearch('')
   }
 
+  // Used only by the "create a new file, then immediately file this
+  // document into it" continuation (handleCreateFile below) — reads the
+  // filed-into file straight from this call's own response rather than the
+  // page's `files` state, since that state may not have re-rendered with the
+  // just-created file yet at this point. The picker's own list-click attach
+  // now happens inside FileIntoDossierModal itself; see handleArchiveFiled
+  // for that path, where reading from `files` is safe (the file already
+  // existed and was loaded before the picker opened).
   const handleArchiveAttach = async (fileId) => {
     if (!archiveFileTarget) return
-    setArchiveFiling(true)
     try {
       const res = await api.put(`/records/documents/${archiveFileTarget.id}/attach-to-file`, { recordsFileId: fileId })
       if (!res.success) throw new Error(res.message || 'Failed to file document')
@@ -620,9 +625,20 @@ export default function RecordsExecutivePage() {
       setArchiveFileTarget(null)
     } catch (err) {
       showToast(err.message || 'Failed to file document', 'error')
-    } finally {
-      setArchiveFiling(false)
     }
+  }
+
+  // FileIntoDossierModal's onFiled — it already performed the attach PUT
+  // itself, so this only handles the page-specific side effects. Looking up
+  // `files` here (rather than trusting a passed-back object) is safe because
+  // this only fires for a file the user picked from the already-loaded list.
+  const handleArchiveFiled = (recordsFileId) => {
+    if (!archiveFileTarget) return
+    const filedFile = files.find((f) => f.id === recordsFileId) || null
+    updateBulkFile(archiveFileTarget.localId, { filedInto: filedFile })
+    showToast(`Filed "${archiveFileTarget.title}" into ${filedFile?.fileNumber || 'dossier'}.`)
+    setArchivePickerOpen(false)
+    setArchiveFileTarget(null)
   }
 
   const handleConfirmFiling = async () => {
@@ -1596,95 +1612,21 @@ export default function RecordsExecutivePage() {
       </AnimatePresence>
 
       {/* ARCHIVE FILE PICKER — files a bulk-ingested archived document into a
-          dossier immediately on pick (PUT /documents/:docId/attach-to-file),
-          unlike the FILE DIALOG above which defers to a separate confirm
-          step. Only ACTIVE files are offered — the backend rejects
-          non-active targets, so they're filtered out here rather than
-          shown as a dead-end option. "+ New" hands off to the existing
-          New Records File modal, which auto-attaches this document once
-          the file is created (see handleCreateFile). */}
-      <AnimatePresence>
-        {archivePickerOpen && archiveFileTarget && (
-          <motion.div
-            className="fixed inset-0 z-[60] flex items-center justify-center p-4"
-            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}
-          >
-            <div
-              className="absolute inset-0 bg-black/70 backdrop-blur-sm"
-              onClick={() => { if (!archiveFiling) { setArchivePickerOpen(false); setArchiveFileTarget(null) } }}
-            ></div>
-            <motion.div
-              className="relative w-full max-w-md bg-[#0b1120] rounded-2xl shadow-2xl border border-white/10 flex flex-col max-h-[70vh]"
-              initial={{ opacity: 0, scale: 0.96, y: 12 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.96, y: 12 }}
-              transition={{ duration: 0.22 }}
-            >
-              <div className="p-4 border-b border-white/10 flex items-center justify-between gap-3">
-                <div className="min-w-0">
-                  <h2 className="text-sm font-bold text-white">File into dossier</h2>
-                  <p className="text-xs text-white/40 truncate">{archiveFileTarget.title}</p>
-                </div>
-                <button
-                  onClick={() => { setArchivePickerOpen(false); setArchiveFileTarget(null) }}
-                  className="p-1.5 text-white/50 hover:text-white hover:bg-white/5 rounded-full transition-colors flex-shrink-0"
-                >
-                  <X size={18} />
-                </button>
-              </div>
-              <div className="p-4 border-b border-white/10 flex gap-2">
-                <div className="relative flex-1">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-white/30" size={15} />
-                  <input
-                    autoFocus
-                    type="text"
-                    value={archivePickerSearch}
-                    onChange={(e) => setArchivePickerSearch(e.target.value)}
-                    placeholder="Search file number or title..."
-                    className="w-full bg-white/5 border border-white/10 rounded-lg pl-9 pr-3 py-2 text-sm text-white focus:outline-none focus:border-uacc-gold/50"
-                  />
-                </div>
-                <button
-                  type="button"
-                  onClick={() => { setArchivePickerOpen(false); setNewFileModalOpen(true) }}
-                  className="flex items-center gap-1.5 px-3 py-2 rounded-lg border border-uacc-gold/30 bg-uacc-gold/10 text-uacc-gold hover:bg-uacc-gold/20 text-xs font-semibold transition-colors whitespace-nowrap cursor-pointer"
-                >
-                  <Plus size={14} /> New
-                </button>
-              </div>
-              <div className="flex-1 overflow-y-auto p-2">
-                {filesLoading ? (
-                  <p className="text-xs text-white/40 text-center py-6">Loading files...</p>
-                ) : (
-                  files
-                    .filter((f) => f.status === 'ACTIVE')
-                    .filter((f) =>
-                      !archivePickerSearch.trim() ||
-                      f.fileNumber.toLowerCase().includes(archivePickerSearch.toLowerCase()) ||
-                      f.title.toLowerCase().includes(archivePickerSearch.toLowerCase())
-                    )
-                    .map((f) => (
-                      <button
-                        key={f.id}
-                        type="button"
-                        disabled={archiveFiling}
-                        onClick={() => handleArchiveAttach(f.id)}
-                        className="w-full text-left px-3 py-2.5 rounded-lg hover:bg-white/5 transition-colors flex items-center gap-2.5 disabled:opacity-50 cursor-pointer"
-                      >
-                        <Folder size={15} className="text-uacc-gold flex-shrink-0" />
-                        <div className="min-w-0">
-                          <p className="text-sm text-white font-medium truncate">{f.fileNumber}</p>
-                          <p className="text-xs text-white/40 truncate">{f.title}</p>
-                        </div>
-                      </button>
-                    ))
-                )}
-                {!filesLoading && files.filter((f) => f.status === 'ACTIVE').length === 0 && (
-                  <p className="text-xs text-white/40 text-center py-6">No active files yet — create one above.</p>
-                )}
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+          dossier immediately on pick, unlike the FILE DIALOG above which
+          defers to a separate confirm step. Extracted into a shared
+          component (also used by documents/page.jsx's Archive tab); "+ New"
+          here hands off to this page's own New Records File modal, which
+          auto-attaches this document once the file is created (see
+          handleCreateFile). */}
+      {archivePickerOpen && archiveFileTarget && (
+        <FileIntoDossierModal
+          documentId={archiveFileTarget.id}
+          documentTitle={archiveFileTarget.title}
+          onClose={() => { setArchivePickerOpen(false); setArchiveFileTarget(null) }}
+          onFiled={handleArchiveFiled}
+          onCreateNew={() => { setArchivePickerOpen(false); setNewFileModalOpen(true) }}
+        />
+      )}
 
       {/* FILE DRILL-IN — opened from a File chip in the register table or a
           row in the Files tab. Contents come from GET /records/files/:id

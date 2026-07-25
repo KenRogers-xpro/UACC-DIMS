@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { createPortal } from 'react-dom'
 import { motion, AnimatePresence } from 'framer-motion'
-import { X, Download, FileText, Pencil, Send, Lock, MessageSquare, History, Eye, PenTool, Maximize2, Minimize2, Paperclip, UploadCloud, User, FolderCheck } from 'lucide-react'
+import { X, Download, FileDown, FileText, Pencil, Send, Lock, MessageSquare, History, Eye, PenTool, Maximize2, Minimize2, Paperclip, UploadCloud, User, FolderCheck } from 'lucide-react'
 import Badge from '@/components/ui/Badge'
 import Button from '@/components/ui/Button'
 import EmptyState from '@/components/ui/EmptyState'
@@ -154,6 +154,7 @@ export default function DocumentViewerModal({
   const [previewUrl, setPreviewUrl] = useState(null)
   const [previewLoading, setPreviewLoading] = useState(false)
   const [downloading, setDownloading] = useState(false)
+  const [downloadingWithAnnotations, setDownloadingWithAnnotations] = useState(false)
 
   // Fullscreen for the preview box only — requestFullscreen on this
   // specific container, not the whole modal, so "full screen" means the
@@ -384,6 +385,31 @@ export default function DocumentViewerModal({
       // consistent with the rest of this component's error handling
     } finally {
       setDownloading(false)
+    }
+  }
+
+  // Original document + full circulation/annotation trail as one PDF — the
+  // digitized physical-docket handover. Server always returns a real PDF
+  // (application/pdf) regardless of the source file's own type, so the
+  // download name is always .pdf here, unlike handleDownload above which
+  // keeps the original file's own name/extension.
+  const handleDownloadWithAnnotations = async () => {
+    setDownloadingWithAnnotations(true)
+    try {
+      const url = await api.getBlob(`/documents/${document.id}/export-with-annotations`)
+      const sanitizedTitle = (document.title || 'document')
+        .replace(/[^a-zA-Z0-9-_ ]/g, '')
+        .trim()
+        .replace(/\s+/g, '_') || 'document'
+      const link = window.document.createElement('a')
+      link.href = url
+      link.download = `${sanitizedTitle}_with_annotations.pdf`
+      link.click()
+      URL.revokeObjectURL(url)
+    } catch {
+      // no-op — same silent-degrade pattern as handleDownload
+    } finally {
+      setDownloadingWithAnnotations(false)
     }
   }
 
@@ -900,6 +926,11 @@ export default function DocumentViewerModal({
               {!editing && !showSubmitForm && !showForwardForm && (
                 <Button variant="outline" icon={Download} onClick={handleDownload} loading={downloading}>
                   Download
+                </Button>
+              )}
+              {!editing && !showSubmitForm && !showForwardForm && (
+                <Button variant="outline" icon={FileDown} onClick={handleDownloadWithAnnotations} loading={downloadingWithAnnotations}>
+                  Download with Annotations
                 </Button>
               )}
               {!editing && !showSubmitForm && !showForwardForm && canSendToFile && (

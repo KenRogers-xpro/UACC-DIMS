@@ -23,6 +23,7 @@ import {
   Repeat,
   Archive,
   Library,
+  Folder,
 } from 'lucide-react'
 import { useAuth } from '@/lib/auth-context'
 import { useDocuments } from '@/lib/useDocuments'
@@ -34,6 +35,7 @@ import Button from '@/components/ui/Button'
 import EmptyState from '@/components/ui/EmptyState'
 import DocumentViewerModal from '@/components/documents/DocumentViewerModal'
 import DocumentsAwaitingAction from '@/components/circulation/DocumentsAwaitingAction'
+import FileIntoDossierModal from '@/components/records/FileIntoDossierModal'
 
 const STATE_TABS = [
   { key: 'new', label: 'New Arrivals', state: 'NEW', icon: Sparkle },
@@ -118,6 +120,7 @@ export default function DocumentsPage() {
   const [currentPage, setCurrentPage] = useState(1)
   const [uploadModalOpen, setUploadModalOpen] = useState(false)
   const [previewDoc, setPreviewDoc] = useState(null)
+  const [fileTargetDoc, setFileTargetDoc] = useState(null) // ARCHIVED doc being filed into a dossier, or null
   const [viewerInitialTab, setViewerInitialTab] = useState('preview')
   const [newArrivalsCount, setNewArrivalsCount] = useState(0)
   // Bumped whenever the viewer closes after being opened from a New
@@ -578,7 +581,12 @@ export default function DocumentsPage() {
                           <div className="flex items-center justify-end gap-1.5">
                             <button className="p-1.5 hover:text-uacc-gold text-[var(--text-muted)] transition-colors cursor-pointer" title="View" onClick={() => openViewer(doc)}><Eye size={16} /></button>
                             <button onClick={() => handleDownload(doc)} className="p-1.5 hover:text-blue-400 text-[var(--text-muted)] transition-colors cursor-pointer" title="Download"><Download size={16} /></button>
-                            <button className="p-1.5 hover:text-uacc-red text-[var(--text-muted)] transition-colors cursor-pointer" title="Delete" onClick={() => handleDelete(doc)}><Trash2 size={16} /></button>
+                            {doc.status === 'ARCHIVED' && !doc.recordsFile && user?.role === 'RECORDS_EXECUTIVE' && (
+                              <button className="p-1.5 hover:text-uacc-gold text-[var(--text-muted)] transition-colors cursor-pointer" title="File into dossier" onClick={() => setFileTargetDoc(doc)}><Folder size={16} /></button>
+                            )}
+                            {['IT_ADMINISTRATOR', 'GENERAL_MANAGER', 'RECORDS_EXECUTIVE', 'GM_PERSONAL_ASSISTANT'].includes(user?.role) && (
+                              <button className="p-1.5 hover:text-uacc-red text-[var(--text-muted)] transition-colors cursor-pointer" title="Delete" onClick={() => handleDelete(doc)}><Trash2 size={16} /></button>
+                            )}
                           </div>
                         </td>
                       </tr>
@@ -627,7 +635,12 @@ export default function DocumentsPage() {
                       <div className="flex items-center gap-2">
                         <button className="p-2 hover:text-uacc-gold text-[var(--text-muted)] transition-colors cursor-pointer rounded-lg hover:bg-white/5" onClick={() => openViewer(doc)}><Eye size={15} /></button>
                         <button onClick={() => handleDownload(doc)} className="p-2 hover:text-blue-400 text-[var(--text-muted)] transition-colors cursor-pointer rounded-lg hover:bg-white/5" title="Download"><Download size={15} /></button>
-                        <button className="p-2 hover:text-uacc-red text-[var(--text-muted)] transition-colors cursor-pointer rounded-lg hover:bg-white/5" onClick={() => handleDelete(doc)}><Trash2 size={15} /></button>
+                        {doc.status === 'ARCHIVED' && !doc.recordsFile && user?.role === 'RECORDS_EXECUTIVE' && (
+                          <button className="p-2 hover:text-uacc-gold text-[var(--text-muted)] transition-colors cursor-pointer rounded-lg hover:bg-white/5" title="File into dossier" onClick={() => setFileTargetDoc(doc)}><Folder size={15} /></button>
+                        )}
+                        {['IT_ADMINISTRATOR', 'GENERAL_MANAGER', 'RECORDS_EXECUTIVE', 'GM_PERSONAL_ASSISTANT'].includes(user?.role) && (
+                          <button className="p-2 hover:text-uacc-red text-[var(--text-muted)] transition-colors cursor-pointer rounded-lg hover:bg-white/5" onClick={() => handleDelete(doc)}><Trash2 size={15} /></button>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -851,6 +864,18 @@ export default function DocumentsPage() {
         onSubmit={handleSubmitDoc}
         initialTab={viewerInitialTab}
       />
+
+      {fileTargetDoc && (
+        <FileIntoDossierModal
+          documentId={fileTargetDoc.id}
+          documentTitle={fileTargetDoc.title}
+          onClose={() => setFileTargetDoc(null)}
+          onFiled={() => {
+            setFileTargetDoc(null)
+            refresh()
+          }}
+        />
+      )}
 
       {/* TOAST ALERT — styling switches on toastType so a blocked/failed
           action (e.g. the 409 from deleting a document with circulation
