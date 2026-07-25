@@ -388,12 +388,12 @@ export default function DocumentViewerModal({
     }
   }
 
-  // Original document + full circulation/annotation trail as one PDF — the
-  // digitized physical-docket handover. Server always returns a real PDF
-  // (application/pdf) regardless of the source file's own type, so the
-  // download name is always .pdf here, unlike handleDownload above which
-  // keeps the original file's own name/extension.
-  const handleDownloadWithAnnotations = async () => {
+  // Trail-only export — the document's circulation/annotation history as its
+  // own PDF, not merged with the original file's content (that was tried and
+  // dropped; see backend). Always a real PDF regardless of the source
+  // document's own type, so the download name is always .pdf here, unlike
+  // handleDownload above which keeps the original file's own name/extension.
+  const handleDownloadAnnotationTrail = async () => {
     setDownloadingWithAnnotations(true)
     try {
       const url = await api.getBlob(`/documents/${document.id}/export-with-annotations`)
@@ -403,7 +403,7 @@ export default function DocumentViewerModal({
         .replace(/\s+/g, '_') || 'document'
       const link = window.document.createElement('a')
       link.href = url
-      link.download = `${sanitizedTitle}_with_annotations.pdf`
+      link.download = `${sanitizedTitle}_annotation_trail.pdf`
       link.click()
       URL.revokeObjectURL(url)
     } catch {
@@ -929,8 +929,8 @@ export default function DocumentViewerModal({
                 </Button>
               )}
               {!editing && !showSubmitForm && !showForwardForm && (
-                <Button variant="outline" icon={FileDown} onClick={handleDownloadWithAnnotations} loading={downloadingWithAnnotations}>
-                  Download with Annotations
+                <Button variant="outline" icon={FileDown} onClick={handleDownloadAnnotationTrail} loading={downloadingWithAnnotations}>
+                  Download Annotation Trail
                 </Button>
               )}
               {!editing && !showSubmitForm && !showForwardForm && canSendToFile && (
