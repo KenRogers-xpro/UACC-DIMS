@@ -2,17 +2,23 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { Inbox, ArrowRight, Send, RotateCcw } from 'lucide-react'
+import { Inbox, ArrowRight, Send, RotateCcw, Eye } from 'lucide-react'
 import { useAuth } from '@/lib/auth-context'
 import { useCirculation } from '@/lib/useCirculation'
+import api from '@/lib/api'
 import PageHeader from '@/components/ui/PageHeader'
 import Button from '@/components/ui/Button'
 import CirculationLiveTracker from '@/components/circulation/CirculationLiveTracker'
+import DocumentViewerModal from '@/components/documents/DocumentViewerModal'
+
+function roleLabel(role) {
+  return role ? role.replace(/_/g, ' ') : 'Recipient'
+}
 
 // Inline note + confirm row, shared by both "Release" and "Return for
 // Correction" — a note is optional for release, required for a return since
 // the whole point is telling the true originator what to fix.
-function GatewayItemCard({ item, onRelease, onReturn, busy }) {
+function GatewayItemCard({ item, onRelease, onReturn, onView, viewing, busy }) {
   const [openAction, setOpenAction] = useState(null) // 'release' | 'return' | null
   const [note, setNote] = useState('')
 
@@ -42,20 +48,25 @@ function GatewayItemCard({ item, onRelease, onReturn, busy }) {
           <h4 className="text-sm font-semibold text-white">{item.title}</h4>
           <p className="text-[11px] text-white/60 mt-1">
             True originator: {item.originator?.name || 'Unknown'}
-            {originatorRole ? ` (${originatorRole.replace(/_/g, ' ')})` : ''}
-            {' · '}Declared destination: {declaredRole ? declaredRole.replace(/_/g, ' ') : 'Unknown'}
+            {originatorRole ? ` (${roleLabel(originatorRole)})` : ''}
+            {' · '}Declared destination: {declaredRole ? roleLabel(declaredRole) : 'Unknown'}
           </p>
           <div className="mt-2">
             <CirculationLiveTracker circulationId={item.id} />
           </div>
         </div>
         <div className="flex items-center gap-2 shrink-0">
+          {item.sourceType === 'DOCUMENT' && (
+            <Button size="sm" variant="outline" onClick={() => onView(item)} loading={viewing} className="flex items-center gap-2">
+              View <Eye size={14} />
+            </Button>
+          )}
           <Button
             size="sm"
             onClick={() => toggle('release')}
             className="flex items-center gap-2 bg-uacc-gold/10 hover:bg-uacc-gold/20 text-uacc-gold border border-uacc-gold/30"
           >
-            Release <Send size={14} />
+            Release to {roleLabel(declaredRole)} <Send size={14} />
           </Button>
           <Button size="sm" variant="outline" onClick={() => toggle('return')} className="flex items-center gap-2">
             Return for Correction <RotateCcw size={14} />
@@ -90,7 +101,7 @@ function GatewayItemCard({ item, onRelease, onReturn, busy }) {
   )
 }
 
-function GatewaySection({ icon: Icon, title, items, emptyMessage, onRelease, onReturn, busyId }) {
+function GatewaySection({ icon: Icon, title, items, emptyMessage, onRelease, onReturn, onView, viewingId, busyId }) {
   return (
     <div className="card rounded-xl p-5">
       <h3
@@ -110,6 +121,8 @@ function GatewaySection({ icon: Icon, title, items, emptyMessage, onRelease, onR
               item={item}
               onRelease={onRelease}
               onReturn={onReturn}
+              onView={onView}
+              viewing={viewingId === item.id}
               busy={busyId === item.id}
             />
           ))}
@@ -124,6 +137,8 @@ export default function PAInboxPage() {
   const { paGateway, fetchPaGateway, releaseCirculation, addStep } = useCirculation()
   const [busyId, setBusyId] = useState(null)
   const [toastMessage, setToastMessage] = useState('')
+  const [previewDoc, setPreviewDoc] = useState(null)
+  const [viewingId, setViewingId] = useState(null)
 
   useEffect(() => {
     if (user?.role === 'GM_PERSONAL_ASSISTANT') fetchPaGateway()
@@ -140,6 +155,28 @@ export default function PAInboxPage() {
       setToastMessage(err.message || 'Failed to release')
     } finally {
       setBusyId(null)
+    }
+  }
+
+  // Same pattern as the AI Agent page's "Open document" from an insight —
+  // the card only has the circulation (sourceType/sourceId), so resolve the
+  // actual Document via GET /documents/:id and hand that to the existing
+  // viewer. no-op onSave/onSubmit below is the same convention that call
+  // site uses; it suppresses this page's own edit/submit flow, though it
+  // doesn't block the viewer's own internal actions (annotations, signing) —
+  // those already aren't owner-gated, and for these gatekept items PA
+  // genuinely is the current holder, so that's an existing capability
+  // elsewhere, not a hole opened by this change.
+  const openDocumentPreview = async (item) => {
+    if (item.sourceType !== 'DOCUMENT') return
+    setViewingId(item.id)
+    try {
+      const res = await api.get(`/documents/${item.sourceId}`)
+      if (res.success) setPreviewDoc(res.data)
+    } catch {
+      // fail quietly — nothing actionable to show if this doesn't resolve
+    } finally {
+      setViewingId(null)
     }
   }
 
@@ -194,6 +231,8 @@ export default function PAInboxPage() {
         emptyMessage="Nothing waiting to reach the GM right now."
         onRelease={handleRelease}
         onReturn={handleReturn}
+        onView={openDocumentPreview}
+        viewingId={viewingId}
         busyId={busyId}
       />
 
@@ -204,7 +243,19 @@ export default function PAInboxPage() {
         emptyMessage="Nothing outgoing from the GM waiting on you right now."
         onRelease={handleRelease}
         onReturn={handleReturn}
+        onView={openDocumentPreview}
+        viewingId={viewingId}
         busyId={busyId}
+      />
+
+      <DocumentViewerModal
+        document={previewDoc}
+        isOpen={!!previewDoc}
+        onClose={() => setPreviewDoc(null)}
+        currentUserId={user?.id}
+        currentUserRole={user?.role}
+        onSave={async () => {}}
+        onSubmit={async () => {}}
       />
     </div>
   )
