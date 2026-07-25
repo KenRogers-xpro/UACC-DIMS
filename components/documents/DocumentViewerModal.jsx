@@ -17,6 +17,9 @@ import { notifyNotificationsChanged } from '@/lib/useNotifications'
 import api from '@/lib/api'
 
 const CATEGORIES = ['POLICY', 'REPORT', 'MEMO', 'CONTRACT', 'FORM', 'OTHER']
+// Just long enough to absorb an accidental double-click, not a real
+// cooldown on legitimate repeat sends by later holders.
+const SEND_TO_FILE_COOLDOWN_MS = 5000
 const ANNOTATION_TYPES = ['COMMENT', 'NOTE', 'ACTION', 'FLAG']
 // Every role a document can be sent to.
 const SUBMIT_ROLES = [
@@ -185,6 +188,12 @@ export default function DocumentViewerModal({
   const { addStep, sendToFile } = useCirculation()
   const [sendingToFile, setSendingToFile] = useState(false)
   const [sendToFileError, setSendToFileError] = useState('')
+  // Send to File can now be clicked more than once over a document's life
+  // (any current holder, any time — not just once at closure), so it no
+  // longer permanently disappears after use. This cooldown only guards
+  // against an accidental double-click firing twice in a row; it's not
+  // meant to block a legitimate second send from a later holder.
+  const [sendToFileCoolingDown, setSendToFileCoolingDown] = useState(false)
 
   useEffect(() => {
     if (document) {
@@ -366,10 +375,12 @@ export default function DocumentViewerModal({
   // isCurrentHolder above already exclude them from every action naturally.
   // This just drives the "copied, no action required" badge.
   const isCcRecipient = Boolean(circulation?.steps?.some((s) => s.ccRoles?.includes(currentUserRole)))
-  // Visible only to whoever closed it (currentHolderRole doesn't change
-  // after CLOSED — see circulation.routes.js), and only until it's actually
-  // been sent — never a re-offer once circulation.recordsCopy exists.
-  const canSendToFile = circulation && circulation.status === 'CLOSED' && circulation.currentHolderRole === currentUserRole && !circulation.recordsCopy
+  // Any current holder can send a copy to file at any point in the
+  // circulation's life now, not just at closure — no status check, and no
+  // "already sent" guard either, since a circulation can legitimately
+  // accumulate more than one package over its life (see circulation.routes.js
+  // POST /:id/send-to-file). Only the current-holder check still matters.
+  const canSendToFile = circulation && circulation.currentHolderRole === currentUserRole
 
   const handleDownload = async () => {
     setDownloading(true)
@@ -473,6 +484,8 @@ export default function DocumentViewerModal({
     try {
       await sendToFile(circulation.id)
       await fetchCirculation()
+      setSendToFileCoolingDown(true)
+      setTimeout(() => setSendToFileCoolingDown(false), SEND_TO_FILE_COOLDOWN_MS)
     } catch (err) {
       setSendToFileError(err.message || 'Failed to send to file')
     } finally {
@@ -922,6 +935,11 @@ export default function DocumentViewerModal({
             {sendToFileError && !editing && !showSubmitForm && !showForwardForm && (
               <p className="px-5 pt-3 text-xs text-uacc-red flex-shrink-0">{sendToFileError}</p>
             )}
+            {!sendToFileError && sendToFileCoolingDown && !editing && !showSubmitForm && !showForwardForm && (
+              <p className="px-5 pt-3 text-xs text-emerald-400 flex-shrink-0">
+                Sent to file — Records Executive has a copy to review.
+              </p>
+            )}
             <div className="p-5 border-t flex items-center justify-end gap-3 flex-shrink-0" style={{ borderColor: 'var(--border-subtle)' }}>
               {!editing && !showSubmitForm && !showForwardForm && (
                 <Button variant="outline" icon={Download} onClick={handleDownload} loading={downloading}>
@@ -934,7 +952,13 @@ export default function DocumentViewerModal({
                 </Button>
               )}
               {!editing && !showSubmitForm && !showForwardForm && canSendToFile && (
-                <Button variant="primary" icon={FolderCheck} onClick={handleSendToFile} loading={sendingToFile}>
+                <Button
+                  variant="primary"
+                  icon={FolderCheck}
+                  onClick={handleSendToFile}
+                  loading={sendingToFile}
+                  disabled={sendToFileCoolingDown}
+                >
                   Send to File
                 </Button>
               )}
