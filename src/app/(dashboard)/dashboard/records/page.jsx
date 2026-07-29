@@ -918,7 +918,7 @@ export default function RecordsExecutivePage() {
                     setFilterStatus('ALL'); setFilterPriority('ALL'); setFilterMedium('ALL');
                     setFilterDateFrom(''); setFilterDateTo('');
                   }}
-                  className="text-xs text-uacc-gold hover:underline font-medium"
+                  className="text-xs text-uacc-gold hover:underline font-medium px-1 py-2 -m-1"
                 >
                   Clear Filters
                 </button>

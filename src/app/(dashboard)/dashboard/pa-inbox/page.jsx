@@ -55,7 +55,7 @@ function GatewayItemCard({ item, onRelease, onReturn, onView, viewing, busy }) {
             <CirculationLiveTracker circulationId={item.id} />
           </div>
         </div>
-        <div className="flex items-center gap-2 shrink-0">
+        <div className="flex flex-wrap items-center gap-2">
           {item.sourceType === 'DOCUMENT' && (
             <Button size="sm" variant="outline" onClick={() => onView(item)} loading={viewing} className="flex items-center gap-2">
               View <Eye size={14} />

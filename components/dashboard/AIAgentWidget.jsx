@@ -460,14 +460,14 @@ export default function AIAgentWidget() {
             </button>
           </div>
           <p className="text-[11px] text-white/70 mt-1.5 leading-relaxed line-clamp-3">{insightPopup.body}</p>
-          <div className="flex items-center gap-3 mt-2">
+          <div className="flex items-center gap-3 -mx-1 -mb-1 mt-1">
             <button
               onClick={() => {
                 markSeen(insightPopup.id)
                 setInsightPopup(null)
                 router.push('/dashboard/ai-agent?tab=insights')
               }}
-              className="text-[10px] font-bold uppercase tracking-wider text-uacc-gold hover:underline"
+              className="text-[10px] font-bold uppercase tracking-wider text-uacc-gold hover:underline px-1 py-2"
             >
               View
             </button>
@@ -480,7 +480,7 @@ export default function AIAgentWidget() {
                   const params = new URLSearchParams({ tab: 'chat', askMessage: message })
                   router.push(`/dashboard/ai-agent?${params.toString()}`)
                 }}
-                className="text-[10px] font-bold uppercase tracking-wider text-white/70 hover:text-white hover:underline"
+                className="text-[10px] font-bold uppercase tracking-wider text-white/70 hover:text-white hover:underline px-1 py-2"
               >
                 Ask AI about this
               </button>

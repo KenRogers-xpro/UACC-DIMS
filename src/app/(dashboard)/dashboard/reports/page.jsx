@@ -478,7 +478,7 @@ export default function ReportsPage() {
             </div>
 
             {/* Mock PDF Body */}
-            <div className="bg-white p-8 pb-12 min-h-[300px]">
+            <div className="bg-white p-4 sm:p-6 lg:p-8 pb-12 min-h-[300px]">
               <div className="mb-6 border-b-2 border-gray-100 pb-4">
                 <h3 className="text-gray-800 font-bold font-heading text-lg uppercase tracking-wider mb-1">Executive Summary</h3>
                 <p className="text-gray-500 text-sm leading-relaxed">
@@ -514,11 +514,11 @@ export default function ReportsPage() {
                 <table className="w-full text-left border-collapse border border-gray-200">
                   <thead className="bg-gray-50">
                     <tr className="text-xs uppercase tracking-wider text-gray-500 border-b border-gray-200">
-                      <th className="p-3 border-r border-gray-200">Month</th>
-                      <th className="p-3 border-r border-gray-200 text-center">Submitted</th>
-                      <th className="p-3 border-r border-gray-200 text-center">Approved</th>
-                      <th className="p-3 border-r border-gray-200 text-center">Rejected</th>
-                      <th className="p-3 text-right">Est. Cost (UGX)</th>
+                      <th className="p-2 sm:p-3 border-r border-gray-200">Month</th>
+                      <th className="p-2 sm:p-3 border-r border-gray-200 text-center">Submitted</th>
+                      <th className="p-2 sm:p-3 border-r border-gray-200 text-center">Approved</th>
+                      <th className="p-2 sm:p-3 border-r border-gray-200 text-center">Rejected</th>
+                      <th className="p-2 sm:p-3 text-right">Est. Cost (UGX)</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -526,11 +526,11 @@ export default function ReportsPage() {
                       <tr><td colSpan={5} className="p-6 text-center text-sm text-gray-400">No procurement activity in this range.</td></tr>
                     ) : previewProcurement.map((row, i) => (
                       <tr key={i} className="border-b border-gray-200 text-sm text-gray-700 hover:bg-gray-50/50">
-                        <td className="p-3 font-semibold border-r border-gray-200">{row.month}</td>
-                        <td className="p-3 border-r border-gray-200 text-center">{row.submitted}</td>
-                        <td className="p-3 border-r border-gray-200 text-center">{row.approved}</td>
-                        <td className="p-3 border-r border-gray-200 text-center">{row.rejected}</td>
-                        <td className="p-3 text-right font-bold text-gray-900">{row.totalCost.toLocaleString()}</td>
+                        <td className="p-2 sm:p-3 font-semibold border-r border-gray-200">{row.month}</td>
+                        <td className="p-2 sm:p-3 border-r border-gray-200 text-center">{row.submitted}</td>
+                        <td className="p-2 sm:p-3 border-r border-gray-200 text-center">{row.approved}</td>
+                        <td className="p-2 sm:p-3 border-r border-gray-200 text-center">{row.rejected}</td>
+                        <td className="p-2 sm:p-3 text-right font-bold text-gray-900">{row.totalCost.toLocaleString()}</td>
                       </tr>
                     ))}
                   </tbody>

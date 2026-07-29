@@ -228,6 +228,31 @@ export default function AuditTrailPage() {
     [knownUsers]
   )
 
+  // Windowed pagination — first page, last page, current ± 2, with an
+  // 'ellipsis' marker for gaps. Raw 1..totalPages (up to 50 buttons on this
+  // log) overflowed the page at every width; this caps it at ~9 controls
+  // regardless of how many pages exist.
+  const pageWindow = useMemo(() => {
+    const total = pagination.totalPages
+    const current = currentPage
+    const delta = 2
+    const pages = []
+    for (let i = 1; i <= total; i++) {
+      if (i === 1 || i === total || (i >= current - delta && i <= current + delta)) {
+        pages.push(i)
+      }
+    }
+    const withEllipses = []
+    let prev = 0
+    for (const p of pages) {
+      if (prev && p - prev === 2) withEllipses.push(prev + 1)
+      else if (prev && p - prev > 2) withEllipses.push(`ellipsis-${p}`)
+      withEllipses.push(p)
+      prev = p
+    }
+    return withEllipses
+  }, [currentPage, pagination.totalPages])
+
   const toggleRowExpand = (id) => {
     setExpandedLog((prev) => (prev === id ? null : id))
   }
@@ -512,18 +537,27 @@ export default function AuditTrailPage() {
                 <ChevronLeft size={16} />
               </button>
               <div className="flex items-center gap-1">
-                {Array.from({ length: pagination.totalPages }, (_, i) => i + 1).map(page => (
-                  <button
-                    key={page}
-                    onClick={() => setCurrentPage(page)}
-                    className={`w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold transition-colors ${
-                      currentPage === page
-                        ? 'bg-uacc-gold/20 text-uacc-gold border border-uacc-gold/30'
-                        : 'bg-white/5 border border-white/10 text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-white/10'
-                    }`}
-                  >
-                    {page}
-                  </button>
+                {pageWindow.map(page => (
+                  typeof page === 'string' ? (
+                    <span
+                      key={page}
+                      className="w-8 h-8 flex items-center justify-center text-xs text-[var(--text-faint)]"
+                    >
+                      &hellip;
+                    </span>
+                  ) : (
+                    <button
+                      key={page}
+                      onClick={() => setCurrentPage(page)}
+                      className={`w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold transition-colors ${
+                        currentPage === page
+                          ? 'bg-uacc-gold/20 text-uacc-gold border border-uacc-gold/30'
+                          : 'bg-white/5 border border-white/10 text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-white/10'
+                      }`}
+                    >
+                      {page}
+                    </button>
+                  )
                 ))}
               </div>
               <button
