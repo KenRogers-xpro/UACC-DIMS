@@ -426,7 +426,7 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto px-margin-mobile md:px-margin-desktop text-center flex items-center justify-center gap-3">
           <Plane className="text-uacc-gold w-4 h-4 shrink-0 animate-pulse rotate-90" />
           <p className="font-heading text-[10px] md:text-xs text-uacc-gold-light uppercase tracking-[0.25em] leading-normal max-w-full">
-            ✈ Deployed for Uganda Air Cargo Corporation <span className="mx-2 text-uacc-gold/30">·</span> Entebbe International Airport <span className="mx-2 text-uacc-gold/30">·</span> Ministry of Defence &amp; Veteran Affairs
+            ✈ Deployed for Uganda Air Cargo Corporation <span className="mx-2 text-uacc-gold/30">·</span> 
           </p>
         </div>
       </section>
