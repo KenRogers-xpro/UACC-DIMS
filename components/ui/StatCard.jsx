@@ -155,7 +155,7 @@ export default function StatCard({ title, value, subtitle, icon: Icon,
               ))}
               <Link
                 href={viewAllHref}
-                className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider mt-1 pt-2 border-t"
+                className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider mt-1 pt-2 pb-1.5 px-1 -mx-1 border-t"
                 style={{ color: c.text, borderColor: 'var(--border-subtle)' }}
               >
                 View all <ArrowRight size={11} />

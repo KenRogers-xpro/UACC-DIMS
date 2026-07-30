@@ -101,7 +101,7 @@ export default function ProcurementOfficerDashboard() {
                 Most utilized vendors
               </p>
             </div>
-            <Link href="/dashboard/procurement/vendors" className="text-xs hover:underline uppercase tracking-wider font-semibold font-heading text-uacc-gold">
+            <Link href="/dashboard/procurement/vendors" className="text-xs hover:underline uppercase tracking-wider font-semibold font-heading text-uacc-gold px-1 py-2 -m-1">
               View All &rarr;
             </Link>
           </div>

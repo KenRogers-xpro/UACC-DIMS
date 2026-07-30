@@ -488,7 +488,7 @@ export default function DashboardHome() {
                 Live operational actions
               </p>
             </div>
-            <Link href="/dashboard/audit-trail" className="text-[10px] hover:underline uppercase tracking-wider font-semibold font-heading text-uacc-gold flex-shrink-0">
+            <Link href="/dashboard/audit-trail" className="text-[10px] hover:underline uppercase tracking-wider font-semibold font-heading text-uacc-gold flex-shrink-0 px-1 py-2 -m-1">
               View All &rarr;
             </Link>
           </div>
@@ -568,7 +568,7 @@ export default function DashboardHome() {
                 Procurement requests pending
               </p>
             </div>
-            <Link href="/dashboard/procurement" className="text-[10px] hover:underline uppercase tracking-wider font-semibold font-heading text-uacc-gold flex-shrink-0">
+            <Link href="/dashboard/procurement" className="text-[10px] hover:underline uppercase tracking-wider font-semibold font-heading text-uacc-gold flex-shrink-0 px-1 py-2 -m-1">
               View All &rarr;
             </Link>
           </div>
