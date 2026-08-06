@@ -4,24 +4,24 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import ThemeToggle from '@/components/ui/ThemeToggle';
 import { useTheme } from 'next-themes';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useInView } from 'framer-motion';
 // using standard <img> for external logo URL
-import { 
-  FileText, 
-  ClipboardList, 
-  Clock, 
-  BarChart2, 
-  User, 
-  Building2, 
-  Shield, 
-  Settings, 
-  Search, 
-  Menu, 
-  X, 
-  Check, 
-  Plane, 
-  Bot, 
+import {
+  FileText,
+  ClipboardList,
+  Clock,
+  BarChart2,
+  User,
+  Building2,
+  Shield,
+  Settings,
+  Search,
+  Menu,
+  X,
+  Check,
+  Plane,
+  Bot,
   Send,
   Briefcase,
   UserCheck,
@@ -34,6 +34,65 @@ import {
   ScrollText,
 } from 'lucide-react';
 
+// Rotating examples for the AI Agent spotlight card. Each one is checked
+// against the real chat backend (backend/src/routes/ai.routes.js), not just
+// written to sound plausible:
+// - RAG retrieval cites "[Document #N] "Title"" — that's the literal format
+//   buildRagContext produces, so example 1 mirrors real output structure.
+// - Drafting: the draftDocument tool's real response is literally
+//   `I've created a draft titled "X". You can find it in your Drafts to
+//   review and edit before submitting.` — example 3 is that almost verbatim.
+// - OCR: the real system prompt adds a "minor transcription errors may be
+//   present" caveat whenever a retrieved doc used vision OCR — example 4
+//   echoes that same caveat rather than inventing a different one.
+// - Proactive insight: this is the AgentInsight / matchUnansweredQueriesFor-
+//   Document pipeline, built and live-tested this session — example 5 as-is.
+// - Status tracking: the chat has NO circulation/routing tool — it can find
+//   a document via RAG but can't narrate who's currently holding it. The
+//   original draft example claimed live routing status the system doesn't
+//   have; rewritten to what RAG actually returns (a lookup, not a routing
+//   narration), with an honest pointer to where routing status really lives.
+// - Honest limits: buildRagContext filters invisible documents out of
+//   context entirely (canViewDocument-equivalent check) before the model
+//   ever sees them, so an inaccessible document hits the same
+//   "isUnanswerable" branch as a real not-found — the model doesn't say
+//   "that's classified", it genuinely never received it. Rewritten to match
+//   that isUnanswerable copy pattern instead of implying explicit
+//   per-document classification awareness that doesn't exist at the chat
+//   layer.
+const EXAMPLE_CONVERSATIONS = [
+  {
+    question: 'What does the Q3 maintenance memo say about the inverter replacement?',
+    answer: 'According to [Document #12] "Maintenance Approval — Inverter", the GM approved replacement of the Line 3 inverter on 14 July, subject to the Contracts Committee threshold. The full approval trail has 4 annotations.',
+    roleLabel: 'Department Head',
+  },
+  {
+    question: 'Have you seen my Annual Leave Request anywhere in the system?',
+    answer: 'Yes — I found "Annual Leave Request" (Form, Human Resources) on file. I can summarize its contents, but live circulation status — who\'s currently holding it — isn\'t something I track in chat; check the Records or PA Inbox page for that.',
+    roleLabel: 'Staff',
+  },
+  {
+    question: 'Draft a memo to all departments about the records digitization exercise.',
+    answer: 'I\'ve created a draft titled "Records Digitization Exercise — All Departments". You can find it in your Drafts to review and edit before submitting.',
+    roleLabel: 'Records Executive',
+  },
+  {
+    question: 'What was the delivery date on the 2019 scanned procurement form?',
+    answer: 'The archived Form 5 (ingested from the physical archive) shows a delivery date of 12 March 2019, received by the Receiving Committee. This was transcribed via OCR, so treat exact details as needing confirmation.',
+    roleLabel: 'Procurement Officer',
+  },
+  {
+    question: 'Did anything come in that answers my question about the visa letter?',
+    answer: 'Yes — a new document uploaded this morning, "Visa Support Letter — Katusabe", appears to answer your earlier question. Would you like me to summarize it?',
+    roleLabel: 'IT Administrator',
+  },
+  {
+    question: 'What\'s in the confidential board minutes?',
+    answer: 'I couldn\'t find anything matching that among the documents visible to your role — I\'ll flag it for you if something relevant is added later. I only draw from documents you\'re actually authorized to see, so anything genuinely confidential stays out of reach here too.',
+    roleLabel: 'Marketing Officer',
+  },
+];
+
 // Helper component for animated number counting
 function CountingNumber({ value, duration = 2 }) {
   const [count, setCount] = useState(0);
@@ -42,7 +101,7 @@ function CountingNumber({ value, duration = 2 }) {
 
   useEffect(() => {
     if (!isInView) return;
-    
+
     let start = 0;
     const increment = value / (duration * 60); // 60fps
     const interval = setInterval(() => {
@@ -63,39 +122,56 @@ function CountingNumber({ value, duration = 2 }) {
 export default function LandingPage() {
   const [activeSection, setActiveSection] = useState('home');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [chatMessages, setChatMessages] = useState([
-    {
-      role: 'user',
-      text: 'Which department submitted the most procurement requests last quarter?'
-    },
-    {
-      role: 'ai',
-      text: 'Engineering submitted 14 requests — the highest of all departments. 11 were approved, 2 rejected due to cost limits, and 1 is pending GM review.'
-    }
-  ]);
-  const [isTyping, setIsTyping] = useState(false);
   const { theme, resolvedTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
 
-  // Scripted "composing live" reveal for the two seed chat messages —
-  // purely presentational, independent of the real askAI interaction below
+  // Rotating example conversations — cycles automatically, pauses on
+  // hover, respects prefers-reduced-motion. "phase" drives the per-example
+  // reveal (question -> brief typing pause -> answer), independent of the
+  // 7s auto-advance timer below.
   const chatPreviewRef = React.useRef(null);
   const chatPreviewInView = useInView(chatPreviewRef, { once: true, margin: '-100px' });
-  const [seedRevealCount, setSeedRevealCount] = useState(0);
-  const [seedTyping, setSeedTyping] = useState(false);
+  const [activeExampleIndex, setActiveExampleIndex] = useState(0);
+  const [examplePhase, setExamplePhase] = useState('question'); // 'question' | 'typing' | 'answer'
+  const [isPreviewPaused, setIsPreviewPaused] = useState(false);
+  const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
 
   useEffect(() => setMounted(true), []);
 
+  // Detect prefers-reduced-motion and keep it live if the user changes it
+  // mid-session (matches the OS-level setting, not just a one-time read).
+  useEffect(() => {
+    const mq = window.matchMedia('(prefers-reduced-motion: reduce)');
+    setPrefersReducedMotion(mq.matches);
+    const handler = (e) => setPrefersReducedMotion(e.matches);
+    mq.addEventListener('change', handler);
+    return () => mq.removeEventListener('change', handler);
+  }, []);
+
+  // Per-example reveal: question shows immediately, then a brief typing
+  // pause, then the answer — replays every time activeExampleIndex changes,
+  // whether from auto-advance or a manual dot click.
   useEffect(() => {
     if (!chatPreviewInView) return;
+    setExamplePhase('question');
     const timers = [
-      setTimeout(() => setSeedTyping(true), 400),
-      setTimeout(() => { setSeedTyping(false); setSeedRevealCount(1); }, 1000),
-      setTimeout(() => setSeedTyping(true), 1500),
-      setTimeout(() => { setSeedTyping(false); setSeedRevealCount(2); }, 2400),
+      setTimeout(() => setExamplePhase('typing'), 500),
+      setTimeout(() => setExamplePhase('answer'), 1000),
     ];
     return () => timers.forEach(clearTimeout);
-  }, [chatPreviewInView]);
+  }, [activeExampleIndex, chatPreviewInView]);
+
+  // Auto-advance every ~7s. setTimeout (not setInterval) so it naturally
+  // restarts with a fresh window on every dependency change — a manual dot
+  // click or unpausing both get a full 7s before the next auto-advance,
+  // rather than inheriting a stale countdown.
+  useEffect(() => {
+    if (!chatPreviewInView || isPreviewPaused || prefersReducedMotion) return;
+    const t = setTimeout(() => {
+      setActiveExampleIndex((i) => (i + 1) % EXAMPLE_CONVERSATIONS.length);
+    }, 7000);
+    return () => clearTimeout(t);
+  }, [activeExampleIndex, isPreviewPaused, prefersReducedMotion, chatPreviewInView]);
 
   // Use resolvedTheme for rendering decisions (avoids hydration mismatch)
   const currentTheme = mounted ? (resolvedTheme || 'dark') : 'dark';
@@ -121,18 +197,6 @@ export default function LandingPage() {
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
-
-  // Handle interactive predefined AI chatbot questions
-  const askAI = (question, answer) => {
-    if (isTyping) return;
-    setChatMessages(prev => [...prev, { role: 'user', text: question }]);
-    setIsTyping(true);
-
-    setTimeout(() => {
-      setChatMessages(prev => [...prev, { role: 'ai', text: answer }]);
-      setIsTyping(false);
-    }, 1200);
-  };
 
   const navLinks = [
     { label: 'Home', href: '#home', id: 'home' },
@@ -170,11 +234,10 @@ export default function LandingPage() {
               <a
                 key={link.label}
                 href={link.href}
-                className={`font-heading text-sm uppercase tracking-wider px-3 py-1.5 rounded transition-all duration-300 relative nav-hover ${
-                  activeSection === link.id
+                className={`font-heading text-sm uppercase tracking-wider px-3 py-1.5 rounded transition-all duration-300 relative nav-hover ${activeSection === link.id
                     ? 'text-uacc-gold font-semibold'
                     : ''
-                }`}
+                  }`}
                 style={activeSection !== link.id ? { color: 'var(--text-muted)' } : {}}
               >
                 {link.label}
@@ -188,15 +251,15 @@ export default function LandingPage() {
           {/* Action buttons (desktop) */}
           <div className="hidden md:flex items-center gap-3">
             <ThemeToggle />
-            <Link 
-              href="/login" 
+            <Link
+              href="/login"
               className="px-5 py-2 border rounded font-heading text-xs uppercase tracking-wider transition-all duration-200"
               style={{ color: 'var(--text-primary)', borderColor: 'var(--border-default)' }}
             >
               Sign In
             </Link>
-            <Link 
-              href="/login" 
+            <Link
+              href="/login"
               className="btn-primary px-5 py-2 rounded font-heading text-xs uppercase tracking-wider font-bold"
             >
               Get Started
@@ -204,7 +267,7 @@ export default function LandingPage() {
           </div>
 
           {/* Mobile hamburger menu toggle */}
-          <button 
+          <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             className="md:hidden p-2 focus:outline-none"
             style={{ color: 'var(--text-muted)' }}
@@ -223,11 +286,10 @@ export default function LandingPage() {
                   key={link.label}
                   href={link.href}
                   onClick={() => setMobileMenuOpen(false)}
-                  className={`font-heading text-sm uppercase tracking-wider py-3 px-4 rounded transition-all ${
-                    activeSection === link.id
+                  className={`font-heading text-sm uppercase tracking-wider py-3 px-4 rounded transition-all ${activeSection === link.id
                       ? 'bg-uacc-gold/10 text-uacc-gold font-bold'
                       : ''
-                  }`}
+                    }`}
                   style={activeSection !== link.id ? { color: 'var(--text-muted)' } : {}}
                 >
                   {link.label}
@@ -239,16 +301,16 @@ export default function LandingPage() {
               <div className="flex items-center justify-center pt-2">
                 <ThemeToggle />
               </div>
-              <Link 
-                href="/login" 
+              <Link
+                href="/login"
                 onClick={() => setMobileMenuOpen(false)}
                 className="w-full text-center py-3 border rounded font-heading text-xs uppercase tracking-wider transition-all"
                 style={{ color: 'var(--text-primary)', borderColor: 'var(--border-default)' }}
               >
                 Sign In
               </Link>
-              <Link 
-                href="/login" 
+              <Link
+                href="/login"
                 onClick={() => setMobileMenuOpen(false)}
                 className="w-full text-center btn-primary py-3 rounded font-heading text-xs uppercase tracking-wider font-bold"
               >
@@ -260,8 +322,8 @@ export default function LandingPage() {
       </nav>
 
       {/* SECTION 2 — Hero */}
-      <section 
-        id="home" 
+      <section
+        id="home"
         className="relative z-10 pt-28 md:pt-40 pb-20 px-margin-mobile md:px-margin-desktop max-w-7xl mx-auto min-h-screen flex flex-col justify-center overflow-hidden"
       >
         {/* Background elements (low opacity 0.15) */}
@@ -274,11 +336,11 @@ export default function LandingPage() {
           </svg>
         </div>
         {/* Gold Glow Top Right */}
-<div className="absolute top-0 right-0 w-[300px] h-[300px] md:w-[600px] md:h-[600px] bg-linear-to-bl from-uacc-gold/10 to-transparent rounded-full blur-[100px] pointer-events-none z-0"></div>
+        <div className="absolute top-0 right-0 w-[300px] h-[300px] md:w-[600px] md:h-[600px] bg-linear-to-bl from-uacc-gold/10 to-transparent rounded-full blur-[100px] pointer-events-none z-0"></div>
 
         <div className="grid grid-cols-1 md:grid-cols-12 gap-12 items-center relative z-10">
           {/* Left Column (60% desktop) */}
-          <motion.div 
+          <motion.div
             className="md:col-span-7 flex flex-col items-start gap-6"
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -295,7 +357,7 @@ export default function LandingPage() {
 
             {/* H1 Heading — uses var(--text-primary) so it works in both themes */}
             <h1 className="font-heading text-4xl sm:text-5xl md:text-[68px] font-bold tracking-tight leading-[1.05]"
-                style={{ color: 'var(--text-primary)' }}>
+              style={{ color: 'var(--text-primary)' }}>
               The Future of <br className="hidden sm:inline" />
               Operations at <br />
               <span className="gradient-text-gold">Uganda Air Cargo Corporation</span>
@@ -308,14 +370,14 @@ export default function LandingPage() {
 
             {/* CTAs */}
             <div className="flex flex-wrap items-center gap-4 mt-2">
-              <a 
-                href="/login" 
+              <a
+                href="/login"
                 className="btn-primary px-8 py-4 rounded font-heading text-xs font-bold tracking-wider"
               >
                 Access DIMS
               </a>
-              <a 
-                href="#features" 
+              <a
+                href="#features"
                 className="btn-ghost px-8 py-4 rounded font-heading text-xs font-bold tracking-wider flex items-center gap-2"
               >
                 See How It Works <span className="text-uacc-gold">→</span>
@@ -325,9 +387,9 @@ export default function LandingPage() {
             {/* Stats row below thin divider */}
             <div className="w-full mt-8 pt-8" style={{ borderTop: '1px solid var(--border-subtle)' }}>
               <p className="font-heading text-xs md:text-sm tracking-wider flex flex-wrap items-center gap-x-3 gap-y-1" style={{ color: 'var(--text-muted)' }}>
-                <span className="text-uacc-gold font-bold">230+</span> Assets Digitized 
+                <span className="text-uacc-gold font-bold">230+</span> Assets Digitized
                 <span style={{ color: 'var(--text-faint)' }}>·</span>
-                <span className="text-uacc-gold font-bold">5</span> Departments Connected 
+                <span className="text-uacc-gold font-bold">5</span> Departments Connected
                 <span style={{ color: 'var(--text-faint)' }}>·</span>
                 <span className="text-uacc-gold font-bold animate-pulse">AI-Powered</span> Insights
               </p>
@@ -335,7 +397,7 @@ export default function LandingPage() {
           </motion.div>
 
           {/* Right Column (40% desktop) */}
-          <motion.div 
+          <motion.div
             className="md:col-span-5 relative w-full"
             initial={{ opacity: 0, scale: 0.95, y: 20 }}
             whileInView={{ opacity: 1, scale: 1, y: 0 }}
@@ -346,8 +408,8 @@ export default function LandingPage() {
             <div className="glass-panel rounded-xl p-6 absolute -top-6 -right-6 z-0 opacity-40 blur-sm w-48 h-48 border-uacc-gold/10 pointer-events-none"></div>
 
             {/* Main status glass card */}
-            <motion.div 
-              className="glass-panel rounded-xl p-6 md:p-8 relative z-10 w-full backdrop-blur-2xl shadow-[0_0_40px_rgba(201,151,58,0.1)]" 
+            <motion.div
+              className="glass-panel rounded-xl p-6 md:p-8 relative z-10 w-full backdrop-blur-2xl shadow-[0_0_40px_rgba(201,151,58,0.1)]"
               style={{ borderColor: 'var(--border-gold-hover)' }}
               whileHover={{ y: -8, boxShadow: '0 20px 60px rgba(201, 151, 58, 0.15)' }}
               transition={{ duration: 0.3, ease: "easeOut" }}
@@ -401,7 +463,7 @@ export default function LandingPage() {
 
               {/* AI Chat Bubble at Bottom */}
               <div className="p-3.5 glass-panel border-uacc-red/20 rounded-lg"
-                   style={{ background: 'rgba(204,34,0,0.08)' }}>
+                style={{ background: 'rgba(204,34,0,0.08)' }}>
                 <div className="flex items-start gap-3">
                   <div className="p-1.5 rounded-full bg-uacc-red/20 text-uacc-red shrink-0">
                     <Bot size={16} />
@@ -426,14 +488,14 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto px-margin-mobile md:px-margin-desktop text-center flex items-center justify-center gap-3">
           <Plane className="text-uacc-gold w-4 h-4 shrink-0 animate-pulse rotate-90" />
           <p className="font-heading text-[10px] md:text-xs text-uacc-gold-light uppercase tracking-[0.25em] leading-normal max-w-full">
-            ✈ Deployed for Uganda Air Cargo Corporation <span className="mx-2 text-uacc-gold/30">·</span> 
+            ✈ Deployed for Uganda Air Cargo Corporation <span className="mx-2 text-uacc-gold/30">·</span>
           </p>
         </div>
       </section>
 
       {/* SECTION 4 — Four Core Modules */}
-      <section 
-        id="features" 
+      <section
+        id="features"
         className="relative z-10 py-24 px-margin-mobile md:px-margin-desktop max-w-7xl mx-auto"
       >
         {/* Section Heading */}
@@ -448,7 +510,7 @@ export default function LandingPage() {
         </div>
 
         {/* 2x2 Grid / 1 column mobile */}
-        <motion.div 
+        <motion.div
           className="grid grid-cols-1 md:grid-cols-2 gap-8"
           initial="hidden"
           whileInView="visible"
@@ -462,7 +524,7 @@ export default function LandingPage() {
           }}
         >
           {/* Card 1 — Document Management */}
-          <motion.div 
+          <motion.div
             className="glass-panel rounded-xl p-8 hover:border-uacc-gold/40 hover:shadow-[inset_0_0_20px_rgba(201,151,58,0.05)] relative overflow-hidden group"
             variants={{
               hidden: { opacity: 0, y: 30 },
@@ -472,7 +534,7 @@ export default function LandingPage() {
           >
             {/* Hover light indicator */}
             <div className="absolute top-0 left-0 w-2 h-full bg-uacc-gold opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-            
+
             <div className="flex items-start gap-5">
               <div className="p-4 rounded-lg bg-uacc-gold/10 text-uacc-gold shrink-0 group-hover:scale-110 transition-transform duration-300">
                 <FileText size={24} />
@@ -489,7 +551,7 @@ export default function LandingPage() {
           </motion.div>
 
           {/* Card 2 — Procurement Workflow */}
-          <motion.div 
+          <motion.div
             className="glass-panel rounded-xl p-8 accent-red hover:border-uacc-red/40 hover:shadow-[inset_0_0_20px_rgba(204,34,0,0.05)] relative overflow-hidden group"
             variants={{
               hidden: { opacity: 0, y: 30 },
@@ -516,7 +578,7 @@ export default function LandingPage() {
           </motion.div>
 
           {/* Card 3 — Activity Logs */}
-          <motion.div 
+          <motion.div
             className="glass-panel rounded-xl p-8 hover:border-uacc-gold/40 hover:shadow-[inset_0_0_20px_rgba(201,151,58,0.05)] relative overflow-hidden group"
             variants={{
               hidden: { opacity: 0, y: 30 },
@@ -543,7 +605,7 @@ export default function LandingPage() {
           </motion.div>
 
           {/* Card 4 — Reports & Dashboard */}
-          <motion.div 
+          <motion.div
             className="glass-panel rounded-xl p-8 accent-red hover:border-uacc-red/40 hover:shadow-[inset_0_0_20px_rgba(204,34,0,0.05)] relative overflow-hidden group"
             variants={{
               hidden: { opacity: 0, y: 30 },
@@ -572,8 +634,8 @@ export default function LandingPage() {
       </section>
 
       {/* SECTION 5 — AI Agent Spotlight */}
-      <section 
-        id="ai-agent" 
+      <section
+        id="ai-agent"
         className="relative z-10 py-24 overflow-hidden"
         style={{ backgroundColor: 'var(--bg-overlay)', borderTop: '1px solid var(--border-subtle)', borderBottom: '1px solid var(--border-subtle)' }}
       >
@@ -582,7 +644,7 @@ export default function LandingPage() {
 
         <div className="max-w-7xl mx-auto px-margin-mobile md:px-margin-desktop grid grid-cols-1 md:grid-cols-12 gap-12 items-center relative z-10">
           {/* Left Column (text) */}
-          <motion.div 
+          <motion.div
             className="md:col-span-6 flex flex-col items-start gap-6"
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -596,7 +658,7 @@ export default function LandingPage() {
               An AI Agent That Learns From Your Operations
             </h2>
             <p className="text-base md:text-lg leading-relaxed" style={{ color: 'var(--text-muted)' }}>
-              DIMS includes a built-in AI agent powered by Claude (Anthropic) that reads your live operational data and surfaces insights, flags anomalies, and answers questions in plain English.
+              DIMS includes a built-in AI agent that reads your live operational data and surfaces insights, flags anomalies, and answers questions in plain English.
             </p>
 
             {/* Bullet points with checkmarks */}
@@ -629,8 +691,8 @@ export default function LandingPage() {
 
             {/* CTA & Muted Labels */}
             <div className="flex flex-col gap-3 mt-4 w-full sm:w-auto">
-              <a 
-                href="/login" 
+              <a
+                href="/login"
                 className="btn-ghost px-8 py-4 rounded font-heading text-xs font-bold tracking-wider text-center"
               >
                 Meet the AI Agent →
@@ -650,10 +712,17 @@ export default function LandingPage() {
             transition={{ duration: 0.8, delay: 0.15, ease: "easeOut" }}
             viewport={{ once: true, margin: "-100px" }}
           >
-            {/* Chat Frame Container */}
-            <div className="glass-panel border-t-2 border-t-uacc-gold rounded-xl overflow-hidden shadow-[0_12px_40px_rgba(0,0,0,0.5)]" style={{ backgroundColor: 'var(--bg-surface)' }}>
+            {/* Chat Frame Container — pauses rotation while the pointer is
+                anywhere over it, so a reader hovering the header or input
+                area isn't yanked away mid-sentence either */}
+            <div
+              className="glass-panel border-t-2 border-t-uacc-gold rounded-xl overflow-hidden shadow-[0_12px_40px_rgba(0,0,0,0.5)]"
+              style={{ backgroundColor: 'var(--bg-surface)' }}
+              onMouseEnter={() => setIsPreviewPaused(true)}
+              onMouseLeave={() => setIsPreviewPaused(false)}
+            >
               {/* Header */}
-              <div className="flex justify-between items-center px-6 py-4" style={{ backgroundColor: 'var(--bg-surface-low)', borderBottom: '1px solid var(--border-subtle)' }}>
+              <div className="flex items-center px-6 py-4" style={{ backgroundColor: 'var(--bg-surface-low)', borderBottom: '1px solid var(--border-subtle)' }}>
                 <div className="flex items-center gap-3">
                   <div className="p-2 rounded-lg bg-uacc-gold/10 text-uacc-gold">
                     <Bot size={20} />
@@ -666,93 +735,82 @@ export default function LandingPage() {
                     </div>
                   </div>
                 </div>
-                {/* Predefined prompts chips */}
-                <div className="flex gap-2">
-                  <button 
-                    onClick={() => askAI(
-                      "Show doc status for Engineering.", 
-                      "Engineering has uploaded 145 files this month. 98% are technical manuals."
-                    )}
-                    className="text-[9px] px-2.5 py-1 rounded text-uacc-gold transition-all"
-                    style={{ background: 'var(--glass-bg)', border: '1px solid var(--border-default)' }}
-                  >
-                    Doc Status
-                  </button>
-                  <button 
-                    onClick={() => askAI(
-                      "How many logs today?", 
-                      "34 logs submitted across 5 departments. 30 approved, 4 pending in Operations."
-                    )}
-                    className="text-[9px] px-2.5 py-1 rounded text-uacc-gold transition-all"
-                    style={{ background: 'var(--glass-bg)', border: '1px solid var(--border-default)' }}
-                  >
-                    Today&apos;s Logs
-                  </button>
-                </div>
               </div>
 
-              {/* Message Log Body */}
+              {/* Message Log Body — one rotating example at a time, not an
+                  accumulating log. AnimatePresence gives the fade between
+                  examples; no position:fixed descendants in this subtree,
+                  so the containing-block bug that's bitten modals here
+                  before doesn't apply. */}
               <div className="p-6 h-[300px] overflow-y-auto flex flex-col gap-4">
-                {chatMessages.map((msg, idx) => {
-                  // The first two seed messages are held back until this card
-                  // scrolls into view, then revealed in sequence — see the
-                  // seedRevealCount effect above. Messages appended by askAI
-                  // (idx >= 2) always render immediately as before.
-                  if (idx < 2 && idx >= seedRevealCount) return null;
-                  return (
+                <AnimatePresence mode="wait">
                   <motion.div
-                    key={idx}
-                    className={`flex flex-col max-w-[85%] ${
-                      msg.role === 'user' ? 'self-end items-end' : 'self-start items-start'
-                    }`}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.4, delay: idx < 2 ? 0 : idx * 0.1 }}
+                    key={activeExampleIndex}
+                    className="flex flex-col gap-4"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: prefersReducedMotion ? 0 : 0.4 }}
                   >
-                    <span className="text-[9px] font-heading uppercase mb-1 tracking-wider" style={{ color: 'var(--text-muted)' }}>
-                      {msg.role === 'user' ? 'You' : 'DIMS AI Agent'}
-                    </span>
-                    <div 
-                      className={`p-3.5 rounded-lg text-sm leading-relaxed ${
-                        msg.role === 'user'
-                          ? 'rounded-tr-none'
-                          : 'border-l-2 border-uacc-gold rounded-tl-none'
-                      }`}
-                      style={msg.role === 'user' 
-                        ? { background: 'var(--glass-bg)', border: '1px solid var(--border-default)', color: 'var(--text-primary)' }
-                        : { background: 'rgba(201,151,58,0.08)', color: 'var(--text-secondary)' }
-                      }
-                    >
-                      {msg.text}
+                    {/* Question bubble — role label instead of a generic
+                        "You", so the rotation itself shows how many
+                        different roles this agent actually serves */}
+                    <div className="flex flex-col max-w-[85%] self-end items-end">
+                      <span className="text-[9px] font-heading uppercase mb-1 tracking-wider" style={{ color: 'var(--text-muted)' }}>
+                        {EXAMPLE_CONVERSATIONS[activeExampleIndex].roleLabel}
+                      </span>
+                      <div
+                        className="p-3.5 rounded-lg text-sm leading-relaxed rounded-tr-none"
+                        style={{ background: 'var(--glass-bg)', border: '1px solid var(--border-default)', color: 'var(--text-primary)' }}
+                      >
+                        {EXAMPLE_CONVERSATIONS[activeExampleIndex].question}
+                      </div>
                     </div>
-                  </motion.div>
-                  );
-                })}
 
-                {/* Animated Typing Indicator */}
-                {(isTyping || seedTyping) && (
-                  <div className="self-start flex flex-col items-start max-w-[85%]">
-                    <span className="text-[9px] font-heading uppercase mb-1 tracking-wider" style={{ color: 'var(--text-muted)' }}>
-                      DIMS AI Agent
-                    </span>
-                    <div className="flex gap-1.5 items-center px-4 py-3 border-l-2 border-uacc-gold rounded-lg rounded-tl-none" style={{ background: 'rgba(201,151,58,0.08)' }}>
-                      <span className="w-1.5 h-1.5 rounded-full bg-uacc-gold animate-bounce" style={{ animationDelay: '0ms' }}></span>
-                      <span className="w-1.5 h-1.5 rounded-full bg-uacc-gold animate-bounce" style={{ animationDelay: '150ms' }}></span>
-                      <span className="w-1.5 h-1.5 rounded-full bg-uacc-gold animate-bounce" style={{ animationDelay: '300ms' }}></span>
-                    </div>
-                  </div>
-                )}
+                    {/* Typing indicator, then the answer */}
+                    {examplePhase === 'typing' && (
+                      <div className="self-start flex flex-col items-start max-w-[85%]">
+                        <span className="text-[9px] font-heading uppercase mb-1 tracking-wider" style={{ color: 'var(--text-muted)' }}>
+                          DIMS AI Agent
+                        </span>
+                        <div className="flex gap-1.5 items-center px-4 py-3 border-l-2 border-uacc-gold rounded-lg rounded-tl-none" style={{ background: 'rgba(201,151,58,0.08)' }}>
+                          <span className="w-1.5 h-1.5 rounded-full bg-uacc-gold animate-bounce" style={{ animationDelay: '0ms' }}></span>
+                          <span className="w-1.5 h-1.5 rounded-full bg-uacc-gold animate-bounce" style={{ animationDelay: '150ms' }}></span>
+                          <span className="w-1.5 h-1.5 rounded-full bg-uacc-gold animate-bounce" style={{ animationDelay: '300ms' }}></span>
+                        </div>
+                      </div>
+                    )}
+                    {examplePhase === 'answer' && (
+                      <motion.div
+                        className="flex flex-col max-w-[85%] self-start items-start"
+                        initial={{ opacity: 0, y: 6 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: prefersReducedMotion ? 0 : 0.3 }}
+                      >
+                        <span className="text-[9px] font-heading uppercase mb-1 tracking-wider" style={{ color: 'var(--text-muted)' }}>
+                          DIMS AI Agent
+                        </span>
+                        <div
+                          className="p-3.5 rounded-lg text-sm leading-relaxed border-l-2 border-uacc-gold rounded-tl-none"
+                          style={{ background: 'rgba(201,151,58,0.08)', color: 'var(--text-secondary)' }}
+                        >
+                          {EXAMPLE_CONVERSATIONS[activeExampleIndex].answer}
+                        </div>
+                      </motion.div>
+                    )}
+                  </motion.div>
+                </AnimatePresence>
               </div>
 
               {/* Chat Input placeholder */}
               <div className="p-4 flex gap-2" style={{ backgroundColor: 'var(--bg-surface-low)', borderTop: '1px solid var(--border-subtle)' }}>
-                <input 
-                  type="text" 
-                  placeholder="Ask a question about aircraft logistics, procurement status..." 
+                <input
+                  type="text"
+                  placeholder="Ask a question about aircraft logistics, procurement status..."
                   disabled
                   className="input-field cursor-not-allowed"
                 />
-                <button 
+                <button
                   disabled
                   className="p-2 rounded bg-uacc-gold/20 text-uacc-gold-light border border-uacc-gold/30 cursor-not-allowed"
                 >
@@ -761,7 +819,25 @@ export default function LandingPage() {
               </div>
             </div>
 
-            {/* Illustrative caption */}
+            {/* Dot indicators — manual nav + shows there are multiple
+                examples. Always available, even with reduced motion (only
+                the *auto* rotation is disabled by that preference). */}
+            <div className="flex items-center justify-center gap-2 mt-4">
+              {EXAMPLE_CONVERSATIONS.map((ex, i) => (
+                <button
+                  key={i}
+                  onClick={() => setActiveExampleIndex(i)}
+                  aria-label={`Show example ${i + 1} of ${EXAMPLE_CONVERSATIONS.length}: ${ex.roleLabel}`}
+                  aria-current={i === activeExampleIndex}
+                  className={`h-1.5 rounded-full transition-all duration-300 cursor-pointer ${i === activeExampleIndex ? 'w-5 bg-uacc-gold' : 'w-1.5'
+                    }`}
+                  style={i === activeExampleIndex ? undefined : { background: 'var(--border-default)' }}
+                />
+              ))}
+            </div>
+
+            {/* Illustrative caption — stays visible on every slide, not
+                just the first */}
             <div className="mt-3 text-center text-[10px]" style={{ color: 'var(--text-faint)' }}>
               Example conversation — illustrative
             </div>
@@ -770,8 +846,8 @@ export default function LandingPage() {
       </section>
 
       {/* SECTION 6 — Built For Every Role */}
-      <section 
-        id="modules" 
+      <section
+        id="modules"
         className="relative z-10 py-24 px-margin-mobile md:px-margin-desktop max-w-7xl mx-auto"
       >
         {/* Title Heading */}
@@ -839,8 +915,8 @@ export default function LandingPage() {
       </section>
 
       {/* SECTION 7 — CTA Banner — intentionally dark red in both themes */}
-      <section 
-        id="about" 
+      <section
+        id="about"
         className="relative z-10 w-full py-20 border-t border-uacc-gold/30 overflow-hidden"
         style={{ background: 'linear-gradient(90deg,#1A0500,#2D0800)' }}
       >
@@ -859,8 +935,8 @@ export default function LandingPage() {
             DIMS is built specifically for UACC&apos;s operational structure, legal obligations, and multi-department workflow.
           </p>
           <div className="mt-4">
-            <Link 
-              href="/login" 
+            <Link
+              href="/login"
               className="px-8 py-4 bg-white text-uacc-red font-heading text-xs uppercase tracking-wider font-bold rounded-full hover:bg-neutral-100 transform hover:-translate-y-0.5 transition-all shadow-[0_4px_20px_rgba(204,34,0,0.15)] inline-block"
             >
               Access the System
@@ -899,9 +975,9 @@ export default function LandingPage() {
             </h4>
             <div className="flex flex-col gap-2.5">
               {['Dashboard', 'Documents', 'Procurement', 'Activity Logs', 'Reports'].map((link) => (
-                <Link 
-                  key={link} 
-                  href="/login" 
+                <Link
+                  key={link}
+                  href="/login"
                   className="text-xs hover:text-uacc-gold transition-colors duration-200"
                   style={{ color: 'var(--text-muted)' }}
                 >
@@ -921,8 +997,8 @@ export default function LandingPage() {
               <span>Plot 103A–107A, Circular Road, Bugonga</span>
               <span>Entebbe International Airport, Uganda</span>
               <span>P.O. Box 343 Entebbe</span>
-              <a 
-                href="mailto:marketing@uganda-aircargo.com" 
+              <a
+                href="mailto:marketing@uganda-aircargo.com"
                 className="text-uacc-gold hover:underline mt-1 inline-block"
               >
                 marketing@uganda-aircargo.com
