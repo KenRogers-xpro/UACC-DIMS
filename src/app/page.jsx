@@ -235,8 +235,8 @@ export default function LandingPage() {
                 key={link.label}
                 href={link.href}
                 className={`font-heading text-sm uppercase tracking-wider px-3 py-1.5 rounded transition-all duration-300 relative nav-hover ${activeSection === link.id
-                    ? 'text-uacc-gold font-semibold'
-                    : ''
+                  ? 'text-uacc-gold font-semibold'
+                  : ''
                   }`}
                 style={activeSection !== link.id ? { color: 'var(--text-muted)' } : {}}
               >
@@ -287,8 +287,8 @@ export default function LandingPage() {
                   href={link.href}
                   onClick={() => setMobileMenuOpen(false)}
                   className={`font-heading text-sm uppercase tracking-wider py-3 px-4 rounded transition-all ${activeSection === link.id
-                      ? 'bg-uacc-gold/10 text-uacc-gold font-bold'
-                      : ''
+                    ? 'bg-uacc-gold/10 text-uacc-gold font-bold'
+                    : ''
                     }`}
                   style={activeSection !== link.id ? { color: 'var(--text-muted)' } : {}}
                 >
@@ -389,7 +389,7 @@ export default function LandingPage() {
               <p className="font-heading text-xs md:text-sm tracking-wider flex flex-wrap items-center gap-x-3 gap-y-1" style={{ color: 'var(--text-muted)' }}>
                 <span className="text-uacc-gold font-bold">230+</span> Assets Digitized
                 <span style={{ color: 'var(--text-faint)' }}>·</span>
-                <span className="text-uacc-gold font-bold">5</span> Departments Connected
+                <span className="text-uacc-gold font-bold">All</span> Departments Connected
                 <span style={{ color: 'var(--text-faint)' }}>·</span>
                 <span className="text-uacc-gold font-bold animate-pulse">AI-Powered</span> Insights
               </p>
@@ -698,7 +698,7 @@ export default function LandingPage() {
                 Meet the AI Agent →
               </a>
               <span className="font-heading text-[10px] uppercase tracking-widest text-center sm:text-left" style={{ color: 'var(--text-faint)' }}>
-                Powered by Claude · Anthropic API · Data stays on your server
+                · Data stays on your server
               </span>
             </div>
           </motion.div>
