@@ -1,8 +1,7 @@
 'use client'
 import { useTheme } from 'next-themes'
 import { useEffect, useState } from 'react'
-import { HugeiconsIcon } from '@hugeicons/react'
-import { Sun01Icon, Moon01Icon } from '@hugeicons/core-free-icons'
+import { Sun, Moon } from 'lucide-react'
 
 export default function ThemeToggle({ className = '' }) {
   const { theme, setTheme } = useTheme()
@@ -43,8 +42,8 @@ export default function ThemeToggle({ className = '' }) {
       </div>
       {/* Icon */}
       {isDark
-        ? <HugeiconsIcon icon={Moon01Icon} size={14} color="currentColor" strokeWidth={1.5} className="text-uacc-gold" />
-        : <HugeiconsIcon icon={Sun01Icon} size={14} color="#C9973A" strokeWidth={1.5} />
+        ? <Moon size={14} strokeWidth={1.5} className="text-uacc-gold" />
+        : <Sun size={14} strokeWidth={1.5} style={{ color: '#C9973A' }} />
       }
     </button>
   )

@@ -3,9 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { createPortal } from 'react-dom'
 import { motion, AnimatePresence } from 'framer-motion'
-import { HugeiconsIcon } from '@hugeicons/react'
-import { Cancel01Icon, Download01Icon, PencilEdit01Icon, SentIcon, LockIcon, Comment01Icon, Time02Icon, ViewIcon, PenTool01Icon, AttachmentIcon, CloudUploadIcon, UserIcon, FolderCheckIcon } from '@hugeicons/core-free-icons'
-import { Maximize2, Minimize2, FileText, FileDown } from 'lucide-react'
+import { Maximize2, Minimize2, FileText, FileDown, Eye, MessageSquare, Clock, Paperclip, Download, PenTool, CloudUpload, User, FolderCheck, Send, X } from 'lucide-react'
 import Badge from '@/components/ui/Badge'
 import Button from '@/components/ui/Button'
 import EmptyState from '@/components/ui/EmptyState'
@@ -40,10 +38,10 @@ const SUBMIT_ROLES = [
 ]
 
 const TABS = [
-  { key: 'preview', label: 'Preview', icon: ViewIcon },
-  { key: 'annotations', label: 'Annotations', icon: Comment01Icon },
-  { key: 'signatures', label: 'Signatures', icon: Time02Icon },
-  { key: 'attachments', label: 'Attachments', icon: AttachmentIcon },
+  { key: 'preview', label: 'Preview', icon: Eye },
+  { key: 'annotations', label: 'Annotations', icon: MessageSquare },
+  { key: 'signatures', label: 'Signatures', icon: Clock },
+  { key: 'attachments', label: 'Attachments', icon: Paperclip },
 ]
 
 // Secondary, clearly-optional multi-select — deliberately smaller/quieter
@@ -615,20 +613,6 @@ export default function DocumentViewerModal({
             <div className="flex-1 overflow-y-auto p-5 flex flex-col gap-5 min-h-0">
               {tab === 'preview' && (
                 <div className="flex flex-col gap-5 flex-1 min-h-0">
-                  {/* flex-1 + min-h-0 on this wrapper (not h-full/percentage
-                      sizing) is what makes it actually get a real, definite
-                      height from the flex layout — the modal above is a
-                      fixed h-[95vh], not just a max-height, so that height
-                      is real all the way down this chain. The iframe fills
-                      it with plain w-full h-full: no max-width/aspect-ratio
-                      constraint, so it renders the same way a PDF does in
-                      its own browser tab — full-bleed, with the viewer's
-                      own zoom/page controls, not letterboxed down to a
-                      forced page-shaped box (that was the previous bug:
-                      an aspect-[1/1.414] wrapper computed its width from
-                      height/ratio, which is far narrower than this modal is
-                      wide, so the PDF rendered small in the middle of a
-                      mostly-empty container). */}
                   <div
                     ref={previewBoxRef}
                     className="relative rounded-xl overflow-hidden border bg-black/20 flex-1 min-h-[420px] flex flex-col"
@@ -665,7 +649,7 @@ export default function DocumentViewerModal({
                         <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
                           This file type can&apos;t be previewed inline.
                         </p>
-                        <Button size="sm" variant="outline" icon={Download01Icon} onClick={() => window.open(fileUrl)} loading={downloading}>
+                        <Button size="sm" variant="outline" icon={Download} onClick={() => window.open(fileUrl)} loading={downloading}>
                           Download to view
                         </Button>
                       </div>
@@ -774,7 +758,7 @@ export default function DocumentViewerModal({
                       <SkeletonLine height="h-16" />
                     </div>
                   ) : annotations.length === 0 && !(circulation?.steps?.length) && attachments.length === 0 ? (
-                    <EmptyState icon={Comment01Icon} title="No annotations yet" message="Comments, notes, and routing history for this document will appear here." />
+                    <EmptyState icon={MessageSquare} title="No annotations yet" message="Comments, notes, and routing history for this document will appear here." />
                   ) : (
                     <AnnotationTrail circulation={circulation} annotations={annotations} attachments={attachments} />
                   )}
@@ -789,12 +773,12 @@ export default function DocumentViewerModal({
                       <SkeletonLine height="h-16" />
                     </div>
                   ) : !circulation ? (
-                    <EmptyState icon={PenTool01Icon} title="No circulation yet" message="This document has not entered circulation yet." />
+                    <EmptyState icon={PenTool} title="No circulation yet" message="This document has not entered circulation yet." />
                   ) : (
                     <>
                       {canSign && (
                         <div className="flex justify-end">
-                          <Button size="sm" variant="primary" icon={PenTool01Icon} onClick={() => setShowSigning(true)}>
+                          <Button size="sm" variant="primary" icon={PenTool} onClick={() => setSigningOpen(true)}>
                             Sign This Step
                           </Button>
                         </div>
@@ -813,13 +797,13 @@ export default function DocumentViewerModal({
                       <SkeletonLine height="h-16" />
                     </div>
                   ) : !circulation ? (
-                    <EmptyState icon={AttachmentIcon} title="No circulation yet" message="Supporting documents can be attached once this document is in circulation." />
+                    <EmptyState icon={Paperclip} title="No circulation yet" message="Supporting documents can be attached once this document is in circulation." />
                   ) : (
                     <>
                       {isCurrentHolder && (
                         <div className="rounded-lg p-4 flex flex-col gap-3 border" style={{ borderColor: 'var(--border-gold)', background: 'rgba(201,151,58,0.05)' }}>
                           <p className="text-xs font-semibold flex items-center gap-1.5" style={{ color: 'var(--text-primary)' }}>
-                            <HugeiconsIcon icon={CloudUploadIcon} size={14} color="currentColor" strokeWidth={1.5} /> Attach Supporting Document
+                            <CloudUpload size={14} strokeWidth={1.5} /> Attach Supporting Document
                           </p>
                           <input
                             className="input-field w-full"
@@ -835,7 +819,7 @@ export default function DocumentViewerModal({
                           />
                           <Button
                             variant="outline"
-                            icon={CloudUploadIcon}
+                            icon={CloudUpload}
                             loading={attaching}
                             onClick={() => attachmentFileInputRef.current?.click()}
                             className="self-start"
@@ -852,7 +836,7 @@ export default function DocumentViewerModal({
                           <SkeletonLine height="h-14" />
                         </div>
                       ) : attachments.length === 0 ? (
-                        <EmptyState icon={AttachmentIcon} title="No attachments yet" message="Supporting documents attached during circulation will appear here." />
+                        <EmptyState icon={Paperclip} title="No attachments yet" message="Supporting documents attached during circulation will appear here." />
                       ) : (
                         <div className="flex flex-col gap-3">
                           {attachments.map((att) => (
@@ -863,13 +847,13 @@ export default function DocumentViewerModal({
                               style={{ borderColor: 'var(--border-subtle)' }}
                             >
                               <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5" style={{ background: 'rgba(201,151,58,0.1)', border: '1px solid rgba(201,151,58,0.2)' }}>
-                                <HugeiconsIcon icon={AttachmentIcon} size={16} color="currentColor" strokeWidth={1.5} className="text-uacc-gold" />
+                                <Paperclip size={16} strokeWidth={1.5} className="text-uacc-gold" />
                               </div>
                               <div className="flex-1 min-w-0">
                                 <p className="text-sm font-semibold truncate" style={{ color: 'var(--text-primary)' }}>{att.document?.title}</p>
                                 {att.note && <p className="text-xs italic mt-0.5" style={{ color: 'var(--text-secondary)' }}>"{att.note}"</p>}
                                 <p className="text-[10px] mt-1 flex items-center gap-1" style={{ color: 'var(--text-faint)' }}>
-                                  <HugeiconsIcon icon={UserIcon} size={10} color="currentColor" strokeWidth={1.5} /> {att.attachedBy?.name || 'Unknown'} · {new Date(att.createdAt).toLocaleString()}
+                                  <User size={10} strokeWidth={1.5} /> {att.attachedBy?.name || 'Unknown'} · {new Date(att.createdAt).toLocaleString()}
                                 </p>
                               </div>
                             </button>
@@ -928,7 +912,7 @@ export default function DocumentViewerModal({
             )}
             <div className="p-5 border-t flex items-center justify-end gap-3 flex-shrink-0" style={{ borderColor: 'var(--border-subtle)' }}>
               {!editing && !showSubmitForm && !showForwardForm && (
-                <Button variant="outline" icon={Download01Icon} onClick={handleDownload} loading={downloading}>
+                <Button variant="outline" icon={Download} onClick={handleDownload} loading={downloading}>
                   Download
                 </Button>
               )}
@@ -940,7 +924,7 @@ export default function DocumentViewerModal({
               {!editing && !showSubmitForm && !showForwardForm && canSendToFile && (
                 <Button
                   variant="primary"
-                  icon={FolderCheckIcon}
+                  icon={FolderCheck}
                   onClick={handleSendToFile}
                   loading={sendingToFile}
                   disabled={sendToFileCoolingDown}
@@ -950,8 +934,8 @@ export default function DocumentViewerModal({
               )}
               {canEdit && !editing && !showSubmitForm && (
                 <>
-                  <Button size="sm" icon={FolderCheckIcon} onClick={() => setShowFiling(true)}>Edit</Button>
-                  <Button size="sm" icon={SentIcon} onClick={() => setShowSubmit(true)}>Send / Circulate</Button>
+                  <Button size="sm" icon={FolderCheck} onClick={() => setShowFiling(true)}>Edit</Button>
+                  <Button size="sm" icon={Send} onClick={() => setShowSubmit(true)}>Send / Circulate</Button>
                 </>
               )}
               {editing && (
@@ -1013,7 +997,7 @@ export default function DocumentViewerModal({
                   <div className="p-4 border-b flex items-center justify-between flex-shrink-0" style={{ borderColor: 'var(--border-subtle)' }}>
                     <p className="text-sm font-semibold truncate" style={{ color: 'var(--text-primary)' }}>{attachmentPreview.title}</p>
                     <button onClick={() => setAttachmentPreview(null)} className="p-1.5 rounded-lg hover:bg-white/5 flex-shrink-0" style={{ color: 'var(--text-muted)' }}>
-                      <HugeiconsIcon icon={Cancel01Icon} size={18} color="currentColor" strokeWidth={1.5} />
+                      <X size={18} strokeWidth={1.5} />
                     </button>
                   </div>
                   <div className="flex-1 overflow-hidden flex items-center justify-center bg-black/20 min-h-[300px]">

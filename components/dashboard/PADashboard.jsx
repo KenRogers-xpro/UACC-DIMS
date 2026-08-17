@@ -4,8 +4,7 @@ import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import { useAuth } from '@/lib/auth-context'
 import api from '@/lib/api'
-import { HugeiconsIcon } from '@hugeicons/react'
-import { CalendarClockIcon, InboxIcon, ArrowRight01Icon } from '@hugeicons/core-free-icons'
+import { CalendarClock, Inbox, ArrowRight } from 'lucide-react'
 import { FileText, Sparkles, Loader2 } from 'lucide-react'
 
 import PageHeader from '@/components/ui/PageHeader'
@@ -225,7 +224,7 @@ export default function PADashboard() {
             <Link key={action.href} href={action.href}>
               <Button variant="outline" className="justify-between" style={{ minWidth: 180 }}>
                 {action.label}
-                <HugeiconsIcon icon={ArrowRight01Icon} size={14} color="currentColor" strokeWidth={1.5} />
+                <ArrowRight size={14} strokeWidth={1.5} />
               </Button>
             </Link>
           ))}

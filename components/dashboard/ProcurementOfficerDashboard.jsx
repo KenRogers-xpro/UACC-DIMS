@@ -4,8 +4,7 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useAuth } from '@/lib/auth-context'
 import api from '@/lib/api'
-import { HugeiconsIcon } from '@hugeicons/react'
-import { ClipboardIcon, Clock01Icon, ArrowRight01Icon } from '@hugeicons/core-free-icons'
+import { ClipboardList, Clock, ArrowRight } from 'lucide-react'
 import { TrendingUp, TrendingDown, AlertCircle } from 'lucide-react'
 
 import PageHeader from '@/components/ui/PageHeader'
@@ -138,14 +137,14 @@ export default function ProcurementOfficerDashboard() {
           <div className="flex flex-col gap-3">
             <Link href="/dashboard/procurement?filter=pending_po">
               <Button variant="outline" className="w-full justify-between py-6">
-                <span className="flex items-center gap-2"><HugeiconsIcon icon={ClipboardIcon} size={18} color="currentColor" strokeWidth={1.5}/> Review Pending Requests</span>
-                <HugeiconsIcon icon={ArrowRight01Icon} size={16} color="currentColor" strokeWidth={1.5} />
+                <span className="flex items-center gap-2"><ClipboardList size={18} strokeWidth={1.5}/> Review Pending Requests</span>
+                <ArrowRight size={16} strokeWidth={1.5} />
               </Button>
             </Link>
             <Link href="/dashboard/procurement/vendors">
               <Button variant="outline" className="w-full justify-between py-6">
                 <span className="flex items-center gap-2"><TrendingUp size={18} strokeWidth={1.5} className="text-current"/> Vendor List</span>
-                <HugeiconsIcon icon={ArrowRight01Icon} size={16} color="currentColor" strokeWidth={1.5} />
+                <ArrowRight size={16} strokeWidth={1.5} />
               </Button>
             </Link>
           </div>

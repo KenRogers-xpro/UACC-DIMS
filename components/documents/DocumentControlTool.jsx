@@ -2,9 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { HugeiconsIcon } from '@hugeicons/react'
-import { CloudUploadIcon, Add01Icon, Cancel01Icon } from '@hugeicons/core-free-icons'
-import { FileText } from 'lucide-react'
+import { CloudUpload, Plus, X } from 'lucide-react'
 import { useAuth } from '@/lib/auth-context'
 import { useDocuments } from '@/lib/useDocuments'
 import Badge from '@/components/ui/Badge'
@@ -116,7 +114,7 @@ export default function DocumentControlTool({
           </h3>
           <p className="text-xs mt-0.5" style={{ color: 'var(--text-muted)' }}>{description}</p>
         </div>
-        <Button variant="primary" size="sm" icon={Add01Icon} onClick={() => setUploadOpen(true)}>
+        <Button variant="primary" size="sm" icon={Plus} onClick={() => setUploadOpen(true)}>
           Upload
         </Button>
       </div>
@@ -186,7 +184,7 @@ export default function DocumentControlTool({
                   Upload Document
                 </h2>
                 <button onClick={() => setUploadOpen(false)} className="p-1 hover:bg-white/5 rounded-lg" style={{ color: 'var(--text-muted)' }}>
-                <HugeiconsIcon icon={Cancel01Icon} size={18} color="currentColor" strokeWidth={1.5} />
+                <X size={18} strokeWidth={1.5} />
                 </button>
               </div>
 
@@ -233,7 +231,7 @@ export default function DocumentControlTool({
                   className="border border-dashed rounded-lg p-4 flex items-center gap-3 cursor-pointer hover:bg-white/5 transition-colors"
                   style={{ borderColor: 'var(--border-default)' }}
                 >
-                  <HugeiconsIcon icon={CloudUploadIcon} size={18} color="currentColor" strokeWidth={1.5} style={{ color: 'var(--text-muted)' }} />
+                  <CloudUpload size={18} strokeWidth={1.5} style={{ color: 'var(--text-muted)' }} />
                   <span className="text-xs" style={{ color: 'var(--text-muted)' }}>
                     {selectedFileName || 'Click to choose a file'}
                   </span>

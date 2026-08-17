@@ -31,22 +31,13 @@ import {
   Megaphone,
   Send,
   Briefcase,
+  Search,
+  Settings2,
+  ShieldCheck,
+  UserPlus,
+  Megaphone as MegaphoneIcon,
+  FilePlus,
 } from 'lucide-react';
-import { HugeiconsIcon } from '@hugeicons/react';
-import {
-  Time02Icon,
-  UserIcon,
-  Shield01Icon,
-  Settings01Icon,
-  Search01Icon,
-  Cancel01Icon,
-  Tick01Icon,
-  SentIcon,
-  Briefcase02Icon,
-  UserMultipleIcon,
-  Megaphone01Icon,
-  Note01Icon,
-} from '@hugeicons/core-free-icons';
 
 // Rotating examples for the AI Agent spotlight card. Each one is checked
 // against the real chat backend (backend/src/routes/ai.routes.js), not just
@@ -739,7 +730,7 @@ export default function LandingPage() {
               <div className="flex items-center px-6 py-4" style={{ backgroundColor: 'var(--bg-surface-low)', borderBottom: '1px solid var(--border-subtle)' }}>
                 <div className="flex items-center gap-3">
                   <div className="p-2 rounded-lg bg-uacc-gold/10 text-uacc-gold">
-                    <HugeiconsIcon icon={Cancel01Icon} size={24} color="currentColor" strokeWidth={1.5} />
+                    <X size={24} strokeWidth={1.5} />
                   </div>
                   <div>
                     <h4 className="text-sm font-heading font-bold" style={{ color: 'var(--text-primary)' }}>DIMS AI Agent</h4>
@@ -828,7 +819,7 @@ export default function LandingPage() {
                   disabled
                   className="p-2 rounded bg-uacc-gold/20 text-uacc-gold-light border border-uacc-gold/30 cursor-not-allowed"
                 >
-                  <HugeiconsIcon icon={SentIcon} size={14} color="currentColor" strokeWidth={1.5} />
+                  <Send size={14} strokeWidth={1.5} />
                 </button>
               </div>
             </div>

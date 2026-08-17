@@ -2,9 +2,7 @@
 
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { HugeiconsIcon } from '@hugeicons/react';
-import { CheckmarkCircle02Icon, InformationCircleIcon, Cancel01Icon } from '@hugeicons/core-free-icons';
-import { AlertCircle } from 'lucide-react';
+import { CheckCircle2, Info, AlertCircle, X } from 'lucide-react';
 
 export function Toast({ 
   message, 
@@ -13,12 +11,12 @@ export function Toast({
   autoClose = 5000 
 }) {
   const icons = {
-    success: { icon: CheckmarkCircle02Icon, bg: 'rgba(34,197,94,0.1)', border: 'rgba(34,197,94,0.25)', color: '#3dda7a' },
-    error: { icon: AlertCircleIcon, bg: 'rgba(204,34,0,0.1)', border: 'rgba(204,34,0,0.25)', color: '#f07060' },
-    info: { icon: InformationCircleIcon, bg: 'rgba(99,102,241,0.1)', border: 'rgba(99,102,241,0.25)', color: '#a5b4fc' },
+    success: { icon: CheckCircle2, bg: 'rgba(34,197,94,0.1)', border: 'rgba(34,197,94,0.25)', color: '#3dda7a' },
+    error: { icon: AlertCircle, bg: 'rgba(204,34,0,0.1)', border: 'rgba(204,34,0,0.25)', color: '#f07060' },
+    info: { icon: Info, bg: 'rgba(99,102,241,0.1)', border: 'rgba(99,102,241,0.25)', color: '#a5b4fc' },
   };
 
-  const { icon, bg, border, color } = icons[type] || icons.info;
+  const { icon: Icon, bg, border, color } = icons[type] || icons.info;
 
   // Auto-dismiss after specified time
   React.useEffect(() => {
@@ -37,7 +35,7 @@ export function Toast({
       exit={{ opacity: 0, x: 100, y: -20 }}
       transition={{ duration: 0.3, ease: "easeOut" }}
     >
-      <HugeiconsIcon icon={icon} size={16} color={color} strokeWidth={1.5} style={{ flexShrink: 0, marginTop: '2px' }} />
+      <Icon size={16} strokeWidth={1.5} style={{ color, flexShrink: 0, marginTop: '2px' }} />
       <p className="text-sm flex-1" style={{ color: 'var(--text-secondary)' }}>
         {message}
       </p>
@@ -47,7 +45,7 @@ export function Toast({
           className="p-1 hover:opacity-70 transition-opacity flex-shrink-0"
           aria-label="Dismiss notification"
         >
-          <HugeiconsIcon icon={Cancel01Icon} size={14} color="currentColor" strokeWidth={1.5} style={{ color: 'var(--text-muted)' }} />
+          <X size={14} strokeWidth={1.5} style={{ color: 'var(--text-muted)' }} />
         </button>
       )}
     </motion.div>

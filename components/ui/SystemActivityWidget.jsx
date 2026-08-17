@@ -1,8 +1,7 @@
 'use client'
 
 import { motion } from 'framer-motion'
-import { HugeiconsIcon } from '@hugeicons/react'
-import { ActivityIcon } from '@hugeicons/core-free-icons'
+import { Activity } from 'lucide-react'
 import { useOnlineStatus } from '@/lib/useOnlineStatus'
 
 /**
@@ -28,7 +27,7 @@ export default function SystemActivityWidget() {
         <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
         <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500" />
       </span>
-      <HugeiconsIcon icon={ActivityIcon} size={14} color="currentColor" strokeWidth={1.5} className="text-emerald-400" />
+      <Activity size={14} strokeWidth={1.5} className="text-emerald-400" />
       <span className="text-xs font-heading font-semibold" style={{ color: 'var(--text-secondary)' }}>
         <span className="font-bold text-emerald-400">{onlineCount}</span> {onlineCount === 1 ? 'person' : 'people'} online now
       </span>

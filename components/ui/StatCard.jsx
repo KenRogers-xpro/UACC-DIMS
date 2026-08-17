@@ -3,8 +3,7 @@
 import { motion, useInView } from 'framer-motion';
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
-import { HugeiconsIcon } from '@hugeicons/react';
-import { ArrowDown01Icon, ArrowRight01Icon } from '@hugeicons/core-free-icons';
+import { ChevronDown, ArrowRight } from 'lucide-react';
 import StatusDot from './StatusDot';
 
 /**
@@ -93,18 +92,12 @@ export default function StatCard({ title, value, subtitle, icon: Icon,
             {Icon && (
               <div className="p-2 rounded-lg"
                    style={{ background: c.bg, border: `1px solid ${c.border}` }}>
-                {Array.isArray(Icon) ? (
-                  <HugeiconsIcon icon={Icon} size={16} color={c.text} strokeWidth={1.5} />
-                ) : (
-                  <Icon size={16} color={c.text} strokeWidth={1.5} />
-                )}
+                <Icon size={16} color={c.text} strokeWidth={1.5} />
               </div>
             )}
             {fetchItems && (
-              <HugeiconsIcon
-                icon={ArrowDown01Icon}
+              <ChevronDown
                 size={14}
-                color="currentColor"
                 strokeWidth={1.5}
                 style={{ color: 'var(--text-faint)', transform: expanded ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s ease' }}
               />
@@ -166,7 +159,7 @@ export default function StatCard({ title, value, subtitle, icon: Icon,
                 className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider mt-1 pt-2 pb-1.5 px-1 -mx-1 border-t"
                 style={{ color: c.text, borderColor: 'var(--border-subtle)' }}
               >
-                View all <HugeiconsIcon icon={ArrowRight01Icon} size={11} color="currentColor" strokeWidth={1.5} />
+                View all <ArrowRight size={11} strokeWidth={1.5} color="currentColor" />
               </Link>
             </>
           ) : (

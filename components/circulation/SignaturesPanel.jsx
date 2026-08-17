@@ -1,9 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { HugeiconsIcon } from '@hugeicons/react'
-import { Key01Icon, LockIcon, Shield01Icon, FingerPrintIcon, Clock01Icon, PenTool01Icon } from '@hugeicons/core-free-icons'
-import { ShieldAlert } from 'lucide-react'
+import { Key, Lock, Shield, Fingerprint, Clock, PenTool, ShieldAlert } from 'lucide-react'
 import Button from '@/components/ui/Button'
 import EmptyState from '@/components/ui/EmptyState'
 import api from '@/lib/api'
@@ -68,7 +66,7 @@ export default function SignaturesPanel({ circulation }) {
             ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-400'
             : 'border-uacc-red/30 bg-uacc-red/10 text-uacc-red'
         }`}>
-          {verifyResult.chainValid ? <HugeiconsIcon icon={Shield01Icon} size={14} color="currentColor" strokeWidth={1.5} /> : <ShieldAlert size={14} strokeWidth={1.5} className="text-current" />}
+          {verifyResult.chainValid ? <Shield size={14} strokeWidth={1.5} className="text-current" /> : <ShieldAlert size={14} strokeWidth={1.5} className="text-current" />}
           {verifyResult.chainValid
             ? `All ${verifyResult.signatureCount} signature(s) verified — hash chain intact.`
             : 'Integrity check failed — one or more signatures do not match their recorded hash.'}
@@ -99,7 +97,7 @@ export default function SignaturesPanel({ circulation }) {
                 {check && (
                   check.valid ? (
                     <span className="text-[10px] font-bold text-emerald-400 flex items-center gap-1 flex-shrink-0">
-                      <HugeiconsIcon icon={Shield01Icon} size={11} color="currentColor" strokeWidth={1.5} /> Verified
+                      <Shield size={11} strokeWidth={1.5} className="text-current" /> Verified
                     </span>
                   ) : (
                     <span className="text-[10px] font-bold text-uacc-red flex items-center gap-1 flex-shrink-0">
@@ -111,7 +109,7 @@ export default function SignaturesPanel({ circulation }) {
 
               {!sig ? (
                 <div className="flex items-center gap-2 text-xs" style={{ color: 'var(--text-faint)' }}>
-                  <HugeiconsIcon icon={Clock01Icon} size={12} color="currentColor" strokeWidth={1.5} />
+                  <Clock size={12} strokeWidth={1.5} />
                   Awaiting signature
                 </div>
               ) : (
@@ -138,12 +136,12 @@ export default function SignaturesPanel({ circulation }) {
                   <div className="flex flex-wrap items-center gap-2">
                     {sig.verifiedWithPin && (
                       <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-uacc-gold/10 text-uacc-gold border border-uacc-gold/25">
-                        <HugeiconsIcon icon={Key01Icon} size={10} color="currentColor" strokeWidth={1.5} /> PIN Verified
+                        <Key size={10} strokeWidth={1.5} /> PIN Verified
                       </span>
                     )}
                     {sig.verifiedWithPassword && (
                       <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-purple-500/10 text-purple-400 border border-purple-500/25">
-                        <HugeiconsIcon icon={LockIcon} size={10} color="currentColor" strokeWidth={1.5} /> Password Verified — high-stakes
+                        <Lock size={10} strokeWidth={1.5} /> Password Verified — high-stakes
                       </span>
                     )}
                   </div>
@@ -157,7 +155,7 @@ export default function SignaturesPanel({ circulation }) {
                       style={{ color: 'var(--text-faint)' }}
                       title={sig.signatureHash}
                     >
-                      <HugeiconsIcon icon={FingerPrintIcon} size={10} color="currentColor" strokeWidth={1.5} />
+                      <Fingerprint size={10} strokeWidth={1.5} />
                       {truncateHash(sig.signatureHash)}
                     </span>
                     <span className="text-[10px]" style={{ color: 'var(--text-faint)' }}>
