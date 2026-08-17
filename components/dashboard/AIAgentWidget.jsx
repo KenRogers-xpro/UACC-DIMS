@@ -5,6 +5,7 @@ import { useAuth } from '@/lib/auth-context'
 import { usePathname, useRouter } from 'next/navigation'
 import { useInsights, buildAskAboutMessage } from '@/lib/useInsights'
 import api from '@/lib/api'
+import { useStore } from '@/lib/store'
 import {
   Bot,
   User,
@@ -115,7 +116,8 @@ export default function AIAgentWidget() {
   const [isTyping, setIsTyping] = useState(false)
   const [unread, setUnread] = useState(true)
 
-  const { unseenCount, justArrived, markSeen, consumeJustArrived } = useInsights()
+  const { justArrived, markSeen, consumeJustArrived } = useInsights()
+  const insightUnreadCount = useStore((state) => state.insightUnreadCount)
   const [insightPopup, setInsightPopup] = useState(null)
 
   // A justArrived insight pops a toast above the icon, then auto-dismisses.
@@ -502,7 +504,7 @@ export default function AIAgentWidget() {
         }}
       >
         {/* Glow pulsing ring for unread notification */}
-        {!isOpen && (unread || unseenCount > 0) && (
+        {!isOpen && (unread || insightUnreadCount > 0) && (
           <span className="absolute -inset-0.5 rounded-full border border-uacc-gold/40 animate-ping opacity-60"></span>
         )}
 
@@ -514,9 +516,9 @@ export default function AIAgentWidget() {
 
         {/* Small badge — unseen insight count takes priority over the
             generic "new chat welcome" indicator when there is one */}
-        {!isOpen && (unseenCount > 0 || unread) && (
+        {!isOpen && (insightUnreadCount > 0 || unread) && (
           <span className="absolute top-0 right-0 w-3.5 h-3.5 bg-red-500 rounded-full border border-slate-900 flex items-center justify-center text-[8px] font-bold text-white">
-            {unseenCount > 0 ? (unseenCount > 9 ? '9+' : unseenCount) : 1}
+            {insightUnreadCount > 0 ? (insightUnreadCount > 9 ? '9+' : insightUnreadCount) : 1}
           </span>
         )}
       </button>

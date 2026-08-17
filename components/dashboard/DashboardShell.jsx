@@ -5,8 +5,10 @@ import { motion, AnimatePresence } from 'framer-motion'
 import Sidebar from '@/components/dashboard/Sidebar'
 import TopBar from '@/components/dashboard/TopBar'
 import AIAgentWidget from '@/components/dashboard/AIAgentWidget'
+import { useOnlineStatus } from '@/lib/useOnlineStatus'
 
 export default function DashboardShell({ children, user }) {
+  useOnlineStatus() // Global online status polling
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false)
   const pathname = usePathname()

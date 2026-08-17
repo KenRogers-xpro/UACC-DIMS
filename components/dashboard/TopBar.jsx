@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { Menu, Bell, ChevronLeft, ChevronRight, Search, FileText, MessageSquare, Megaphone, CheckCheck, AlertTriangle } from 'lucide-react'
 import ThemeToggle from '@/components/ui/ThemeToggle'
 import StatusDot from '@/components/ui/StatusDot'
-import { useOnlineStatus } from '@/lib/useOnlineStatus'
+import { useStore } from '@/lib/store'
 import { useNotifications } from '@/lib/useNotifications'
 
 const NOTIFICATION_ICONS = {
@@ -44,7 +44,8 @@ export default function TopBar({ user, sidebarCollapsed, onToggleSidebar, onMobi
   const pathname = usePathname()
   const router = useRouter()
   const page = PAGE_TITLES[pathname] || { title: 'DIMS', sub: 'Uganda Air Cargo Corporation' }
-  const { isUserOnline } = useOnlineStatus()
+  const onlineUsers = useStore((state) => state.onlineUsers) || []
+  const isUserOnline = (userId) => onlineUsers.find((u) => u.id === userId)?.isOnline || false
   const { incoming, outgoing, unreadCount, error: notifError, refresh: refreshNotifications } = useNotifications()
 
   const [notifOpen, setNotifOpen] = useState(false)
