@@ -3,7 +3,8 @@
 import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
-import { X, Lock, ShieldCheck, ShieldAlert, Check, KeyRound, Settings } from 'lucide-react'
+import { HugeiconsIcon } from '@hugeicons/react'
+import { Cancel01Icon, LockIcon, Shield01Icon, ShieldAlert, Tick01Icon, Key01Icon, Settings01Icon } from '@hugeicons/core-free-icons'
 import api from '@/lib/api'
 import Button from '@/components/ui/Button'
 
@@ -149,11 +150,11 @@ export default function SigningModal({ circulationId, currentUserRole, isOpen, o
           >
             <div className="flex items-center justify-between">
               <h2 className="font-heading font-bold text-lg flex items-center gap-2" style={{ color: 'var(--text-primary)' }}>
-                <ShieldCheck size={20} className="text-uacc-gold" />
+                <HugeiconsIcon icon={Shield01Icon} size={20} color="currentColor" strokeWidth={1.5} className="text-uacc-gold" />
                 {success ? 'Signed' : !pinRequired || hasPinSet ? 'Sign Document' : 'Set Signing PIN'}
               </h2>
               <button onClick={onClose} className="p-1 hover:bg-white/5 rounded-lg" style={{ color: 'var(--text-muted)' }}>
-                <X size={18} />
+                <HugeiconsIcon icon={Cancel01Icon} size={18} color="currentColor" strokeWidth={1.5} />
               </button>
             </div>
 
@@ -171,7 +172,7 @@ export default function SigningModal({ circulationId, currentUserRole, isOpen, o
                   animate={{ scale: 1 }}
                   transition={{ type: 'spring', stiffness: 300, damping: 15 }}
                 >
-                  <Check size={32} className="text-emerald-400" />
+                  <HugeiconsIcon icon={Tick01Icon} size={32} color="currentColor" strokeWidth={1.5} className="text-emerald-400" />
                 </motion.div>
                 <p className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>Signature recorded</p>
               </motion.div>
@@ -204,7 +205,7 @@ export default function SigningModal({ circulationId, currentUserRole, isOpen, o
                   onChange={(e) => setPassword(e.target.value)}
                 />
                 {setPinError && <p className="text-xs text-uacc-red">{setPinError}</p>}
-                <Button type="submit" variant="primary" loading={settingPin} icon={KeyRound}>
+                <Button type="submit" variant="primary" loading={settingPin} icon={Key01Icon}>
                   Set PIN
                 </Button>
                 <button
@@ -213,7 +214,7 @@ export default function SigningModal({ circulationId, currentUserRole, isOpen, o
                   className="flex items-center justify-center gap-1.5 text-xs hover:underline"
                   style={{ color: 'var(--text-muted)' }}
                 >
-                  <Settings size={12} /> Or manage this later from Settings
+                  <HugeiconsIcon icon={Settings01Icon} size={12} color="currentColor" strokeWidth={1.5} /> Or manage this later from Settings
                 </button>
               </form>
             ) : (
@@ -281,7 +282,7 @@ export default function SigningModal({ circulationId, currentUserRole, isOpen, o
                     transition={{ duration: 0.4 }}
                   >
                     <label className="flex items-center gap-2 text-[10px] uppercase tracking-wider font-semibold mb-1.5" style={{ color: 'var(--text-muted)' }}>
-                      <Lock size={12} /> Signing PIN
+                      <HugeiconsIcon icon={LockIcon} size={12} color="currentColor" strokeWidth={1.5} /> Signing PIN
                     </label>
                     <input
                       ref={pinInputRef}
@@ -300,7 +301,7 @@ export default function SigningModal({ circulationId, currentUserRole, isOpen, o
                   // DigitalSignature record honestly stores
                   // verifiedWithPin: false, since none was actually checked.
                   <div className="rounded-lg p-3 border flex items-start gap-2" style={{ borderColor: 'var(--border-gold)', background: 'rgba(201,151,58,0.05)' }}>
-                    <ShieldAlert size={14} className="text-uacc-gold flex-shrink-0 mt-0.5" />
+                    <HugeiconsIcon icon={ShieldAlert} size={14} color="currentColor" strokeWidth={1.5} className="text-uacc-gold flex-shrink-0 mt-0.5" />
                     <div>
                       <p className="text-xs font-semibold" style={{ color: 'var(--text-primary)' }}>
                         Sign as {currentUserRole?.replace(/_/g, ' ')} — {new Date().toLocaleString()}?

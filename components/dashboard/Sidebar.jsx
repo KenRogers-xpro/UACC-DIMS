@@ -6,34 +6,34 @@ import { useState, useEffect, useCallback } from 'react'
 import { useAuth } from '@/lib/auth-context'
 import api from '@/lib/api'
 import { motion } from 'framer-motion'
+import { HugeiconsIcon } from '@hugeicons/react'
 import {
-  LayoutDashboard,
-  FolderOpen,
-  ClipboardList,
-  Clock,
-  BarChart2,
-  Users,
-  ShieldCheck,
-  LogOut,
-  ChevronLeft,
-  ChevronRight,
-  Bot,
-  Settings2,
-  BookOpen,
-  Inbox,
-  CalendarClock,
+  DashboardCircleIcon,
+  FolderOpenIcon,
+  ClipboardIcon,
+  Clock01Icon,
+  BarChartIcon,
+  UserGroupIcon,
+  Shield01Icon,
+  Logout01Icon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
+  RobotIcon,
+  Settings02Icon,
+  BookOpen01Icon,
+  InboxIcon,
+  CalendarClockIcon,
   FileText,
-  MessageSquare,
-  Megaphone,
-  X,
-} from 'lucide-react'
+  Comment01Icon,
+  MegaphoneIcon,
+  Cancel01Icon,
+} from '@hugeicons/core-free-icons'
 
-// Navigation items with role access control
 const NAV_ITEMS = [
   {
     label: 'Dashboard',
     href: '/dashboard',
-    icon: LayoutDashboard,
+    icon: DashboardCircleIcon,
     roles: ['GENERAL_MANAGER', 'DEPARTMENT_HEAD', 'STAFF',
             'IT_ADMINISTRATOR', 'INTERNAL_AUDITOR', 'RECORDS_EXECUTIVE',
             'HR_MANAGER', 'FINANCE_DIRECTOR', 'MARKETING_OFFICER'],
@@ -41,7 +41,7 @@ const NAV_ITEMS = [
   {
     label: 'Documents',
     href: '/dashboard/documents',
-    icon: FolderOpen,
+    icon: FolderOpenIcon,
     roles: ['GENERAL_MANAGER', 'DEPARTMENT_HEAD', 'STAFF',
             'IT_ADMINISTRATOR', 'INTERNAL_AUDITOR', 'RECORDS_EXECUTIVE',
             'HR_MANAGER', 'FINANCE_DIRECTOR', 'MARKETING_OFFICER'],
@@ -49,7 +49,7 @@ const NAV_ITEMS = [
   {
     label: 'Records',
     href: '/dashboard/records',
-    icon: BookOpen,
+    icon: BookOpen01Icon,
     roles: ['GENERAL_MANAGER', 'DEPARTMENT_HEAD', 'STAFF',
             'IT_ADMINISTRATOR', 'INTERNAL_AUDITOR', 'RECORDS_EXECUTIVE'],
     badge: 'NEW',
@@ -65,14 +65,14 @@ const NAV_ITEMS = [
   {
     label: 'Procurement',
     href: '/dashboard/procurement',
-    icon: ClipboardList,
+    icon: ClipboardIcon,
     roles: ['GENERAL_MANAGER', 'DEPARTMENT_HEAD', 'STAFF',
             'IT_ADMINISTRATOR', 'PROCUREMENT_OFFICER'],
   },
   {
     label: 'Activity Logs',
     href: '/dashboard/activity-logs',
-    icon: Clock,
+    icon: Clock01Icon,
     roles: ['GENERAL_MANAGER', 'DEPARTMENT_HEAD', 'STAFF',
             'IT_ADMINISTRATOR', 'INTERNAL_AUDITOR', 'RECORDS_EXECUTIVE',
             'HR_MANAGER', 'FINANCE_DIRECTOR', 'MARKETING_OFFICER'],
@@ -80,14 +80,14 @@ const NAV_ITEMS = [
   {
     label: 'Reports',
     href: '/dashboard/reports',
-    icon: BarChart2,
+    icon: BarChartIcon,
     roles: ['GENERAL_MANAGER', 'DEPARTMENT_HEAD', 'IT_ADMINISTRATOR',
             'INTERNAL_AUDITOR'],
   },
   {
     label: 'Messages',
     href: '/dashboard/messages',
-    icon: MessageSquare,
+    icon: Comment01Icon,
     roles: ['GENERAL_MANAGER', 'DEPARTMENT_HEAD', 'STAFF',
             'IT_ADMINISTRATOR', 'INTERNAL_AUDITOR', 'RECORDS_EXECUTIVE',
             'HR_MANAGER', 'FINANCE_DIRECTOR', 'MARKETING_OFFICER'],
@@ -95,7 +95,7 @@ const NAV_ITEMS = [
   {
     label: 'Announcements',
     href: '/dashboard/announcements',
-    icon: Megaphone,
+    icon: MegaphoneIcon,
     roles: ['GENERAL_MANAGER', 'DEPARTMENT_HEAD', 'STAFF',
             'IT_ADMINISTRATOR', 'INTERNAL_AUDITOR', 'RECORDS_EXECUTIVE',
             'HR_MANAGER', 'FINANCE_DIRECTOR', 'MARKETING_OFFICER'],
@@ -103,19 +103,19 @@ const NAV_ITEMS = [
   {
     label: 'User Management',
     href: '/dashboard/user-management',
-    icon: Users,
+    icon: UserGroupIcon,
     roles: ['IT_ADMINISTRATOR'],
   },
   {
     label: 'Audit Trail',
     href: '/dashboard/audit-trail',
-    icon: ShieldCheck,
+    icon: Shield01Icon,
     roles: ['INTERNAL_AUDITOR', 'GENERAL_MANAGER', 'IT_ADMINISTRATOR'],
   },
   {
     label: 'AI Agent',
     href: '/dashboard/ai-agent',
-    icon: Bot,
+    icon: RobotIcon,
     roles: ['GENERAL_MANAGER', 'DEPARTMENT_HEAD', 'STAFF',
             'IT_ADMINISTRATOR', 'INTERNAL_AUDITOR', 'RECORDS_EXECUTIVE',
             'HR_MANAGER', 'FINANCE_DIRECTOR', 'MARKETING_OFFICER'],
@@ -127,36 +127,36 @@ const BOTTOM_NAV_ITEMS_ROLES = ['GENERAL_MANAGER', 'DEPARTMENT_HEAD', 'STAFF',
                                  'IT_ADMINISTRATOR', 'INTERNAL_AUDITOR']
 
 const PA_NAV_ITEMS = [
-  { label: 'Dashboard',      href: '/dashboard',                icon: LayoutDashboard },
-  { label: 'GM Inbox',       href: '/dashboard/pa-inbox',        icon: Inbox },
-  { label: 'Schedule',       href: '/dashboard/schedule',        icon: CalendarClock },
+  { label: 'Dashboard',      href: '/dashboard',                icon: DashboardCircleIcon },
+  { label: 'GM Inbox',       href: '/dashboard/pa-inbox',        icon: InboxIcon },
+  { label: 'Schedule',       href: '/dashboard/schedule',        icon: CalendarClockIcon },
   { label: 'My Drafts',      href: '/dashboard/drafts',          icon: FileText },
-  { label: 'Documents',      href: '/dashboard/documents',       icon: FolderOpen },
-  { label: 'Messages',       href: '/dashboard/messages',        icon: MessageSquare },
-  { label: 'Announcements',  href: '/dashboard/announcements',   icon: Megaphone },
-  { label: 'AI Agent',       href: '/dashboard/ai-agent',        icon: Bot, badge: 'AI' },
+  { label: 'Documents',      href: '/dashboard/documents',       icon: FolderOpenIcon },
+  { label: 'Messages',       href: '/dashboard/messages',        icon: Comment01Icon },
+  { label: 'Announcements',  href: '/dashboard/announcements',   icon: MegaphoneIcon },
+  { label: 'AI Agent',       href: '/dashboard/ai-agent',        icon: RobotIcon, badge: 'AI' },
 ]
 
 const PO_NAV_ITEMS = [
-  { label: 'Dashboard',      href: '/dashboard',                 icon: LayoutDashboard },
-  { label: 'Documents',      href: '/dashboard/documents',       icon: FolderOpen },
-  { label: 'Procurement',    href: '/dashboard/procurement',     icon: ClipboardList },
+  { label: 'Dashboard',      href: '/dashboard',                 icon: DashboardCircleIcon },
+  { label: 'Documents',      href: '/dashboard/documents',       icon: FolderOpenIcon },
+  { label: 'Procurement',    href: '/dashboard/procurement',     icon: ClipboardIcon },
   { label: 'My Drafts',      href: '/dashboard/drafts',          icon: FileText },
-  { label: 'Activity Logs',  href: '/dashboard/activity-logs',   icon: Clock },
-  { label: 'Messages',       href: '/dashboard/messages',        icon: MessageSquare },
-  { label: 'Announcements',  href: '/dashboard/announcements',   icon: Megaphone },
-  { label: 'AI Agent',       href: '/dashboard/ai-agent',        icon: Bot, badge: 'AI' },
+  { label: 'Activity Logs',  href: '/dashboard/activity-logs',   icon: Clock01Icon },
+  { label: 'Messages',       href: '/dashboard/messages',        icon: Comment01Icon },
+  { label: 'Announcements',  href: '/dashboard/announcements',   icon: MegaphoneIcon },
+  { label: 'AI Agent',       href: '/dashboard/ai-agent',        icon: RobotIcon, badge: 'AI' },
 ]
 
 // Governance-scoped nav — deliberately no procurement/finance modules.
 const CS_NAV_ITEMS = [
-  { label: 'Dashboard',      href: '/dashboard',                 icon: LayoutDashboard },
-  { label: 'Documents',      href: '/dashboard/documents',       icon: FolderOpen },
-  { label: 'Records',        href: '/dashboard/records',         icon: BookOpen },
+  { label: 'Dashboard',      href: '/dashboard',                 icon: DashboardCircleIcon },
+  { label: 'Documents',      href: '/dashboard/documents',       icon: FolderOpenIcon },
+  { label: 'Records',        href: '/dashboard/records',         icon: BookOpen01Icon },
   { label: 'My Drafts',      href: '/dashboard/drafts',          icon: FileText },
-  { label: 'Messages',       href: '/dashboard/messages',        icon: MessageSquare },
-  { label: 'Announcements',  href: '/dashboard/announcements',   icon: Megaphone },
-  { label: 'AI Agent',       href: '/dashboard/ai-agent',        icon: Bot, badge: 'AI' },
+  { label: 'Messages',       href: '/dashboard/messages',        icon: Comment01Icon },
+  { label: 'Announcements',  href: '/dashboard/announcements',   icon: MegaphoneIcon },
+  { label: 'AI Agent',       href: '/dashboard/ai-agent',        icon: RobotIcon, badge: 'AI' },
 ]
 
 const ROLE_META = {
@@ -300,7 +300,7 @@ function SidebarContent({
             onClick={onMobileClose}
             className="ml-auto p-1.5 rounded-md text-white/40 hover:text-white hover:bg-white/8 transition-colors"
           >
-            <X size={16} />
+            <HugeiconsIcon icon={Cancel01Icon} size={16} color="currentColor" strokeWidth={1.5} />
           </button>
         )}
       </div>
@@ -365,7 +365,6 @@ function SidebarContent({
           }}
         >
           {mainNav.map((item) => {
-            const Icon = item.icon
             const isActive = pathname === item.href ||
               (item.href !== '/dashboard' && pathname.startsWith(item.href))
             // Drafts' badge is a live count, not the static 'NEW'/'AI'
@@ -398,8 +397,11 @@ function SidebarContent({
                     />
                   )}
                 
-                  <Icon
+                  <HugeiconsIcon
+                    icon={item.icon}
                     size={16}
+                    color="currentColor"
+                    strokeWidth={1.5}
                     className={`flex-shrink-0 ${isActive ? 'text-uacc-gold' : ''}`}
                   />
                   {!collapsed && (
@@ -437,7 +439,7 @@ function SidebarContent({
                         ${pathname === '/dashboard/settings' ? 'active' : ''}`}
             title={collapsed ? 'Settings' : undefined}
           >
-            <Settings2 size={16} className={`flex-shrink-0 ${pathname === '/dashboard/settings' ? 'text-uacc-gold' : ''}`} />
+            <HugeiconsIcon icon={Settings02Icon} size={16} color="currentColor" strokeWidth={1.5} className={`flex-shrink-0 ${pathname === '/dashboard/settings' ? 'text-uacc-gold' : ''}`} />
             {!collapsed && (
               <span className="font-heading font-medium text-[12px] tracking-wide">
                 Settings
@@ -450,7 +452,7 @@ function SidebarContent({
           className="sidebar-item sidebar-signout w-full flex items-center gap-3 px-3 py-2.5 rounded-md text-sm"
           title={collapsed ? 'Sign Out' : undefined}
         >
-          <LogOut size={16} className="flex-shrink-0" />
+          <HugeiconsIcon icon={Logout01Icon} size={16} color="currentColor" strokeWidth={1.5} className="flex-shrink-0" />
           {!collapsed && (
             <span className="font-heading font-medium text-[12px] tracking-wide">
               Sign Out

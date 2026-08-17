@@ -6,14 +6,10 @@ import { usePathname, useRouter } from 'next/navigation'
 import { useInsights, buildAskAboutMessage } from '@/lib/useInsights'
 import api from '@/lib/api'
 import { useStore } from '@/lib/store'
+import { HugeiconsIcon } from '@hugeicons/react'
+import { UserIcon, SentIcon, Cancel01Icon, ArrowDown01Icon, Shield01Icon } from '@hugeicons/core-free-icons'
 import {
   Bot,
-  User,
-  Send,
-  X,
-  ChevronDown,
-  Clock,
-  ShieldCheck,
   Minimize2,
   Sparkles,
   Lightbulb,
@@ -337,7 +333,7 @@ export default function AIAgentWidget() {
                 className="p-1.5 rounded-lg hover:bg-white/10 text-white/40 hover:text-white transition-colors"
                 title="Close"
               >
-                <X size={14} />
+                <HugeiconsIcon icon={Cancel01Icon} size={14} color="currentColor" strokeWidth={1.5} />
               </button>
             </div>
           </div>
@@ -382,7 +378,7 @@ export default function AIAgentWidget() {
                 {msg.role === 'user' && (
                   <div className="flex gap-2 max-w-[80%] flex-row-reverse">
                     <div className="w-6 h-6 rounded-full bg-white/10 flex-shrink-0 flex items-center justify-center mt-0.5 border border-white/15">
-                      <User size={12} className="text-white/60" />
+                      <HugeiconsIcon icon={UserIcon} size={12} color="currentColor" strokeWidth={1.5} className="text-white/60" />
                     </div>
                     <div className="flex flex-col gap-1 items-end">
                       <div className="bg-white/5 border border-white/10 rounded-xl rounded-tr-sm px-3 py-2 shadow-sm">
@@ -432,11 +428,11 @@ export default function AIAgentWidget() {
                 disabled={!inputValue.trim() || isTyping}
                 className="w-9 h-9 flex-shrink-0 rounded-xl bg-uacc-gold/20 border border-uacc-gold/50 flex items-center justify-center text-uacc-gold hover:bg-uacc-gold hover:text-white transition-all disabled:opacity-50 disabled:hover:bg-uacc-gold/20 disabled:hover:text-uacc-gold disabled:cursor-not-allowed"
               >
-                <Send size={14} />
+                <HugeiconsIcon icon={SentIcon} size={14} color="currentColor" strokeWidth={1.5} />
               </button>
             </div>
             <div className="mt-2 text-center flex items-center justify-center gap-1 text-[8px] uppercase tracking-wider text-white/30 font-medium">
-              <ShieldCheck size={9} />
+              <HugeiconsIcon icon={Shield01Icon} size={9} color="currentColor" strokeWidth={1.5} />
               <span>DIMS AI SECURE CANAL</span>
             </div>
           </div>
@@ -458,7 +454,7 @@ export default function AIAgentWidget() {
               onClick={() => setInsightPopup(null)}
               className="p-0.5 rounded hover:bg-white/10 text-white/40 hover:text-white flex-shrink-0"
             >
-              <X size={12} />
+              <HugeiconsIcon icon={Cancel01Icon} size={12} color="currentColor" strokeWidth={1.5} />
             </button>
           </div>
           <p className="text-[11px] text-white/70 mt-1.5 leading-relaxed line-clamp-3">{insightPopup.body}</p>
@@ -509,7 +505,7 @@ export default function AIAgentWidget() {
         )}
 
         {isOpen ? (
-          <ChevronDown size={22} className="text-white animate-fade-in" />
+          <HugeiconsIcon icon={ArrowDown01Icon} size={22} color="currentColor" strokeWidth={1.5} className="text-white animate-fade-in" />
         ) : (
           <Bot size={24} className="text-uacc-gold animate-bounce" style={{ animationDuration: '4s' }} />
         )}

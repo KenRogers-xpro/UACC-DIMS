@@ -2,7 +2,8 @@
 import { useState, useRef, useEffect } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Menu, Bell, ChevronLeft, ChevronRight, Search, FileText, MessageSquare, Megaphone, CheckCheck, AlertTriangle } from 'lucide-react'
+import { HugeiconsIcon } from '@hugeicons/react'
+import { Menu01Icon, BellIcon, ChevronLeftIcon, ChevronRightIcon, Search01Icon, FileText, Comment01Icon, MegaphoneIcon, TickDouble01Icon, AlertTriangle } from '@hugeicons/core-free-icons'
 import ThemeToggle from '@/components/ui/ThemeToggle'
 import StatusDot from '@/components/ui/StatusDot'
 import { useStore } from '@/lib/store'
@@ -10,8 +11,8 @@ import { useNotifications } from '@/lib/useNotifications'
 
 const NOTIFICATION_ICONS = {
   CIRCULATION: FileText,
-  MESSAGE: MessageSquare,
-  ANNOUNCEMENT: Megaphone,
+  MESSAGE: Comment01Icon,
+  ANNOUNCEMENT: MegaphoneIcon,
 }
 
 function timeAgo(dateStr) {
@@ -88,7 +89,7 @@ export default function TopBar({ user, sidebarCollapsed, onToggleSidebar, onMobi
           style={{ color: 'var(--text-muted)' }}
           aria-label="Open navigation"
         >
-          <Menu size={18} />
+          <HugeiconsIcon icon={Menu01Icon} size={18} color="currentColor" strokeWidth={1.5} />
         </button>
 
         {/* Desktop collapse toggle */}
@@ -98,7 +99,7 @@ export default function TopBar({ user, sidebarCollapsed, onToggleSidebar, onMobi
           style={{ color: 'var(--text-muted)' }}
           title={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
         >
-          {sidebarCollapsed ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
+          {sidebarCollapsed ? <HugeiconsIcon icon={ChevronRightIcon} size={16} color="currentColor" strokeWidth={1.5} /> : <HugeiconsIcon icon={ChevronLeftIcon} size={16} color="currentColor" strokeWidth={1.5} />}
         </button>
 
         {/* Vertical divider */}
@@ -137,7 +138,7 @@ export default function TopBar({ user, sidebarCollapsed, onToggleSidebar, onMobi
             title="Notifications"
             aria-label="Notifications"
           >
-            <Bell size={16} />
+            <HugeiconsIcon icon={BellIcon} size={16} color="currentColor" strokeWidth={1.5} />
             {unreadCount > 0 && (
               <span
                 className="absolute top-0.5 right-0.5 min-w-[15px] h-[15px] px-[3px] flex items-center justify-center rounded-full bg-uacc-red text-white text-[9px] font-bold leading-none"
@@ -172,7 +173,7 @@ export default function TopBar({ user, sidebarCollapsed, onToggleSidebar, onMobi
                 <div className="max-h-96 overflow-y-auto">
                   {notifError ? (
                     <div className="px-4 py-8 flex flex-col items-center gap-2 text-center">
-                      <AlertTriangle size={22} className="text-uacc-red" />
+                      <HugeiconsIcon icon={AlertTriangle} size={22} color="currentColor" strokeWidth={1.5} className="text-uacc-red" />
                       <p className="text-xs font-semibold" style={{ color: 'var(--text-primary)' }}>Couldn&apos;t load notifications</p>
                       <p className="text-[11px]" style={{ color: 'var(--text-muted)' }}>{notifError}</p>
                       <button
@@ -184,7 +185,7 @@ export default function TopBar({ user, sidebarCollapsed, onToggleSidebar, onMobi
                     </div>
                   ) : incoming.length === 0 && outgoing.length === 0 ? (
                     <div className="px-4 py-8 flex flex-col items-center gap-2 text-center">
-                      <CheckCheck size={22} style={{ color: 'var(--text-faint)' }} />
+                      <HugeiconsIcon icon={TickDouble01Icon} size={22} color="currentColor" strokeWidth={1.5} style={{ color: 'var(--text-faint)' }} />
                       <p className="text-xs" style={{ color: 'var(--text-muted)' }}>You&apos;re all caught up</p>
                     </div>
                   ) : (
@@ -252,7 +253,7 @@ export default function TopBar({ user, sidebarCollapsed, onToggleSidebar, onMobi
 }
 
 function NotificationRow({ item, onClick }) {
-  const Icon = NOTIFICATION_ICONS[item.type] || Bell
+  const icon = NOTIFICATION_ICONS[item.type] || BellIcon
   return (
     <button
       onClick={() => onClick(item)}
@@ -261,7 +262,7 @@ function NotificationRow({ item, onClick }) {
     >
       <div className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5"
            style={{ background: 'rgba(201,151,58,0.12)', border: '1px solid rgba(201,151,58,0.25)' }}>
-        <Icon size={13} className="text-uacc-gold" />
+        <HugeiconsIcon icon={icon} size={13} color="currentColor" strokeWidth={1.5} className="text-uacc-gold" />
       </div>
       <div className="min-w-0 flex-1">
         <p className="text-xs font-semibold truncate" style={{ color: 'var(--text-primary)' }}>{item.title}</p>

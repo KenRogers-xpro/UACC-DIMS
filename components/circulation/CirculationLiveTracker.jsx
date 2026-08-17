@@ -1,27 +1,28 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
+import { HugeiconsIcon } from '@hugeicons/react'
 import {
-  User, Users, Shield, Wallet, Megaphone, FileCheck2,
-  Landmark, ClipboardList, ScrollText, Briefcase, Check, ArrowRight,
-} from 'lucide-react'
+  UserIcon, UserMultipleIcon, Shield01Icon, Wallet01Icon, Megaphone01Icon, Task01Icon,
+  BankIcon, CheckListIcon, Note01Icon, Briefcase02Icon, Tick01Icon, ArrowRight01Icon,
+} from '@hugeicons/core-free-icons'
 import api from '@/lib/api'
 
 const POLL_INTERVAL_MS = 20000
 
 const ROLE_ICONS = {
-  GENERAL_MANAGER: Landmark,
-  GM_PERSONAL_ASSISTANT: User,
-  DEPARTMENT_HEAD: Briefcase,
-  STAFF: User,
-  IT_ADMINISTRATOR: Shield,
-  INTERNAL_AUDITOR: FileCheck2,
-  RECORDS_EXECUTIVE: ScrollText,
-  PROCUREMENT_OFFICER: ClipboardList,
-  HR_MANAGER: Users,
-  FINANCE_DIRECTOR: Wallet,
-  MARKETING_OFFICER: Megaphone,
-  CORPORATION_SECRETARY: Briefcase,
+  GENERAL_MANAGER: BankIcon,
+  GM_PERSONAL_ASSISTANT: UserIcon,
+  DEPARTMENT_HEAD: Briefcase02Icon,
+  STAFF: UserIcon,
+  IT_ADMINISTRATOR: Shield01Icon,
+  INTERNAL_AUDITOR: Task01Icon,
+  RECORDS_EXECUTIVE: Note01Icon,
+  PROCUREMENT_OFFICER: CheckListIcon,
+  HR_MANAGER: UserMultipleIcon,
+  FINANCE_DIRECTOR: Wallet01Icon,
+  MARKETING_OFFICER: Megaphone01Icon,
+  CORPORATION_SECRETARY: Briefcase02Icon,
 }
 
 function roleLabel(role) {
@@ -80,7 +81,7 @@ export default function CirculationLiveTracker({ circulationId }) {
           className="w-6 h-6 rounded-full border border-dashed flex items-center justify-center flex-shrink-0"
           style={{ borderColor: 'var(--border-default)' }}
         >
-          <User size={11} style={{ color: 'var(--text-faint)' }} />
+          <HugeiconsIcon icon={UserIcon} size={11} color="currentColor" strokeWidth={1.5} style={{ color: 'var(--text-faint)' }} />
         </div>
         <span className="text-[11px]" style={{ color: 'var(--text-faint)' }}>Not yet circulated</span>
       </div>
@@ -100,7 +101,7 @@ export default function CirculationLiveTracker({ circulationId }) {
     <div className="flex flex-col gap-1 py-1">
     <div className="flex items-center gap-1 overflow-x-auto">
       {sequence.map((role, idx) => {
-        const Icon = ROLE_ICONS[role] || User
+        const Icon = ROLE_ICONS[role] || UserIcon
         const isLast = idx === sequence.length - 1
         const isCurrent = isLast && !isClosed
         const isCompleted = !isCurrent
@@ -108,7 +109,7 @@ export default function CirculationLiveTracker({ circulationId }) {
         return (
           <div key={`${role}-${idx}`} className="flex items-center flex-shrink-0">
             {idx > 0 && (
-              <ArrowRight size={13} className="flex-shrink-0 mx-0.5" style={{ color: 'var(--border-strong)' }} />
+              <HugeiconsIcon icon={ArrowRight01Icon} size={13} color="currentColor" strokeWidth={1.5} className="flex-shrink-0 mx-0.5" style={{ color: 'var(--border-strong)' }} />
             )}
             <div
               className="relative flex-shrink-0"
@@ -126,8 +127,8 @@ export default function CirculationLiveTracker({ circulationId }) {
                 }
               >
                 {isCompleted
-                  ? <Check size={13} className="text-uacc-gold" />
-                  : <Icon size={13} className="text-uacc-gold" />}
+                  ? <HugeiconsIcon icon={Tick01Icon} size={13} color="currentColor" strokeWidth={1.5} className="text-uacc-gold" />
+                  : <HugeiconsIcon icon={Icon} size={13} color="currentColor" strokeWidth={1.5} className="text-uacc-gold" />}
               </div>
             </div>
           </div>

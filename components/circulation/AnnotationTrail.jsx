@@ -2,16 +2,17 @@
 
 import React from 'react'
 import { motion } from 'framer-motion'
-import { ArrowRight, CheckCircle2, MessageSquare, StickyNote, ListChecks, Flag, Paperclip } from 'lucide-react'
+import { HugeiconsIcon } from '@hugeicons/react'
+import { ArrowRight01Icon, CheckmarkCircle02Icon, Comment01Icon, Note01Icon, CheckListIcon, Flag01Icon, AttachmentIcon } from '@hugeicons/core-free-icons'
 import Badge from '@/components/ui/Badge'
 
 const STEP_ROMAN = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X']
 
 const ANNOTATION_ICONS = {
-  COMMENT: MessageSquare,
-  NOTE: StickyNote,
-  ACTION: ListChecks,
-  FLAG: Flag,
+  COMMENT: Comment01Icon,
+  NOTE: Note01Icon,
+  ACTION: CheckListIcon,
+  FLAG: Flag01Icon,
 }
 
 /**
@@ -78,7 +79,7 @@ export default function AnnotationTrail({ circulation, annotations, attachments 
                 <div className="flex justify-between items-start mb-2">
                   <div className="text-xs font-bold text-(--text-muted) uppercase tracking-wider flex items-center gap-2">
                     <span className="text-(--text-secondary)">{step.fromRole.replace(/_/g, ' ')}</span>
-                    <ArrowRight size={12} className="text-(--text-faint)" />
+                    <HugeiconsIcon icon={ArrowRight01Icon} size={12} color="currentColor" strokeWidth={1.5} className="text-(--text-faint)" />
                     <span className="text-uacc-gold">{step.toRole.replace(/_/g, ' ')}</span>
                   </div>
                   <span className="text-[10px] text-(--text-faint) whitespace-nowrap">
@@ -115,7 +116,7 @@ export default function AnnotationTrail({ circulation, annotations, attachments 
 
                 <div className="mt-4 flex items-center gap-2 border-t border-white/5 pt-3">
                   <div className="w-5 h-5 rounded-full bg-white/10 flex items-center justify-center">
-                    <CheckCircle2 size={12} className="text-uacc-gold/70" />
+                    <HugeiconsIcon icon={CheckmarkCircle02Icon} size={12} color="currentColor" strokeWidth={1.5} className="text-uacc-gold/70" />
                   </div>
                   <span className="text-[10px] text-(--text-muted) font-mono tracking-tighter">
                     Signed: {step.fromUser?.name || step.fromUserId}
@@ -138,7 +139,7 @@ export default function AnnotationTrail({ circulation, annotations, attachments 
               transition={{ duration: 0.5, delay: idx * 0.08, ease: 'easeOut' }}
             >
               <div className="flex items-center justify-center w-6 h-6 rounded-full border border-uacc-gold/30 bg-[#0b1120] text-uacc-gold shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 z-10 absolute left-[-28px] top-4 md:static">
-                <Paperclip size={12} />
+                <HugeiconsIcon icon={AttachmentIcon} size={12} color="currentColor" strokeWidth={1.5} />
               </div>
 
               <div className="w-full md:w-[calc(50%-2rem)] card p-4 rounded-xl border border-uacc-gold/10 bg-uacc-gold/[0.03] hover:bg-uacc-gold/[0.05] transition-colors shadow-lg">
@@ -159,7 +160,7 @@ export default function AnnotationTrail({ circulation, annotations, attachments 
 
         // ANNOTATION
         const a = item.annotation
-        const Icon = ANNOTATION_ICONS[a.type] || MessageSquare
+        const icon = ANNOTATION_ICONS[a.type] || Comment01Icon
 
         return (
           <motion.div
@@ -173,7 +174,7 @@ export default function AnnotationTrail({ circulation, annotations, attachments 
             {/* Node — an icon badge rather than a roman numeral, so a glance
                 down the trail tells routing steps and side notes apart. */}
             <div className="flex items-center justify-center w-6 h-6 rounded-full border border-white/10 bg-[#0b1120] text-(--text-muted) shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 z-10 absolute left-[-28px] top-4 md:static">
-              <Icon size={12} />
+              <HugeiconsIcon icon={icon} size={12} color="currentColor" strokeWidth={1.5} />
             </div>
 
             <div className="w-full md:w-[calc(50%-2rem)] card p-4 rounded-xl border border-white/5 bg-white/[0.02] hover:bg-white/[0.04] transition-colors shadow-lg">

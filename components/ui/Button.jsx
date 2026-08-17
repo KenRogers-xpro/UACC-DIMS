@@ -1,6 +1,7 @@
 'use client';
 
-import { Loader2 } from 'lucide-react';
+import { HugeiconsIcon } from '@hugeicons/react';
+import { Loading03Icon } from '@hugeicons/core-free-icons';
 import { motion } from 'framer-motion';
 
 export default function Button({
@@ -48,8 +49,8 @@ export default function Button({
       transition={{ duration: 0.2, ease: "easeOut" }}
     >
       {loading
-        ? <Loader2 size={13} className="animate-spin" />
-        : Icon && <Icon size={13} />
+        ? <HugeiconsIcon icon={Loading03Icon} size={13} color="currentColor" strokeWidth={1.5} className="animate-spin" />
+        : Icon && <HugeiconsIcon icon={Icon} size={13} color="currentColor" strokeWidth={1.5} />
       }
       {loading ? 'Loading...' : children}
     </motion.button>

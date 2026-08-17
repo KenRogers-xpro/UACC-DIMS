@@ -1,5 +1,7 @@
 import React, { useEffect } from 'react'
-import { FileText, ArrowRight } from 'lucide-react'
+import { HugeiconsIcon } from '@hugeicons/react'
+import { ArrowRight01Icon } from '@hugeicons/core-free-icons'
+import { FileText } from 'lucide-react'
 import { useCirculation } from '@/lib/useCirculation'
 import Button from '@/components/ui/Button'
 import CirculationLiveTracker from '@/components/circulation/CirculationLiveTracker'
@@ -52,7 +54,7 @@ export default function DocumentsAwaitingAction({ onTakeAction, refreshKey }) {
               onClick={() => onTakeAction?.(doc)}
               className="shrink-0 flex items-center gap-2 bg-uacc-gold/10 hover:bg-uacc-gold/20 text-uacc-gold border border-uacc-gold/30"
             >
-              Take Action <ArrowRight size={14} />
+              Take Action <HugeiconsIcon icon={ArrowRight01Icon} size={14} color="currentColor" strokeWidth={1.5} />
             </Button>
           </div>
         ))}

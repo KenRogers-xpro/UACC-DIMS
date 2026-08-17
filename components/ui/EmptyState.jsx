@@ -1,6 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
+import { HugeiconsIcon } from '@hugeicons/react';
 
 export default function EmptyState({ icon: Icon, title, message, action }) {
   return (
@@ -26,7 +27,7 @@ export default function EmptyState({ icon: Icon, title, message, action }) {
             animate={{ y: [0, -4, 0] }}
             transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
           >
-            <Icon size={26} style={{ color: 'var(--text-muted)' }} />
+            <HugeiconsIcon icon={Icon} size={26} color="currentColor" strokeWidth={1.5} style={{ color: 'var(--text-muted)' }} />
           </motion.div>
         </motion.div>
       )}

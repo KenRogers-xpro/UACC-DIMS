@@ -3,7 +3,8 @@
 import { useState, useEffect } from 'react'
 import { createPortal } from 'react-dom'
 import { AnimatePresence, motion } from 'framer-motion'
-import { AlertTriangle } from 'lucide-react'
+import { HugeiconsIcon } from '@hugeicons/react'
+import { AlertTriangle } from '@hugeicons/core-free-icons'
 import Button from './Button'
 
 // Portals to document.body, same pattern as DocumentViewerModal — mounted
@@ -44,7 +45,7 @@ export default function IdleWarningModal({ isOpen, secondsLeft, onStayLoggedIn }
                 className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0"
                 style={{ background: 'rgba(204,34,0,0.10)', border: '1px solid rgba(204,34,0,0.22)' }}
               >
-                <AlertTriangle size={18} className="text-uacc-red" />
+                <HugeiconsIcon icon={AlertTriangle} size={18} color="currentColor" strokeWidth={1.5} className="text-uacc-red" />
               </div>
               <h2 id="idle-warning-title" className="text-base font-bold" style={{ color: 'var(--text-primary)' }}>
                 Still there?

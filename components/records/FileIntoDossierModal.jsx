@@ -2,7 +2,8 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Search, Plus, Folder, X } from 'lucide-react'
+import { HugeiconsIcon } from '@hugeicons/react'
+import { Search01Icon, Add01Icon, Folder01Icon, Cancel01Icon } from '@hugeicons/core-free-icons'
 import api from '@/lib/api'
 
 // Extracted from the inline "archive picker" that used to live only in
@@ -85,12 +86,12 @@ export default function FileIntoDossierModal({ documentId, documentTitle, onClos
               onClick={() => onClose?.()}
               className="p-1.5 text-white/50 hover:text-white hover:bg-white/5 rounded-full transition-colors flex-shrink-0"
             >
-              <X size={18} />
+              <HugeiconsIcon icon={Cancel01Icon} size={18} color="currentColor" strokeWidth={1.5} />
             </button>
           </div>
           <div className="p-4 border-b border-white/10 flex gap-2">
             <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-white/30" size={15} />
+              <HugeiconsIcon icon={Search01Icon} size={15} color="currentColor" strokeWidth={1.5} className="absolute left-3 top-1/2 -translate-y-1/2 text-white/30" />
               <input
                 autoFocus
                 type="text"
@@ -106,7 +107,7 @@ export default function FileIntoDossierModal({ documentId, documentTitle, onClos
                 onClick={onCreateNew}
                 className="flex items-center gap-1.5 px-3 py-2 rounded-lg border border-uacc-gold/30 bg-uacc-gold/10 text-uacc-gold hover:bg-uacc-gold/20 text-xs font-semibold transition-colors whitespace-nowrap cursor-pointer"
               >
-                <Plus size={14} /> New
+                <HugeiconsIcon icon={Add01Icon} size={14} color="currentColor" strokeWidth={1.5} /> New
               </button>
             )}
           </div>
@@ -125,7 +126,7 @@ export default function FileIntoDossierModal({ documentId, documentTitle, onClos
                   onClick={() => handleAttach(f.id)}
                   className="w-full text-left px-3 py-2.5 rounded-lg hover:bg-white/5 transition-colors flex items-center gap-2.5 disabled:opacity-50 cursor-pointer"
                 >
-                  <Folder size={15} className="text-uacc-gold flex-shrink-0" />
+                  <HugeiconsIcon icon={Folder01Icon} size={15} color="currentColor" strokeWidth={1.5} className="text-uacc-gold flex-shrink-0" />
                   <div className="min-w-0">
                     <p className="text-sm text-white font-medium truncate">{f.fileNumber}</p>
                     <p className="text-xs text-white/40 truncate">{f.title}</p>

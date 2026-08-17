@@ -1,7 +1,8 @@
 'use client'
 
 import { useState } from 'react'
-import { KeyRound, Lock, ShieldCheck, ShieldAlert, Fingerprint, Clock, PenTool } from 'lucide-react'
+import { HugeiconsIcon } from '@hugeicons/react'
+import { Key01Icon, LockIcon, Shield01Icon, ShieldAlert, FingerPrintIcon, Clock01Icon, PenTool01Icon } from '@hugeicons/core-free-icons'
 import Button from '@/components/ui/Button'
 import EmptyState from '@/components/ui/EmptyState'
 import api from '@/lib/api'
@@ -29,7 +30,7 @@ export default function SignaturesPanel({ circulation }) {
   const [verifyError, setVerifyError] = useState('')
 
   if (!circulation || !circulation.steps || circulation.steps.length === 0) {
-    return <EmptyState icon={PenTool} title="No circulation yet" message="This document has not entered circulation yet." />
+    return <EmptyState icon={PenTool01Icon} title="No circulation yet" message="This document has not entered circulation yet." />
   }
 
   const handleVerify = async () => {
@@ -53,7 +54,7 @@ export default function SignaturesPanel({ circulation }) {
         <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
           Each entry is a tamper-evident signature record, not the routing history.
         </p>
-        <Button variant="outline" size="sm" icon={ShieldCheck} onClick={handleVerify} loading={verifying}>
+        <Button variant="outline" size="sm" icon={Shield01Icon} onClick={handleVerify} loading={verifying}>
           Verify Integrity
         </Button>
       </div>
@@ -66,7 +67,7 @@ export default function SignaturesPanel({ circulation }) {
             ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-400'
             : 'border-uacc-red/30 bg-uacc-red/10 text-uacc-red'
         }`}>
-          {verifyResult.chainValid ? <ShieldCheck size={14} /> : <ShieldAlert size={14} />}
+          {verifyResult.chainValid ? <HugeiconsIcon icon={Shield01Icon} size={14} color="currentColor" strokeWidth={1.5} /> : <HugeiconsIcon icon={ShieldAlert} size={14} color="currentColor" strokeWidth={1.5} />}
           {verifyResult.chainValid
             ? `All ${verifyResult.signatureCount} signature(s) verified — hash chain intact.`
             : 'Integrity check failed — one or more signatures do not match their recorded hash.'}
@@ -97,11 +98,11 @@ export default function SignaturesPanel({ circulation }) {
                 {check && (
                   check.valid ? (
                     <span className="text-[10px] font-bold text-emerald-400 flex items-center gap-1 flex-shrink-0">
-                      <ShieldCheck size={11} /> Verified
+                      <HugeiconsIcon icon={Shield01Icon} size={11} color="currentColor" strokeWidth={1.5} /> Verified
                     </span>
                   ) : (
                     <span className="text-[10px] font-bold text-uacc-red flex items-center gap-1 flex-shrink-0">
-                      <ShieldAlert size={11} /> Mismatch
+                      <HugeiconsIcon icon={ShieldAlert} size={11} color="currentColor" strokeWidth={1.5} /> Mismatch
                     </span>
                   )
                 )}
@@ -109,7 +110,7 @@ export default function SignaturesPanel({ circulation }) {
 
               {!sig ? (
                 <div className="flex items-center gap-2 text-xs" style={{ color: 'var(--text-faint)' }}>
-                  <Clock size={12} />
+                  <HugeiconsIcon icon={Clock01Icon} size={12} color="currentColor" strokeWidth={1.5} />
                   Awaiting signature
                 </div>
               ) : (
@@ -136,12 +137,12 @@ export default function SignaturesPanel({ circulation }) {
                   <div className="flex flex-wrap items-center gap-2">
                     {sig.verifiedWithPin && (
                       <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-uacc-gold/10 text-uacc-gold border border-uacc-gold/25">
-                        <KeyRound size={10} /> PIN Verified
+                        <HugeiconsIcon icon={Key01Icon} size={10} color="currentColor" strokeWidth={1.5} /> PIN Verified
                       </span>
                     )}
                     {sig.verifiedWithPassword && (
                       <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-purple-500/10 text-purple-400 border border-purple-500/25">
-                        <Lock size={10} /> Password Verified — high-stakes
+                        <HugeiconsIcon icon={LockIcon} size={10} color="currentColor" strokeWidth={1.5} /> Password Verified — high-stakes
                       </span>
                     )}
                   </div>
@@ -155,7 +156,7 @@ export default function SignaturesPanel({ circulation }) {
                       style={{ color: 'var(--text-faint)' }}
                       title={sig.signatureHash}
                     >
-                      <Fingerprint size={10} />
+                      <HugeiconsIcon icon={FingerPrintIcon} size={10} color="currentColor" strokeWidth={1.5} />
                       {truncateHash(sig.signatureHash)}
                     </span>
                     <span className="text-[10px]" style={{ color: 'var(--text-faint)' }}>

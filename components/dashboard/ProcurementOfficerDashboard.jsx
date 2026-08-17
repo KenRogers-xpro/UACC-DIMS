@@ -4,7 +4,8 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useAuth } from '@/lib/auth-context'
 import api from '@/lib/api'
-import { ClipboardList, Clock, TrendingUp, AlertCircle, ArrowRight, TrendingDown } from 'lucide-react'
+import { HugeiconsIcon } from '@hugeicons/react'
+import { ClipboardIcon, Clock01Icon, TrendingUp, TrendingDown, AlertCircleIcon, ArrowRight01Icon } from '@hugeicons/core-free-icons'
 
 import PageHeader from '@/components/ui/PageHeader'
 import StatCard from '@/components/ui/StatCard'
@@ -59,7 +60,7 @@ export default function ProcurementOfficerDashboard() {
           index={0}
           title="Pending Verification"
           value={loading ? '—' : stats.pendingVerification}
-          icon={ClipboardList}
+          icon={ClipboardIcon}
           accentColor="gold"
           subtitle="Awaiting your review"
         />
@@ -67,7 +68,7 @@ export default function ProcurementOfficerDashboard() {
           index={1}
           title="Avg Processing Time"
           value={loading ? '—' : stats.averageProcessingTime}
-          icon={Clock}
+          icon={Clock01Icon}
           accentColor="blue"
           subtitle="Last 30 days"
         />
@@ -83,7 +84,7 @@ export default function ProcurementOfficerDashboard() {
           index={3}
           title="Flagged for Clarification"
           value={loading ? '—' : stats.flaggedForClarification}
-          icon={AlertCircle}
+          icon={AlertCircleIcon}
           accentColor="red"
           subtitle="Returned to Dept Head"
         />
@@ -136,14 +137,14 @@ export default function ProcurementOfficerDashboard() {
           <div className="flex flex-col gap-3">
             <Link href="/dashboard/procurement?filter=pending_po">
               <Button variant="outline" className="w-full justify-between py-6">
-                <span className="flex items-center gap-2"><ClipboardList size={18}/> Review Pending Requests</span>
-                <ArrowRight size={16} />
+                <span className="flex items-center gap-2"><HugeiconsIcon icon={ClipboardIcon} size={18} color="currentColor" strokeWidth={1.5}/> Review Pending Requests</span>
+                <HugeiconsIcon icon={ArrowRight01Icon} size={16} color="currentColor" strokeWidth={1.5} />
               </Button>
             </Link>
             <Link href="/dashboard/procurement/vendors">
               <Button variant="outline" className="w-full justify-between py-6">
-                <span className="flex items-center gap-2"><TrendingUp size={18}/> Vendor List</span>
-                <ArrowRight size={16} />
+                <span className="flex items-center gap-2"><HugeiconsIcon icon={TrendingUp} size={18} color="currentColor" strokeWidth={1.5}/> Vendor List</span>
+                <HugeiconsIcon icon={ArrowRight01Icon} size={16} color="currentColor" strokeWidth={1.5} />
               </Button>
             </Link>
           </div>

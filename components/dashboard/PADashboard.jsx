@@ -4,7 +4,8 @@ import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import { useAuth } from '@/lib/auth-context'
 import api from '@/lib/api'
-import { CalendarClock, Inbox, FileText, Sparkles, Loader2, ArrowRight } from 'lucide-react'
+import { HugeiconsIcon } from '@hugeicons/react'
+import { CalendarClockIcon, InboxIcon, FileText, SparklesIcon, Loading03Icon, ArrowRight01Icon } from '@hugeicons/core-free-icons'
 
 import PageHeader from '@/components/ui/PageHeader'
 import StatCard from '@/components/ui/StatCard'
@@ -43,7 +44,7 @@ function BriefingCard({ briefing, loading }) {
     >
       <div className="flex items-center gap-3 mb-4">
         <div className="p-2.5 rounded-full bg-uacc-gold/15 text-uacc-gold border border-uacc-gold/20">
-          <Sparkles size={18} />
+          <HugeiconsIcon icon={SparklesIcon} size={18} color="currentColor" strokeWidth={1.5} />
         </div>
         <div>
           <h3 className="font-heading font-bold text-sm uppercase tracking-wider" style={{ color: 'var(--text-primary)' }}>
@@ -58,7 +59,7 @@ function BriefingCard({ briefing, loading }) {
       <div className="rounded-lg border bg-black/10 p-4" style={{ minHeight: 120, borderColor: 'var(--border-subtle)' }}>
         {loading ? (
           <div className="flex items-center gap-2 text-sm" style={{ color: 'var(--text-muted)' }}>
-            <Loader2 size={16} className="animate-spin" />
+            <HugeiconsIcon icon={Loading03Icon} size={16} color="currentColor" strokeWidth={1.5} className="animate-spin" />
             Preparing briefing...
           </div>
         ) : (
@@ -174,7 +175,7 @@ export default function PADashboard() {
           index={0}
           title="Pending Triage"
           value={loading ? '—' : stats.pendingTriage}
-          icon={Inbox}
+          icon={InboxIcon}
           accentColor="red"
           subtitle="Items awaiting your review"
         />
@@ -182,7 +183,7 @@ export default function PADashboard() {
           index={1}
           title="Today's Schedule"
           value={loading ? '—' : stats.todaysSchedule}
-          icon={CalendarClock}
+          icon={CalendarClockIcon}
           accentColor="gold"
           subtitle="Events on today's calendar"
         />
@@ -223,7 +224,7 @@ export default function PADashboard() {
             <Link key={action.href} href={action.href}>
               <Button variant="outline" className="justify-between" style={{ minWidth: 180 }}>
                 {action.label}
-                <ArrowRight size={14} />
+                <HugeiconsIcon icon={ArrowRight01Icon} size={14} color="currentColor" strokeWidth={1.5} />
               </Button>
             </Link>
           ))}

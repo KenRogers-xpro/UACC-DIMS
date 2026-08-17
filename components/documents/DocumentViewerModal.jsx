@@ -3,7 +3,9 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { createPortal } from 'react-dom'
 import { motion, AnimatePresence } from 'framer-motion'
-import { X, Download, FileDown, FileText, Pencil, Send, Lock, MessageSquare, History, Eye, PenTool, Maximize2, Minimize2, Paperclip, UploadCloud, User, FolderCheck } from 'lucide-react'
+import { HugeiconsIcon } from '@hugeicons/react'
+import { Cancel01Icon, Download01Icon, PencilEdit01Icon, SentIcon, LockIcon, Comment01Icon, Time02Icon, ViewIcon, PenTool01Icon, AttachmentIcon, CloudUploadIcon, UserIcon, FolderCheckIcon } from '@hugeicons/core-free-icons'
+import { Maximize2, Minimize2, FileText, FileDown } from 'lucide-react'
 import Badge from '@/components/ui/Badge'
 import Button from '@/components/ui/Button'
 import EmptyState from '@/components/ui/EmptyState'
@@ -38,10 +40,10 @@ const SUBMIT_ROLES = [
 ]
 
 const TABS = [
-  { key: 'preview', label: 'Preview', icon: Eye },
-  { key: 'annotations', label: 'Annotations', icon: MessageSquare },
-  { key: 'signatures', label: 'Signatures', icon: History },
-  { key: 'attachments', label: 'Attachments', icon: Paperclip },
+  { key: 'preview', label: 'Preview', icon: ViewIcon },
+  { key: 'annotations', label: 'Annotations', icon: Comment01Icon },
+  { key: 'signatures', label: 'Signatures', icon: Time02Icon },
+  { key: 'attachments', label: 'Attachments', icon: AttachmentIcon },
 ]
 
 // Secondary, clearly-optional multi-select — deliberately smaller/quieter
@@ -639,7 +641,7 @@ export default function DocumentViewerModal({
                         style={{ background: 'rgba(0,0,0,0.4)', color: '#fff' }}
                         title={isPreviewFullscreen ? 'Exit full screen' : 'Full screen'}
                       >
-                        {isPreviewFullscreen ? <Minimize2 size={15} /> : <Maximize2 size={15} />}
+                          {isPreviewFullscreen ? <Minimize2 size={16} color="currentColor" strokeWidth={1.5} /> : <Maximize2 size={16} color="currentColor" strokeWidth={1.5} />}
                       </button>
                     )}
                     {previewLoading ? (
@@ -652,17 +654,9 @@ export default function DocumentViewerModal({
                         </p>
                       </div>
                     ) : fileKind === 'pdf' ? (
-                      // #view=FitH tells the browser's built-in PDF viewer to
-                      // open at "fit width" zoom instead of its 100%/actual-
-                      // size default — at 100% zoom an A4 page is much
-                      // narrower than this container, and the leftover space
-                      // was being left-aligned rather than centered. Fitting
-                      // the page to the available width removes the leftover
-                      // space entirely instead of trying to center it.
                       <iframe src={`${previewUrl}#view=FitH`} title={document.title} className="w-full h-full flex-1" />
                     ) : fileKind === 'image' ? (
                       <div className="flex-1 min-h-0 flex items-center justify-center">
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img src={previewUrl} alt={document.title} className="max-w-full max-h-full object-contain" />
                       </div>
                     ) : (
@@ -671,7 +665,7 @@ export default function DocumentViewerModal({
                         <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
                           This file type can&apos;t be previewed inline.
                         </p>
-                        <Button variant="outline" icon={Download} onClick={handleDownload} loading={downloading}>
+                        <Button size="sm" variant="outline" icon={Download01Icon} onClick={() => window.open(fileUrl)} loading={downloading}>
                           Download to view
                         </Button>
                       </div>
@@ -762,9 +756,6 @@ export default function DocumentViewerModal({
                       >
                         {ANNOTATION_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
                       </select>
-                      {/* Textarea, not a single-line input — real annotations
-                          ("Sir, audit has no objection, forwarded for your
-                          further consideration") are sentences. */}
                       <textarea
                         className="input-field flex-1 min-w-0 resize-none"
                         rows={2}
@@ -777,18 +768,13 @@ export default function DocumentViewerModal({
                     <CcPicker value={newAnnotationCcRoles} onChange={setNewAnnotationCcRoles} />
                   </form>
 
-                  {/* Unified trail — CirculationStep routing history and
-                      Annotation side notes interleaved by timestamp, the
-                      same way both sit on the same page of a physical
-                      docket. SignaturesPanel (the other tab) stays the
-                      separate, pure proof-of-authenticity view. */}
                   {(annotationsLoading || circulationLoading) ? (
                     <div className="flex flex-col gap-2">
                       <SkeletonLine height="h-16" />
                       <SkeletonLine height="h-16" />
                     </div>
                   ) : annotations.length === 0 && !(circulation?.steps?.length) && attachments.length === 0 ? (
-                    <EmptyState icon={MessageSquare} title="No annotations yet" message="Comments, notes, and routing history for this document will appear here." />
+                    <EmptyState icon={Comment01Icon} title="No annotations yet" message="Comments, notes, and routing history for this document will appear here." />
                   ) : (
                     <AnnotationTrail circulation={circulation} annotations={annotations} attachments={attachments} />
                   )}
@@ -803,12 +789,12 @@ export default function DocumentViewerModal({
                       <SkeletonLine height="h-16" />
                     </div>
                   ) : !circulation ? (
-                    <EmptyState icon={PenTool} title="No circulation yet" message="This document has not entered circulation yet." />
+                    <EmptyState icon={PenTool01Icon} title="No circulation yet" message="This document has not entered circulation yet." />
                   ) : (
                     <>
                       {canSign && (
                         <div className="flex justify-end">
-                          <Button variant="primary" icon={PenTool} onClick={() => setSigningOpen(true)}>
+                          <Button size="sm" variant="primary" icon={PenTool01Icon} onClick={() => setShowSigning(true)}>
                             Sign This Step
                           </Button>
                         </div>
@@ -827,13 +813,13 @@ export default function DocumentViewerModal({
                       <SkeletonLine height="h-16" />
                     </div>
                   ) : !circulation ? (
-                    <EmptyState icon={Paperclip} title="No circulation yet" message="Supporting documents can be attached once this document is in circulation." />
+                    <EmptyState icon={AttachmentIcon} title="No circulation yet" message="Supporting documents can be attached once this document is in circulation." />
                   ) : (
                     <>
                       {isCurrentHolder && (
                         <div className="rounded-lg p-4 flex flex-col gap-3 border" style={{ borderColor: 'var(--border-gold)', background: 'rgba(201,151,58,0.05)' }}>
                           <p className="text-xs font-semibold flex items-center gap-1.5" style={{ color: 'var(--text-primary)' }}>
-                            <UploadCloud size={14} /> Attach Supporting Document
+                            <HugeiconsIcon icon={CloudUploadIcon} size={14} color="currentColor" strokeWidth={1.5} /> Attach Supporting Document
                           </p>
                           <input
                             className="input-field w-full"
@@ -849,7 +835,7 @@ export default function DocumentViewerModal({
                           />
                           <Button
                             variant="outline"
-                            icon={UploadCloud}
+                            icon={CloudUploadIcon}
                             loading={attaching}
                             onClick={() => attachmentFileInputRef.current?.click()}
                             className="self-start"
@@ -866,7 +852,7 @@ export default function DocumentViewerModal({
                           <SkeletonLine height="h-14" />
                         </div>
                       ) : attachments.length === 0 ? (
-                        <EmptyState icon={Paperclip} title="No attachments yet" message="Supporting documents attached during circulation will appear here." />
+                        <EmptyState icon={AttachmentIcon} title="No attachments yet" message="Supporting documents attached during circulation will appear here." />
                       ) : (
                         <div className="flex flex-col gap-3">
                           {attachments.map((att) => (
@@ -877,13 +863,13 @@ export default function DocumentViewerModal({
                               style={{ borderColor: 'var(--border-subtle)' }}
                             >
                               <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5" style={{ background: 'rgba(201,151,58,0.1)', border: '1px solid rgba(201,151,58,0.2)' }}>
-                                <Paperclip size={14} className="text-uacc-gold" />
+                                <HugeiconsIcon icon={AttachmentIcon} size={16} color="currentColor" strokeWidth={1.5} className="text-uacc-gold" />
                               </div>
                               <div className="flex-1 min-w-0">
                                 <p className="text-sm font-semibold truncate" style={{ color: 'var(--text-primary)' }}>{att.document?.title}</p>
                                 {att.note && <p className="text-xs italic mt-0.5" style={{ color: 'var(--text-secondary)' }}>"{att.note}"</p>}
                                 <p className="text-[10px] mt-1 flex items-center gap-1" style={{ color: 'var(--text-faint)' }}>
-                                  <User size={10} /> {att.attachedBy?.name || 'Unknown'} · {new Date(att.createdAt).toLocaleString()}
+                                  <HugeiconsIcon icon={UserIcon} size={10} color="currentColor" strokeWidth={1.5} /> {att.attachedBy?.name || 'Unknown'} · {new Date(att.createdAt).toLocaleString()}
                                 </p>
                               </div>
                             </button>
@@ -942,7 +928,7 @@ export default function DocumentViewerModal({
             )}
             <div className="p-5 border-t flex items-center justify-end gap-3 flex-shrink-0" style={{ borderColor: 'var(--border-subtle)' }}>
               {!editing && !showSubmitForm && !showForwardForm && (
-                <Button variant="outline" icon={Download} onClick={handleDownload} loading={downloading}>
+                <Button variant="outline" icon={Download01Icon} onClick={handleDownload} loading={downloading}>
                   Download
                 </Button>
               )}
@@ -954,7 +940,7 @@ export default function DocumentViewerModal({
               {!editing && !showSubmitForm && !showForwardForm && canSendToFile && (
                 <Button
                   variant="primary"
-                  icon={FolderCheck}
+                  icon={FolderCheckIcon}
                   onClick={handleSendToFile}
                   loading={sendingToFile}
                   disabled={sendToFileCoolingDown}
@@ -964,8 +950,8 @@ export default function DocumentViewerModal({
               )}
               {canEdit && !editing && !showSubmitForm && (
                 <>
-                  <Button variant="outline" icon={Pencil} onClick={() => setEditing(true)}>Edit</Button>
-                  <Button variant="primary" icon={Send} onClick={() => setShowSubmitForm(true)}>Send / Circulate</Button>
+                  <Button size="sm" icon={FolderCheckIcon} onClick={() => setShowFiling(true)}>Edit</Button>
+                  <Button size="sm" icon={SentIcon} onClick={() => setShowSubmit(true)}>Send / Circulate</Button>
                 </>
               )}
               {editing && (
@@ -1027,7 +1013,7 @@ export default function DocumentViewerModal({
                   <div className="p-4 border-b flex items-center justify-between flex-shrink-0" style={{ borderColor: 'var(--border-subtle)' }}>
                     <p className="text-sm font-semibold truncate" style={{ color: 'var(--text-primary)' }}>{attachmentPreview.title}</p>
                     <button onClick={() => setAttachmentPreview(null)} className="p-1.5 rounded-lg hover:bg-white/5 flex-shrink-0" style={{ color: 'var(--text-muted)' }}>
-                      <X size={18} />
+                      <HugeiconsIcon icon={Cancel01Icon} size={18} color="currentColor" strokeWidth={1.5} />
                     </button>
                   </div>
                   <div className="flex-1 overflow-hidden flex items-center justify-center bg-black/20 min-h-[300px]">
