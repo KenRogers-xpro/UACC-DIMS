@@ -2,18 +2,19 @@
 import { useState, useRef, useEffect } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
-import { HugeiconsIcon } from '@hugeicons/react'
-import { Menu01Icon, BellIcon, ChevronLeftIcon, ChevronRightIcon, Search01Icon, Comment01Icon, MegaphoneIcon, TickDouble01Icon, Note01Icon } from '@hugeicons/core-free-icons'
-import { AlertTriangle } from 'lucide-react'
+import { 
+  Menu, Bell, ChevronLeft, ChevronRight, Search, 
+  MessageSquare, Megaphone, CheckCheck, FileText, AlertTriangle 
+} from 'lucide-react'
 import ThemeToggle from '@/components/ui/ThemeToggle'
 import StatusDot from '@/components/ui/StatusDot'
 import { useStore } from '@/lib/store'
 import { useNotifications } from '@/lib/useNotifications'
 
 const NOTIFICATION_ICONS = {
-  CIRCULATION: Note01Icon,
-  MESSAGE: Comment01Icon,
-  ANNOUNCEMENT: MegaphoneIcon,
+  CIRCULATION: FileText,
+  MESSAGE: MessageSquare,
+  ANNOUNCEMENT: Megaphone,
 }
 
 function timeAgo(dateStr) {
@@ -90,7 +91,7 @@ export default function TopBar({ user, sidebarCollapsed, onToggleSidebar, onMobi
           style={{ color: 'var(--text-muted)' }}
           aria-label="Open navigation"
         >
-          <HugeiconsIcon icon={Menu01Icon} size={18} color="currentColor" strokeWidth={1.5} />
+          <Menu size={18} strokeWidth={1.5} color="currentColor" />
         </button>
 
         {/* Desktop collapse toggle */}
@@ -100,7 +101,7 @@ export default function TopBar({ user, sidebarCollapsed, onToggleSidebar, onMobi
           style={{ color: 'var(--text-muted)' }}
           title={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
         >
-          {sidebarCollapsed ? <HugeiconsIcon icon={ChevronRightIcon} size={16} color="currentColor" strokeWidth={1.5} /> : <HugeiconsIcon icon={ChevronLeftIcon} size={16} color="currentColor" strokeWidth={1.5} />}
+          {sidebarCollapsed ? <ChevronRight size={16} strokeWidth={1.5} color="currentColor" /> : <ChevronLeft size={16} strokeWidth={1.5} color="currentColor" />}
         </button>
 
         {/* Vertical divider */}
@@ -139,7 +140,7 @@ export default function TopBar({ user, sidebarCollapsed, onToggleSidebar, onMobi
             title="Notifications"
             aria-label="Notifications"
           >
-            <HugeiconsIcon icon={BellIcon} size={16} color="currentColor" strokeWidth={1.5} />
+            <Bell size={16} strokeWidth={1.5} color="currentColor" />
             {unreadCount > 0 && (
               <span
                 className="absolute top-0.5 right-0.5 min-w-[15px] h-[15px] px-[3px] flex items-center justify-center rounded-full bg-uacc-red text-white text-[9px] font-bold leading-none"
@@ -186,7 +187,7 @@ export default function TopBar({ user, sidebarCollapsed, onToggleSidebar, onMobi
                     </div>
                   ) : incoming.length === 0 && outgoing.length === 0 ? (
                     <div className="px-4 py-8 flex flex-col items-center gap-2 text-center">
-                      <HugeiconsIcon icon={TickDouble01Icon} size={22} color="currentColor" strokeWidth={1.5} style={{ color: 'var(--text-faint)' }} />
+                      <CheckCheck size={22} strokeWidth={1.5} color="currentColor" style={{ color: 'var(--text-faint)' }} />
                       <p className="text-xs" style={{ color: 'var(--text-muted)' }}>You&apos;re all caught up</p>
                     </div>
                   ) : (
@@ -254,7 +255,7 @@ export default function TopBar({ user, sidebarCollapsed, onToggleSidebar, onMobi
 }
 
 function NotificationRow({ item, onClick }) {
-  const icon = NOTIFICATION_ICONS[item.type] || BellIcon
+  const Icon = NOTIFICATION_ICONS[item.type] || Bell
   return (
     <button
       onClick={() => onClick(item)}
@@ -263,7 +264,7 @@ function NotificationRow({ item, onClick }) {
     >
       <div className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5"
            style={{ background: 'rgba(201,151,58,0.12)', border: '1px solid rgba(201,151,58,0.25)' }}>
-        <HugeiconsIcon icon={icon} size={13} color="currentColor" strokeWidth={1.5} className="text-uacc-gold" />
+        <Icon size={13} strokeWidth={1.5} color="currentColor" className="text-uacc-gold" />
       </div>
       <div className="min-w-0 flex-1">
         <p className="text-xs font-semibold truncate" style={{ color: 'var(--text-primary)' }}>{item.title}</p>
