@@ -101,18 +101,18 @@ export default function LoginPage() {
           {/* Subtle arc SVG ornament */}
           <svg
             className="absolute inset-0 w-full h-full pointer-events-none"
-            viewBox="0 0 520 100%"
+            viewBox="0 0 520 1000"
             preserveAspectRatio="none"
             fill="none"
           >
             <path
-              d="M 0 100% A 520 520 0 0 1 520 0"
+              d="M 0 1000 A 520 520 0 0 1 520 0"
               stroke="rgba(204,34,0,0.06)"
               strokeWidth="1"
               strokeDasharray="4 6"
             />
             <path
-              d="M 0 100% A 380 380 0 0 1 380 20%"
+              d="M 0 1000 A 380 380 0 0 1 380 200"
               stroke="rgba(201,151,58,0.05)"
               strokeWidth="0.8"
             />

@@ -93,10 +93,10 @@ export default function StatCard({ title, value, subtitle, icon: Icon,
             {Icon && (
               <div className="p-2 rounded-lg"
                    style={{ background: c.bg, border: `1px solid ${c.border}` }}>
-                {typeof Icon === 'function' && Icon.prototype === undefined ? (
-                  <Icon size={16} color={c.text} strokeWidth={1.5} />
-                ) : (
+                {Array.isArray(Icon) ? (
                   <HugeiconsIcon icon={Icon} size={16} color={c.text} strokeWidth={1.5} />
+                ) : (
+                  <Icon size={16} color={c.text} strokeWidth={1.5} />
                 )}
               </div>
             )}
