@@ -2,7 +2,8 @@
 
 import { useState } from 'react'
 import { HugeiconsIcon } from '@hugeicons/react'
-import { Key01Icon, LockIcon, Shield01Icon, ShieldAlert, FingerPrintIcon, Clock01Icon, PenTool01Icon } from '@hugeicons/core-free-icons'
+import { Key01Icon, LockIcon, Shield01Icon, FingerPrintIcon, Clock01Icon, PenTool01Icon } from '@hugeicons/core-free-icons'
+import { ShieldAlert } from 'lucide-react'
 import Button from '@/components/ui/Button'
 import EmptyState from '@/components/ui/EmptyState'
 import api from '@/lib/api'
@@ -67,7 +68,7 @@ export default function SignaturesPanel({ circulation }) {
             ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-400'
             : 'border-uacc-red/30 bg-uacc-red/10 text-uacc-red'
         }`}>
-          {verifyResult.chainValid ? <HugeiconsIcon icon={Shield01Icon} size={14} color="currentColor" strokeWidth={1.5} /> : <HugeiconsIcon icon={ShieldAlert} size={14} color="currentColor" strokeWidth={1.5} />}
+          {verifyResult.chainValid ? <HugeiconsIcon icon={Shield01Icon} size={14} color="currentColor" strokeWidth={1.5} /> : <ShieldAlert size={14} strokeWidth={1.5} className="text-current" />}
           {verifyResult.chainValid
             ? `All ${verifyResult.signatureCount} signature(s) verified — hash chain intact.`
             : 'Integrity check failed — one or more signatures do not match their recorded hash.'}
@@ -102,7 +103,7 @@ export default function SignaturesPanel({ circulation }) {
                     </span>
                   ) : (
                     <span className="text-[10px] font-bold text-uacc-red flex items-center gap-1 flex-shrink-0">
-                      <HugeiconsIcon icon={ShieldAlert} size={11} color="currentColor" strokeWidth={1.5} /> Mismatch
+                      <ShieldAlert size={11} strokeWidth={1.5} className="text-current" /> Mismatch
                     </span>
                   )
                 )}

@@ -5,7 +5,8 @@ import Link from 'next/link'
 import { useAuth } from '@/lib/auth-context'
 import api from '@/lib/api'
 import { HugeiconsIcon } from '@hugeicons/react'
-import { ClipboardIcon, Clock01Icon, TrendingUp, TrendingDown, AlertCircleIcon, ArrowRight01Icon } from '@hugeicons/core-free-icons'
+import { ClipboardIcon, Clock01Icon, ArrowRight01Icon } from '@hugeicons/core-free-icons'
+import { TrendingUp, TrendingDown, AlertCircle } from 'lucide-react'
 
 import PageHeader from '@/components/ui/PageHeader'
 import StatCard from '@/components/ui/StatCard'
@@ -84,7 +85,7 @@ export default function ProcurementOfficerDashboard() {
           index={3}
           title="Flagged for Clarification"
           value={loading ? '—' : stats.flaggedForClarification}
-          icon={AlertCircleIcon}
+          icon={AlertCircle}
           accentColor="red"
           subtitle="Returned to Dept Head"
         />
@@ -143,7 +144,7 @@ export default function ProcurementOfficerDashboard() {
             </Link>
             <Link href="/dashboard/procurement/vendors">
               <Button variant="outline" className="w-full justify-between py-6">
-                <span className="flex items-center gap-2"><HugeiconsIcon icon={TrendingUp} size={18} color="currentColor" strokeWidth={1.5}/> Vendor List</span>
+                <span className="flex items-center gap-2"><TrendingUp size={18} strokeWidth={1.5} className="text-current"/> Vendor List</span>
                 <HugeiconsIcon icon={ArrowRight01Icon} size={16} color="currentColor" strokeWidth={1.5} />
               </Button>
             </Link>

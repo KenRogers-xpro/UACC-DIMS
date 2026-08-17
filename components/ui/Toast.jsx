@@ -3,7 +3,8 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { HugeiconsIcon } from '@hugeicons/react';
-import { AlertCircleIcon, CheckmarkCircle02Icon, InformationCircleIcon, Cancel01Icon } from '@hugeicons/core-free-icons';
+import { CheckmarkCircle02Icon, InformationCircleIcon, Cancel01Icon } from '@hugeicons/core-free-icons';
+import { AlertCircle } from 'lucide-react';
 
 export function Toast({ 
   message, 

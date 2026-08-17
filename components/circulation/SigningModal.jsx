@@ -4,7 +4,8 @@ import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import { HugeiconsIcon } from '@hugeicons/react'
-import { Cancel01Icon, LockIcon, Shield01Icon, ShieldAlert, Tick01Icon, Key01Icon, Settings01Icon } from '@hugeicons/core-free-icons'
+import { Cancel01Icon, LockIcon, Shield01Icon, Tick01Icon, Key01Icon, Settings01Icon } from '@hugeicons/core-free-icons'
+import { ShieldAlert } from 'lucide-react'
 import api from '@/lib/api'
 import Button from '@/components/ui/Button'
 
@@ -301,7 +302,7 @@ export default function SigningModal({ circulationId, currentUserRole, isOpen, o
                   // DigitalSignature record honestly stores
                   // verifiedWithPin: false, since none was actually checked.
                   <div className="rounded-lg p-3 border flex items-start gap-2" style={{ borderColor: 'var(--border-gold)', background: 'rgba(201,151,58,0.05)' }}>
-                    <HugeiconsIcon icon={ShieldAlert} size={14} color="currentColor" strokeWidth={1.5} className="text-uacc-gold flex-shrink-0 mt-0.5" />
+                    <ShieldAlert size={14} strokeWidth={1.5} className="text-uacc-gold flex-shrink-0 mt-0.5" />
                     <div>
                       <p className="text-xs font-semibold" style={{ color: 'var(--text-primary)' }}>
                         Sign as {currentUserRole?.replace(/_/g, ' ')} — {new Date().toLocaleString()}?
