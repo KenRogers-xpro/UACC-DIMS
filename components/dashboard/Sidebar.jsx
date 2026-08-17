@@ -23,11 +23,11 @@ import {
   BookOpen01Icon,
   InboxIcon,
   CalendarClockIcon,
-  FileText,
   Comment01Icon,
   MegaphoneIcon,
   Cancel01Icon,
 } from '@hugeicons/core-free-icons'
+import { FileText } from 'lucide-react'
 
 const NAV_ITEMS = [
   {
@@ -397,13 +397,16 @@ function SidebarContent({
                     />
                   )}
                 
-                  <HugeiconsIcon
-                    icon={item.icon}
-                    size={16}
-                    color="currentColor"
-                    strokeWidth={1.5}
-                    className={`flex-shrink-0 ${isActive ? 'text-uacc-gold' : ''}`}
-                  />
+                  {item.href === '/dashboard/drafts'
+                    ? <FileText size={16} className={`flex-shrink-0 ${isActive ? 'text-uacc-gold' : ''}`} />
+                    : <HugeiconsIcon
+                        icon={item.icon}
+                        size={16}
+                        color="currentColor"
+                        strokeWidth={1.5}
+                        className={`flex-shrink-0 ${isActive ? 'text-uacc-gold' : ''}`}
+                      />
+                  }
                   {!collapsed && (
                     <>
                       <span className="flex-1 font-heading font-medium text-[12px]

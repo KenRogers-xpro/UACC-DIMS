@@ -3,14 +3,15 @@ import { useState, useRef, useEffect } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import { HugeiconsIcon } from '@hugeicons/react'
-import { Menu01Icon, BellIcon, ChevronLeftIcon, ChevronRightIcon, Search01Icon, FileText, Comment01Icon, MegaphoneIcon, TickDouble01Icon, AlertTriangle } from '@hugeicons/core-free-icons'
+import { Menu01Icon, BellIcon, ChevronLeftIcon, ChevronRightIcon, Search01Icon, Comment01Icon, MegaphoneIcon, TickDouble01Icon, Note01Icon } from '@hugeicons/core-free-icons'
+import { AlertTriangle } from 'lucide-react'
 import ThemeToggle from '@/components/ui/ThemeToggle'
 import StatusDot from '@/components/ui/StatusDot'
 import { useStore } from '@/lib/store'
 import { useNotifications } from '@/lib/useNotifications'
 
 const NOTIFICATION_ICONS = {
-  CIRCULATION: FileText,
+  CIRCULATION: Note01Icon,
   MESSAGE: Comment01Icon,
   ANNOUNCEMENT: MegaphoneIcon,
 }
@@ -173,7 +174,7 @@ export default function TopBar({ user, sidebarCollapsed, onToggleSidebar, onMobi
                 <div className="max-h-96 overflow-y-auto">
                   {notifError ? (
                     <div className="px-4 py-8 flex flex-col items-center gap-2 text-center">
-                      <HugeiconsIcon icon={AlertTriangle} size={22} color="currentColor" strokeWidth={1.5} className="text-uacc-red" />
+                      <AlertTriangle size={22} className="text-uacc-red" />
                       <p className="text-xs font-semibold" style={{ color: 'var(--text-primary)' }}>Couldn&apos;t load notifications</p>
                       <p className="text-[11px]" style={{ color: 'var(--text-muted)' }}>{notifError}</p>
                       <button
