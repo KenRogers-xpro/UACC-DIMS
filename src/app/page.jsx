@@ -30,6 +30,7 @@ import {
   ScrollText,
   Megaphone,
   Send,
+  Briefcase,
 } from 'lucide-react';
 import { HugeiconsIcon } from '@hugeicons/react';
 import {
