@@ -29,7 +29,7 @@ export default function SignaturesPanel({ circulation }) {
   const [verifyError, setVerifyError] = useState('')
 
   if (!circulation || !circulation.steps || circulation.steps.length === 0) {
-    return <EmptyState icon={PenTool01Icon} title="No circulation yet" message="This document has not entered circulation yet." />
+    return <EmptyState icon={PenTool} title="No circulation yet" message="This document has not entered circulation yet." />
   }
 
   const handleVerify = async () => {
@@ -53,7 +53,7 @@ export default function SignaturesPanel({ circulation }) {
         <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
           Each entry is a tamper-evident signature record, not the routing history.
         </p>
-        <Button variant="outline" size="sm" icon={Shield01Icon} onClick={handleVerify} loading={verifying}>
+        <Button variant="outline" size="sm" icon={Shield} onClick={handleVerify} loading={verifying}>
           Verify Integrity
         </Button>
       </div>

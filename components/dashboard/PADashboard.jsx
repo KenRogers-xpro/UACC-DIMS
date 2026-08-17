@@ -175,7 +175,7 @@ export default function PADashboard() {
           index={0}
           title="Pending Triage"
           value={loading ? '—' : stats.pendingTriage}
-          icon={InboxIcon}
+          icon={Inbox}
           accentColor="red"
           subtitle="Items awaiting your review"
         />
@@ -183,7 +183,7 @@ export default function PADashboard() {
           index={1}
           title="Today's Schedule"
           value={loading ? '—' : stats.todaysSchedule}
-          icon={CalendarClockIcon}
+          icon={CalendarClock}
           accentColor="gold"
           subtitle="Events on today's calendar"
         />

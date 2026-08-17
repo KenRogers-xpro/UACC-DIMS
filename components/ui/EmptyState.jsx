@@ -27,10 +27,7 @@ export default function EmptyState({ icon: Icon, title, message, action }) {
             animate={{ y: [0, -4, 0] }}
             transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
           >
-            {Array.isArray(Icon)
-              ? <HugeiconsIcon icon={Icon} size={26} color="currentColor" strokeWidth={1.5} style={{ color: 'var(--text-muted)' }} />
-              : <Icon size={26} strokeWidth={1.5} style={{ color: 'var(--text-muted)' }} />
-            }
+            <Icon size={26} strokeWidth={1.5} style={{ color: 'var(--text-muted)' }} />
           </motion.div>
         </motion.div>
       )}

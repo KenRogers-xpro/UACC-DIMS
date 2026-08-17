@@ -60,7 +60,7 @@ export default function ProcurementOfficerDashboard() {
           index={0}
           title="Pending Verification"
           value={loading ? '—' : stats.pendingVerification}
-          icon={ClipboardIcon}
+          icon={ClipboardList}
           accentColor="gold"
           subtitle="Awaiting your review"
         />
@@ -68,7 +68,7 @@ export default function ProcurementOfficerDashboard() {
           index={1}
           title="Avg Processing Time"
           value={loading ? '—' : stats.averageProcessingTime}
-          icon={Clock01Icon}
+          icon={Clock}
           accentColor="blue"
           subtitle="Last 30 days"
         />
