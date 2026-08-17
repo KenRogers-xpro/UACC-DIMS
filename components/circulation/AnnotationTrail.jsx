@@ -99,11 +99,10 @@ export default function AnnotationTrail({ circulation, annotations, attachments 
 
                 {isDecision && (
                   <div className="mt-4 flex items-center gap-2">
-                    <span className={`px-2 py-1 rounded text-xs font-bold ${
-                      step.decision === 'APPROVED' ? 'bg-emerald-500/20 text-emerald-400' :
-                      step.decision === 'REJECTED' ? 'bg-red-500/20 text-red-400' :
-                      'bg-white/10 text-(--text-muted)'
-                    }`}>
+                    <span className={`px-2 py-1 rounded text-xs font-bold ${step.decision === 'APPROVED' ? 'bg-emerald-500/20 text-emerald-400' :
+                        step.decision === 'REJECTED' ? 'bg-red-500/20 text-red-400' :
+                          'bg-white/10 text-(--text-muted)'
+                      }`}>
                       {step.decision}
                     </span>
                     {step.amount && (
