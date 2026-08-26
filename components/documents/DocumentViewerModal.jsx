@@ -934,8 +934,8 @@ export default function DocumentViewerModal({
               )}
               {canEdit && !editing && !showSubmitForm && (
                 <>
-                  <Button size="sm" icon={FolderCheck} onClick={() => setShowFiling(true)}>Edit</Button>
-                  <Button size="sm" icon={Send} onClick={() => setShowSubmit(true)}>Send / Circulate</Button>
+                  <Button size="sm" icon={FolderCheck} onClick={() => setEditing(true)}>Edit</Button>
+                  <Button size="sm" icon={Send} onClick={() => setShowSubmitForm(true)}>Send / Circulate</Button>
                 </>
               )}
               {editing && (
