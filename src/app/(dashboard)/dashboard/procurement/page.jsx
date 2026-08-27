@@ -23,10 +23,14 @@ import PageHeader from '@/components/ui/PageHeader'
 import Badge from '@/components/ui/Badge'
 import Button from '@/components/ui/Button'
 import EmptyState from '@/components/ui/EmptyState'
+import { useAuth } from '@/lib/auth-context'
+import { useProcurement } from '@/lib/useProcurement'
 
 // FORMATTING HELPERS
+// estimatedCost is a Prisma Decimal(12,2) — it arrives over JSON as a
+// string (Decimal's own toJSON), so this must coerce before formatting.
 const formatCost = (amount) =>
-  `UGX ${amount.toLocaleString('en-UG')}`
+  `UGX ${Number(amount).toLocaleString('en-UG')}`
 
 const formatDept = (dept) =>
   dept.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())
@@ -36,117 +40,48 @@ const formatDate = (dateStr) =>
     day: '2-digit', month: 'short', year: 'numeric'
   })
 
-// MOCK DATA
-const MOCK_PROCUREMENT = [
-  {
-    id: 'UACC-PROC-2026-0043',
-    itemDescription: 'Network Switch (Cisco SG350-28 28-Port Gigabit)',
-    quantity: 2,
-    estimatedCost: 2850000,
-    department: 'FINANCE_AND_ADMINISTRATION',
-    justification: 'Current network switches are over 6 years old and causing frequent connectivity drops in the server room. Replacement is critical for system uptime.',
-    requestedBy: 'Patrick Katusabe',
-    requestedAt: '2026-06-24',
-    status: 'PENDING',
-    deptHeadApproval: null,
-    deptHeadComment: null,
-    gmApproval: null,
-    gmComment: null,
-    supportingDocument: 'network_quote.pdf',
-  },
-  {
-    id: 'UACC-PROC-2026-0042',
-    itemDescription: 'Printer Toner Cartridges HP LaserJet (x10 units)',
-    quantity: 10,
-    estimatedCost: 450000,
-    department: 'OPERATIONS',
-    justification: 'Monthly toner replacement for Operations department printers. Stock depleted.',
-    requestedBy: 'Staff Operations',
-    requestedAt: '2026-06-22',
-    status: 'DEPT_HEAD_APPROVED',
-    deptHeadApproval: 'APPROVED',
-    deptHeadComment: 'Confirmed stock depletion. Approved for GM review.',
-    gmApproval: null,
-    gmComment: null,
-    supportingDocument: null,
-  },
-  {
-    id: 'UACC-PROC-2026-0041',
-    itemDescription: 'Ergonomic Office Chairs (x5)',
-    quantity: 5,
-    estimatedCost: 1250000,
-    department: 'ENGINEERING',
-    justification: 'Engineering bay seating is worn out and causing staff discomfort. Replacement required for staff welfare compliance.',
-    requestedBy: 'Head Engineering',
-    requestedAt: '2026-06-20',
-    status: 'APPROVED',
-    deptHeadApproval: 'APPROVED',
-    deptHeadComment: 'Approved. Staff welfare priority.',
-    gmApproval: 'APPROVED',
-    gmComment: 'Approved. Proceed with procurement within budget.',
-    supportingDocument: 'chair_quotation.pdf',
-  },
-  {
-    id: 'UACC-PROC-2026-0040',
-    itemDescription: 'Antivirus Licenses — Kaspersky Endpoint (x20)',
-    quantity: 20,
-    estimatedCost: 3200000,
-    department: 'FINANCE_AND_ADMINISTRATION',
-    justification: 'Annual renewal of endpoint protection licenses for all office computers.',
-    requestedBy: 'Patrick Katusabe',
-    requestedAt: '2026-06-17',
-    status: 'REJECTED',
-    deptHeadApproval: 'APPROVED',
-    deptHeadComment: 'Necessary for cybersecurity compliance.',
-    gmApproval: 'REJECTED',
-    gmComment: 'Budget exceeded for this quarter. Resubmit in Q3 with vendor comparison.',
-    supportingDocument: 'kaspersky_quote.pdf',
-  },
-  {
-    id: 'UACC-PROC-2026-0039',
-    itemDescription: 'UPS Battery Replacement — APC Smart-UPS',
-    quantity: 4,
-    estimatedCost: 980000,
-    department: 'FINANCE_AND_ADMINISTRATION',
-    justification: 'Server room UPS batteries have degraded below 60% capacity. Critical for power backup integrity.',
-    requestedBy: 'Patrick Katusabe',
-    requestedAt: '2026-06-10',
-    status: 'APPROVED',
-    deptHeadApproval: 'APPROVED',
-    deptHeadComment: 'Critical infrastructure. Approved.',
-    gmApproval: 'APPROVED',
-    gmComment: 'Approved. Server room priority.',
-    supportingDocument: 'ups_quote.pdf',
-  },
-  {
-    id: 'UACC-PROC-2026-0038',
-    itemDescription: 'A4 Printing Paper — 80gsm Reams (x50)',
-    quantity: 50,
-    estimatedCost: 375000,
-    department: 'OPERATIONS',
-    justification: 'Monthly stationery replenishment for Operations.',
-    requestedBy: 'Staff Operations',
-    requestedAt: '2026-06-05',
-    status: 'APPROVED',
-    deptHeadApproval: 'APPROVED',
-    deptHeadComment: 'Routine stationery. Approved.',
-    gmApproval: 'APPROVED',
-    gmComment: 'Approved.',
-    supportingDocument: null,
-  },
-]
-
+// Real Department enum (backend/prisma/schema.prisma) — all 8 values, so
+// every department's own users can submit a request against their own
+// department.
 const DEPARTMENTS = [
   'GENERAL_MANAGER_OFFICE',
   'FINANCE_AND_ADMINISTRATION',
   'ENGINEERING',
   'PILOTS',
   'OPERATIONS',
+  'HUMAN_RESOURCES',
+  'FINANCE_AND_ACCOUNTS',
+  'MARKETING',
 ]
 
-const STATUS_TABS = ['ALL', 'PENDING', 'DEPT_HEAD_APPROVED', 'APPROVED', 'REJECTED']
+// Real ProcurementStatus enum (backend/prisma/schema.prisma) — 5 values,
+// not the 4 invented ones the mock data used.
+const STATUS_TABS = ['ALL', 'PENDING_DEPT_HEAD', 'PENDING_PROCUREMENT_OFFICER', 'PENDING_GM', 'APPROVED', 'REJECTED']
+
+const STATUS_LABELS = {
+  PENDING_DEPT_HEAD: 'Pending Dept. Head',
+  PENDING_PROCUREMENT_OFFICER: 'Pending Procurement',
+  PENDING_GM: 'Pending GM',
+  APPROVED: 'Approved',
+  REJECTED: 'Rejected',
+}
+
+// Roles allowed to originate a request — mirrors POST /api/procurement's
+// own allowedRoles check exactly.
+const CAN_SUBMIT_ROLES = ['STAFF', 'DEPARTMENT_HEAD', 'IT_ADMINISTRATOR']
+
+// Which role's turn it is at each pending stage — mirrors PATCH
+// /api/procurement/:id/decision's own per-role status checks exactly.
+const STAGE_OWNER_ROLE = {
+  PENDING_DEPT_HEAD: 'DEPARTMENT_HEAD',
+  PENDING_PROCUREMENT_OFFICER: 'PROCUREMENT_OFFICER',
+  PENDING_GM: 'GENERAL_MANAGER',
+}
 
 export default function ProcurementPage() {
+  const { user } = useAuth()
+  const { requests, pagination, loading, error, fetchRequests, createRequest, decide } = useProcurement()
+
   // PAGE STATE
   const [activeTab, setActiveTab] = useState('ALL')
   const [searchQuery, setSearchQuery] = useState('')
@@ -154,47 +89,65 @@ export default function ProcurementPage() {
   const [reviewModalOpen, setReviewModalOpen] = useState(false)
   const [submitFormOpen, setSubmitFormOpen] = useState(false)
   const [toast, setToast] = useState(null) // { message, type: 'success' | 'error' | 'info' }
+  const [actionLoading, setActionLoading] = useState(false)
 
   // Submit form state
   const [formData, setFormData] = useState({
     itemDescription: '',
     quantity: '',
     estimatedCost: '',
-    department: DEPARTMENTS[0],
+    department: user?.department || DEPARTMENTS[0],
     justification: '',
-    supportingDocument: null,
   })
-  
+
   const [selectedFileName, setSelectedFileName] = useState('')
   const fileInputRef = useRef(null)
 
+  // Review form state — Dept Head / GM only need a comment; Procurement
+  // Officer's stage additionally needs the vendor + verification fields
+  // PATCH /:id/decision accepts for that role.
+  const [reviewForm, setReviewForm] = useState({
+    comment: '',
+    vendorName: '',
+    vendorVerified: false,
+    budgetVerified: false,
+  })
+
+  // Full unfiltered set is fetched once (and re-fetched after any action) —
+  // the table, stats, and tab badges all derive from this one array, never
+  // a second/different query.
+  useEffect(() => {
+    fetchRequests({ limit: 100 }).catch(() => {})
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
   // FILTERING LOGIC
   const filteredRequests = useMemo(() => {
-    return MOCK_PROCUREMENT.filter((req) => {
+    return requests.filter((req) => {
       // Status Filter
       if (activeTab !== 'ALL' && req.status !== activeTab) return false
-      
+
       // Search Filter
       if (searchQuery) {
         const query = searchQuery.toLowerCase()
-        const matchesId = req.id.toLowerCase().includes(query)
+        const matchesRef = req.referenceNo.toLowerCase().includes(query)
         const matchesDesc = req.itemDescription.toLowerCase().includes(query)
         const matchesDept = formatDept(req.department).toLowerCase().includes(query)
-        if (!matchesId && !matchesDesc && !matchesDept) return false
+        if (!matchesRef && !matchesDesc && !matchesDept) return false
       }
       return true
     })
-  }, [activeTab, searchQuery])
+  }, [requests, activeTab, searchQuery])
 
-  // STATS CALCULATIONS
+  // STATS CALCULATIONS — derived from the same fetched `requests` array.
   const stats = useMemo(() => {
     return {
-      total: MOCK_PROCUREMENT.length,
-      pending: MOCK_PROCUREMENT.filter(r => r.status === 'PENDING').length,
-      approved: MOCK_PROCUREMENT.filter(r => r.status === 'APPROVED').length,
-      rejected: MOCK_PROCUREMENT.filter(r => r.status === 'REJECTED').length,
+      total: pagination?.total ?? requests.length,
+      pending: requests.filter(r => STAGE_OWNER_ROLE[r.status]).length,
+      approved: requests.filter(r => r.status === 'APPROVED').length,
+      rejected: requests.filter(r => r.status === 'REJECTED').length,
     }
-  }, [])
+  }, [requests, pagination])
 
   // TOAST EFFECT
   useEffect(() => {
@@ -206,46 +159,83 @@ export default function ProcurementPage() {
     }
   }, [toast])
 
+  // Whether the signed-in user's role owns the NEXT action on this request.
+  const canReview = (req) => STAGE_OWNER_ROLE[req.status] === user?.role
+
   // HANDLERS
   const openReviewModal = (req) => {
     setSelectedRequest(req)
+    setReviewForm({ comment: '', vendorName: req.vendorName || '', vendorVerified: false, budgetVerified: false })
     setReviewModalOpen(true)
   }
 
-  const handleApprove = () => {
-    setToast({ message: 'Request approved.', type: 'success' })
+  const closeReviewModal = () => {
     setReviewModalOpen(false)
     setSelectedRequest(null)
   }
 
-  const handleReject = () => {
-    setToast({ message: 'Request rejected.', type: 'error' })
-    setReviewModalOpen(false)
-    setSelectedRequest(null)
+  const submitDecision = async (decision) => {
+    if (!selectedRequest) return
+    setActionLoading(true)
+    try {
+      const payload = { decision, comment: reviewForm.comment }
+      if (user?.role === 'PROCUREMENT_OFFICER') {
+        payload.vendorName = reviewForm.vendorName
+        payload.vendorVerified = reviewForm.vendorVerified
+        payload.budgetVerified = reviewForm.budgetVerified
+      }
+      const res = await decide(selectedRequest.id, payload)
+      setToast({ message: res.message || 'Decision recorded.', type: 'success' })
+      closeReviewModal()
+      fetchRequests({ limit: 100 }).catch(() => {})
+    } catch (err) {
+      setToast({ message: err.message || 'Failed to record decision.', type: 'error' })
+    } finally {
+      setActionLoading(false)
+    }
   }
 
-  const handleFormSubmit = (e) => {
+  const handleFormSubmit = async (e) => {
     e.preventDefault()
-    setToast({ message: 'Procurement request submitted successfully. Reference: UACC-PROC-2026-0044', type: 'success' })
-    setSubmitFormOpen(false)
-    setFormData({
-      itemDescription: '',
-      quantity: '',
-      estimatedCost: '',
-      department: DEPARTMENTS[0],
-      justification: '',
-      supportingDocument: null,
-    })
-    setSelectedFileName('')
+    setActionLoading(true)
+    try {
+      const res = await createRequest({
+        itemDescription: formData.itemDescription,
+        quantity: formData.quantity,
+        estimatedCost: formData.estimatedCost,
+        department: formData.department,
+        justification: formData.justification,
+      })
+      setToast({ message: res.message || 'Procurement request submitted.', type: 'success' })
+      setSubmitFormOpen(false)
+      setFormData({
+        itemDescription: '',
+        quantity: '',
+        estimatedCost: '',
+        department: user?.department || DEPARTMENTS[0],
+        justification: '',
+      })
+      setSelectedFileName('')
+      fetchRequests({ limit: 100 }).catch(() => {})
+    } catch (err) {
+      setToast({ message: err.message || 'Failed to submit request.', type: 'error' })
+    } finally {
+      setActionLoading(false)
+    }
   }
-  
+
+  // Selecting a file only updates the local filename preview — the backend
+  // route (POST /api/procurement) has no file-handling: it destructures
+  // itemDescription/quantity/estimatedCost/department/justification only,
+  // with no multer/upload middleware. Nothing is actually sent or stored.
   const handleFileSelect = (e) => {
     const file = e.target.files?.[0]
     if (file) {
-      setFormData({ ...formData, supportingDocument: file })
       setSelectedFileName(file.name)
     }
   }
+
+  const canSubmitNewRequest = CAN_SUBMIT_ROLES.includes(user?.role)
 
   return (
     <div className="flex flex-col gap-6 w-full animate-fadeIn relative">
@@ -254,13 +244,15 @@ export default function ProcurementPage() {
         title="Procurement Requests"
         subtitle="Digital Form 5 — Submit and track procurement requests"
       >
-        <Button
-          variant="primary"
-          icon={Plus}
-          onClick={() => setSubmitFormOpen(true)}
-        >
-          New Request
-        </Button>
+        {canSubmitNewRequest && (
+          <Button
+            variant="primary"
+            icon={Plus}
+            onClick={() => setSubmitFormOpen(true)}
+          >
+            New Request
+          </Button>
+        )}
       </PageHeader>
 
       {/* STATS ROW */}
@@ -275,7 +267,7 @@ export default function ProcurementPage() {
             <p className="text-xs text-[var(--text-muted)] uppercase tracking-wider font-semibold mt-1">Total Requests</p>
           </div>
         </div>
-        
+
         {/* Pending */}
         <div className="card rounded-xl p-4 flex items-center gap-3">
           <div className="p-2 rounded-lg bg-uacc-red/10 text-uacc-red border border-uacc-red/20 flex-shrink-0">
@@ -315,20 +307,16 @@ export default function ProcurementPage() {
         <div className="flex gap-6 min-w-max px-2">
           {STATUS_TABS.map((tab) => {
             const isActive = activeTab === tab
-            const label = tab.replace(/_/g, ' ')
-            let count = stats.total
-            if (tab === 'PENDING') count = stats.pending
-            else if (tab === 'APPROVED') count = stats.approved
-            else if (tab === 'REJECTED') count = stats.rejected
-            else if (tab === 'DEPT_HEAD_APPROVED') count = MOCK_PROCUREMENT.filter(r => r.status === 'DEPT_HEAD_APPROVED').length
+            const label = tab === 'ALL' ? 'All' : STATUS_LABELS[tab]
+            const count = tab === 'ALL' ? stats.total : requests.filter(r => r.status === tab).length
 
             return (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
                 className={`pb-3 flex items-center gap-2 text-sm font-semibold transition-all border-b-2 cursor-pointer ${
-                  isActive 
-                    ? 'border-uacc-gold text-uacc-gold bg-uacc-gold/5 px-2 rounded-t-md' 
+                  isActive
+                    ? 'border-uacc-gold text-uacc-gold bg-uacc-gold/5 px-2 rounded-t-md'
                     : 'border-transparent text-[var(--text-muted)] hover:bg-white/[0.02] hover:text-[var(--text-secondary)] px-2 rounded-t-md'
                 }`}
               >
@@ -359,7 +347,17 @@ export default function ProcurementPage() {
       {/* PROCUREMENT TABLE */}
       <div className="card rounded-xl overflow-hidden flex flex-col justify-between min-h-[300px]">
         <div className="overflow-x-auto w-full">
-          {filteredRequests.length > 0 ? (
+          {loading && requests.length === 0 ? (
+            <div className="py-12 text-center text-sm text-[var(--text-muted)]">Loading requests...</div>
+          ) : error && requests.length === 0 ? (
+            <div className="py-12">
+              <EmptyState
+                icon={XCircle}
+                title="Could not load requests"
+                message={error}
+              />
+            </div>
+          ) : filteredRequests.length > 0 ? (
             <table className="data-table">
               <thead>
                 <tr>
@@ -380,18 +378,15 @@ export default function ProcurementPage() {
                     <td>
                       <div className="flex items-center gap-1.5">
                         <span className="font-heading text-xs font-bold text-uacc-gold uppercase tracking-wider">
-                          {req.id}
+                          {req.referenceNo}
                         </span>
-                        {req.supportingDocument && (
-                          <Paperclip size={12} className="text-uacc-gold" title="Has supporting document" />
-                        )}
                       </div>
                     </td>
 
                     {/* Item Description */}
                     <td>
                       <div className="flex flex-col min-w-0">
-                        <span 
+                        <span
                           className="font-bold text-[var(--text-primary)] max-w-[200px] truncate"
                           title={req.itemDescription}
                         >
@@ -414,10 +409,10 @@ export default function ProcurementPage() {
                     <td>
                       <div className="flex items-center gap-2">
                         <div className="w-6 h-6 rounded-full flex-shrink-0 flex items-center justify-center text-[10px] font-bold text-uacc-gold bg-uacc-gold/10 border border-uacc-gold/20">
-                          {req.requestedBy.charAt(0)}
+                          {req.requestedBy?.name?.charAt(0) || '?'}
                         </div>
-                        <span className="text-xs truncate max-w-[120px]" title={req.requestedBy}>
-                          {req.requestedBy}
+                        <span className="text-xs truncate max-w-[120px]" title={req.requestedBy?.name}>
+                          {req.requestedBy?.name}
                         </span>
                       </div>
                     </td>
@@ -425,7 +420,7 @@ export default function ProcurementPage() {
                     {/* Date */}
                     <td>
                       <span className="text-xs text-[var(--text-muted)]">
-                        {formatDate(req.requestedAt)}
+                        {formatDate(req.createdAt)}
                       </span>
                     </td>
 
@@ -438,18 +433,14 @@ export default function ProcurementPage() {
 
                     {/* Status */}
                     <td>
-                      {req.status === 'DEPT_HEAD_APPROVED' ? (
-                        <span className="badge badge-draft">Dept Approved</span>
-                      ) : (
-                        <Badge status={req.status} />
-                      )}
+                      <Badge status={req.status} label={STATUS_LABELS[req.status]} />
                     </td>
 
                     {/* Actions */}
                     <td className="text-right">
-                      {(req.status === 'PENDING' || req.status === 'DEPT_HEAD_APPROVED') && (
-                        <Button 
-                          variant="outline" 
+                      {canReview(req) && (
+                        <Button
+                          variant="outline"
                           size="sm"
                           onClick={() => openReviewModal(req)}
                         >
@@ -494,22 +485,18 @@ export default function ProcurementPage() {
             <div className="p-6 pb-4 flex items-center justify-between sticky top-0 bg-[var(--bg-surface)] z-10 rounded-t-2xl">
               <div className="flex items-center gap-4">
                 <h2 className="font-heading font-bold text-xl text-uacc-gold tracking-wider">
-                  {selectedRequest.id}
+                  {selectedRequest.referenceNo}
                 </h2>
-                {selectedRequest.status === 'DEPT_HEAD_APPROVED' ? (
-                  <span className="badge badge-draft">Dept Approved</span>
-                ) : (
-                  <Badge status={selectedRequest.status} />
-                )}
+                <Badge status={selectedRequest.status} label={STATUS_LABELS[selectedRequest.status]} />
               </div>
               <button
-                onClick={() => setReviewModalOpen(false)}
+                onClick={closeReviewModal}
                 className="p-1.5 rounded-lg text-[var(--text-muted)] hover:bg-white/5 hover:text-[var(--text-primary)] transition-colors cursor-pointer"
               >
                 <X size={20} />
               </button>
             </div>
-            
+
             <hr className="border-t border-uacc-gold/20 mx-6" />
 
             {/* Body */}
@@ -534,11 +521,11 @@ export default function ProcurementPage() {
                   </div>
                   <div className="flex flex-col gap-0.5">
                     <span className="text-[10px] text-[var(--text-muted)] uppercase tracking-wider">Requested By</span>
-                    <span className="text-sm font-semibold text-[var(--text-primary)]">{selectedRequest.requestedBy}</span>
+                    <span className="text-sm font-semibold text-[var(--text-primary)]">{selectedRequest.requestedBy?.name}</span>
                   </div>
                   <div className="flex flex-col gap-0.5">
                     <span className="text-[10px] text-[var(--text-muted)] uppercase tracking-wider">Date Submitted</span>
-                    <span className="text-sm font-semibold text-[var(--text-primary)]">{formatDate(selectedRequest.requestedAt)}</span>
+                    <span className="text-sm font-semibold text-[var(--text-primary)]">{formatDate(selectedRequest.createdAt)}</span>
                   </div>
                 </div>
 
@@ -553,143 +540,139 @@ export default function ProcurementPage() {
                     {selectedRequest.justification}
                   </div>
                 </div>
-
-                {selectedRequest.supportingDocument && (
-                  <div className="flex flex-col gap-2">
-                    <span className="text-[10px] text-[var(--text-muted)] uppercase tracking-wider">Supporting Document</span>
-                    <div className="flex items-center gap-3 bg-[var(--bg-surface-container)] border border-[var(--border-subtle)] rounded-lg p-3">
-                      <Paperclip size={16} className="text-uacc-gold" />
-                      <span className="text-sm font-medium text-[var(--text-primary)] flex-1 truncate">{selectedRequest.supportingDocument}</span>
-                      <a href="#" className="text-xs text-blue-400 hover:underline font-semibold flex items-center gap-1">
-                        <Download size={12} /> Download
-                      </a>
-                    </div>
-                  </div>
-                )}
               </div>
 
-              {/* Right Column: Approval Chain */}
+              {/* Right Column: Approval Chain — real 4-stage chain
+                  (Submitted -> Dept Head -> Procurement Officer -> GM),
+                  not the mock's 3-stage version. */}
               <div className="flex flex-col">
                 <p className="text-[10px] uppercase tracking-widest font-semibold text-[var(--text-muted)] mb-4">Approval Chain</p>
-                
+
                 <div className="flex flex-col relative">
-                  {/* Vertical Line */}
                   <div className="absolute left-[11px] top-3 bottom-8 w-0.5 bg-[var(--border-subtle)] z-0"></div>
 
                   {/* Step 1: Submitted */}
-                  <div className="flex gap-4 relative z-10 mb-6">
-                    <div className="w-6 h-6 rounded-full bg-emerald-500 flex items-center justify-center flex-shrink-0 mt-0.5 shadow-[0_0_10px_rgba(34,197,94,0.3)]">
-                      <Check size={14} className="text-white" />
-                    </div>
-                    <div className="flex flex-col bg-[var(--bg-surface-low)] border-l-2 border-emerald-500 rounded-r-lg p-3 flex-1 border-y border-r border-y-[var(--border-subtle)] border-r-[var(--border-subtle)]">
-                      <span className="text-sm font-bold text-[var(--text-primary)]">Submitted</span>
-                      <span className="text-xs text-[var(--text-muted)] mt-1">
-                        By: {selectedRequest.requestedBy} &middot; {formatDate(selectedRequest.requestedAt)}
-                      </span>
-                    </div>
-                  </div>
+                  <ChainStep
+                    state="done"
+                    title="Submitted"
+                    detail={`By: ${selectedRequest.requestedBy?.name} · ${formatDate(selectedRequest.createdAt)}`}
+                  />
 
                   {/* Step 2: Dept Head */}
-                  <div className="flex gap-4 relative z-10 mb-6">
-                    {selectedRequest.deptHeadApproval === 'APPROVED' ? (
-                      <div className="w-6 h-6 rounded-full bg-emerald-500 flex items-center justify-center flex-shrink-0 mt-0.5 shadow-[0_0_10px_rgba(34,197,94,0.3)]">
-                        <Check size={14} className="text-white" />
-                      </div>
-                    ) : selectedRequest.deptHeadApproval === 'REJECTED' ? (
-                      <div className="w-6 h-6 rounded-full bg-uacc-red flex items-center justify-center flex-shrink-0 mt-0.5 shadow-[0_0_10px_rgba(204,34,0,0.3)]">
-                        <X size={14} className="text-white" />
-                      </div>
-                    ) : (
-                      <div className="w-6 h-6 rounded-full bg-uacc-gold/20 border-2 border-uacc-gold flex items-center justify-center flex-shrink-0 mt-0.5 animate-pulse">
-                        <Clock size={12} className="text-uacc-gold" />
-                      </div>
-                    )}
-                    
-                    <div className={`flex flex-col bg-[var(--bg-surface-low)] border-l-2 rounded-r-lg p-3 flex-1 border-y border-r border-y-[var(--border-subtle)] border-r-[var(--border-subtle)] ${
-                      selectedRequest.deptHeadApproval === 'APPROVED' ? 'border-emerald-500' :
-                      selectedRequest.deptHeadApproval === 'REJECTED' ? 'border-uacc-red' : 'border-uacc-gold'
-                    }`}>
-                      <span className="text-sm font-bold text-[var(--text-primary)]">Dept Head Review</span>
-                      {selectedRequest.deptHeadApproval ? (
-                        <>
-                          <span className={`text-xs font-semibold mt-1 ${
-                            selectedRequest.deptHeadApproval === 'APPROVED' ? 'text-emerald-400' : 'text-uacc-red'
-                          }`}>
-                            [{selectedRequest.deptHeadApproval}]
-                          </span>
-                          {selectedRequest.deptHeadComment && (
-                            <span className="text-xs text-[var(--text-muted)] mt-1 italic">
-                              "{selectedRequest.deptHeadComment}"
-                            </span>
-                          )}
-                        </>
-                      ) : (
-                        <span className="text-xs text-[var(--text-muted)] mt-1">Awaiting review</span>
-                      )}
-                    </div>
-                  </div>
+                  <ChainStep
+                    state={
+                      selectedRequest.deptHeadApproval === 'APPROVED' ? 'done' :
+                      selectedRequest.deptHeadApproval === 'REJECTED' ? 'rejected' :
+                      selectedRequest.status === 'PENDING_DEPT_HEAD' ? 'active' : 'waiting'
+                    }
+                    title="Dept Head Review"
+                    detail={
+                      selectedRequest.deptHeadApproval
+                        ? [`[${selectedRequest.deptHeadApproval}]`, selectedRequest.deptHeadComment && `"${selectedRequest.deptHeadComment}"`].filter(Boolean)
+                        : selectedRequest.status === 'PENDING_DEPT_HEAD' ? 'Awaiting review' : 'Waiting for previous step'
+                    }
+                  />
 
-                  {/* Step 3: GM Final */}
-                  <div className="flex gap-4 relative z-10">
-                    {selectedRequest.gmApproval === 'APPROVED' ? (
-                      <div className="w-6 h-6 rounded-full bg-emerald-500 flex items-center justify-center flex-shrink-0 mt-0.5 shadow-[0_0_10px_rgba(34,197,94,0.3)]">
-                        <Check size={14} className="text-white" />
-                      </div>
-                    ) : selectedRequest.gmApproval === 'REJECTED' ? (
-                      <div className="w-6 h-6 rounded-full bg-uacc-red flex items-center justify-center flex-shrink-0 mt-0.5 shadow-[0_0_10px_rgba(204,34,0,0.3)]">
-                        <X size={14} className="text-white" />
-                      </div>
-                    ) : (
-                      <div className={`w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 ${
-                        selectedRequest.deptHeadApproval === 'APPROVED' ? 'bg-uacc-gold/20 border-2 border-uacc-gold animate-pulse' : 'bg-[var(--bg-surface-container)] border border-[var(--border-subtle)]'
-                      }`}>
-                        {selectedRequest.deptHeadApproval === 'APPROVED' ? <Clock size={12} className="text-uacc-gold" /> : <Clock size={12} className="text-[var(--text-muted)]" />}
-                      </div>
-                    )}
-                    
-                    <div className={`flex flex-col bg-[var(--bg-surface-low)] border-l-2 rounded-r-lg p-3 flex-1 border-y border-r border-y-[var(--border-subtle)] border-r-[var(--border-subtle)] ${
-                      selectedRequest.gmApproval === 'APPROVED' ? 'border-emerald-500' :
-                      selectedRequest.gmApproval === 'REJECTED' ? 'border-uacc-red' :
-                      selectedRequest.deptHeadApproval === 'APPROVED' ? 'border-uacc-gold' : 'border-[var(--border-subtle)]'
-                    }`}>
-                      <span className="text-sm font-bold text-[var(--text-primary)]">GM Final Approval</span>
-                      {selectedRequest.gmApproval ? (
-                        <>
-                          <span className={`text-xs font-semibold mt-1 ${
-                            selectedRequest.gmApproval === 'APPROVED' ? 'text-emerald-400' : 'text-uacc-red'
-                          }`}>
-                            [{selectedRequest.gmApproval}]
-                          </span>
-                          {selectedRequest.gmComment && (
-                            <span className="text-xs text-[var(--text-muted)] mt-1 italic">
-                              "{selectedRequest.gmComment}"
-                            </span>
-                          )}
-                        </>
-                      ) : (
-                        <span className="text-xs text-[var(--text-muted)] mt-1">
-                          {selectedRequest.deptHeadApproval === 'APPROVED' ? 'Awaiting review' : 'Waiting for previous step'}
-                        </span>
-                      )}
-                    </div>
-                  </div>
+                  {/* Step 3: Procurement Officer */}
+                  <ChainStep
+                    state={
+                      selectedRequest.poProcessedAt && selectedRequest.status !== 'PENDING_DEPT_HEAD' ? 'done' :
+                      selectedRequest.poProcessedAt && selectedRequest.status === 'PENDING_DEPT_HEAD' ? 'rejected' :
+                      selectedRequest.status === 'PENDING_PROCUREMENT_OFFICER' ? 'active' : 'waiting'
+                    }
+                    title="Procurement Officer Verification"
+                    detail={
+                      selectedRequest.poProcessedAt
+                        ? [
+                            selectedRequest.status === 'PENDING_DEPT_HEAD' ? '[RETURNED]' : '[VERIFIED]',
+                            selectedRequest.vendorName && `Vendor: ${selectedRequest.vendorName}`,
+                            selectedRequest.poNotes && `"${selectedRequest.poNotes}"`,
+                          ].filter(Boolean)
+                        : selectedRequest.status === 'PENDING_PROCUREMENT_OFFICER' ? 'Awaiting review' : 'Waiting for previous step'
+                    }
+                  />
+
+                  {/* Step 4: GM Final */}
+                  <ChainStep
+                    last
+                    state={
+                      selectedRequest.gmApproval === 'APPROVED' ? 'done' :
+                      selectedRequest.gmApproval === 'REJECTED' ? 'rejected' :
+                      selectedRequest.status === 'PENDING_GM' ? 'active' : 'waiting'
+                    }
+                    title="GM Final Approval"
+                    detail={
+                      selectedRequest.gmApproval
+                        ? [`[${selectedRequest.gmApproval}]`, selectedRequest.gmComment && `"${selectedRequest.gmComment}"`].filter(Boolean)
+                        : selectedRequest.status === 'PENDING_GM' ? 'Awaiting review' : 'Waiting for previous step'
+                    }
+                  />
                 </div>
               </div>
             </div>
 
-            {/* Footer Actions (Only for Pending or Dept Approved) */}
-            {(selectedRequest.status === 'PENDING' || selectedRequest.status === 'DEPT_HEAD_APPROVED') && (
+            {/* Footer Actions — role- and stage-aware. Only the role that
+                owns the CURRENT stage sees an action panel; everyone else
+                gets a read-only view (matches PATCH /:id/decision's own
+                per-role, per-status checks). */}
+            {canReview(selectedRequest) && user?.role === 'PROCUREMENT_OFFICER' && (
               <div className="p-6 border-t border-[var(--border-subtle)] bg-[var(--bg-surface-low)] rounded-b-2xl flex flex-col gap-4 sticky bottom-0">
-                <textarea 
-                  className="input-field resize-none w-full text-sm" 
-                  rows={2} 
-                  placeholder="Add a comment (optional)"
+                <input
+                  className="input-field text-sm"
+                  placeholder="Vendor name"
+                  value={reviewForm.vendorName}
+                  onChange={(e) => setReviewForm({ ...reviewForm, vendorName: e.target.value })}
+                />
+                <div className="flex gap-6">
+                  <label className="flex items-center gap-2 text-xs font-semibold text-[var(--text-secondary)] cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={reviewForm.vendorVerified}
+                      onChange={(e) => setReviewForm({ ...reviewForm, vendorVerified: e.target.checked })}
+                    />
+                    Vendor Verified
+                  </label>
+                  <label className="flex items-center gap-2 text-xs font-semibold text-[var(--text-secondary)] cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={reviewForm.budgetVerified}
+                      onChange={(e) => setReviewForm({ ...reviewForm, budgetVerified: e.target.checked })}
+                    />
+                    Budget Verified
+                  </label>
+                </div>
+                <textarea
+                  className="input-field resize-none w-full text-sm"
+                  rows={2}
+                  placeholder="Notes (optional)"
+                  value={reviewForm.comment}
+                  onChange={(e) => setReviewForm({ ...reviewForm, comment: e.target.value })}
                 />
                 <div className="flex justify-end gap-3">
-                  <Button variant="danger" onClick={handleReject} icon={XCircle}>
+                  <Button variant="danger" disabled={actionLoading} onClick={() => submitDecision('RETURNED')} icon={XCircle}>
+                    Return
+                  </Button>
+                  <Button variant="primary" disabled={actionLoading} onClick={() => submitDecision('VERIFIED')} icon={CheckCircle}>
+                    Verify
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            {canReview(selectedRequest) && user?.role !== 'PROCUREMENT_OFFICER' && (
+              <div className="p-6 border-t border-[var(--border-subtle)] bg-[var(--bg-surface-low)] rounded-b-2xl flex flex-col gap-4 sticky bottom-0">
+                <textarea
+                  className="input-field resize-none w-full text-sm"
+                  rows={2}
+                  placeholder="Add a comment (optional)"
+                  value={reviewForm.comment}
+                  onChange={(e) => setReviewForm({ ...reviewForm, comment: e.target.value })}
+                />
+                <div className="flex justify-end gap-3">
+                  <Button variant="danger" disabled={actionLoading} onClick={() => submitDecision('REJECTED')} icon={XCircle}>
                     Reject
                   </Button>
-                  <Button variant="primary" onClick={handleApprove} icon={CheckCircle}>
+                  <Button variant="primary" disabled={actionLoading} onClick={() => submitDecision('APPROVED')} icon={CheckCircle}>
                     Approve
                   </Button>
                 </div>
@@ -704,11 +687,11 @@ export default function ProcurementPage() {
       {submitFormOpen && (
         <div className="fixed inset-0 z-40 flex justify-end">
           {/* Overlay */}
-          <div 
+          <div
             className="absolute inset-0 bg-black/60 backdrop-blur-sm"
             onClick={() => setSubmitFormOpen(false)}
           ></div>
-          
+
           {/* Panel */}
           <div className="relative z-50 w-full max-w-lg h-full bg-[var(--bg-surface)] shadow-2xl flex flex-col border-l border-[var(--border-subtle)] transform transition-transform animate-slideInRight overflow-hidden">
             {/* Header */}
@@ -833,7 +816,6 @@ export default function ProcurementPage() {
                       onClick={(e) => {
                         e.stopPropagation()
                         setSelectedFileName('')
-                        setFormData({...formData, supportingDocument: null})
                       }}
                       className="text-[var(--text-muted)] hover:text-uacc-red transition-colors"
                     >
@@ -841,13 +823,17 @@ export default function ProcurementPage() {
                     </button>
                   </div>
                 )}
+                {/* No storage endpoint exists on the backend for this field
+                    yet (see the comment on handleFileSelect) — the file
+                    name is shown for UX continuity only and nothing is
+                    uploaded. */}
+                <p className="text-[10px] text-[var(--text-faint)]">
+                  Attachment storage is not wired up yet — this file is not sent with the request.
+                </p>
               </div>
 
-              {/* Reference Preview */}
-              <div className="mt-2 bg-uacc-gold/10 border border-uacc-gold/30 rounded-lg p-4 flex flex-col items-center justify-center text-center">
-                <span className="text-[10px] text-uacc-gold/80 uppercase tracking-widest font-semibold mb-1">Auto-Generated Reference</span>
-                <span className="font-heading text-sm font-bold text-uacc-gold tracking-wider">UACC-PROC-2026-0044</span>
-              </div>
+              {/* Reference is assigned by the server on submission — no
+                  client-side placeholder. */}
             </div>
 
             {/* Footer */}
@@ -855,7 +841,7 @@ export default function ProcurementPage() {
               <Button variant="outline" onClick={() => setSubmitFormOpen(false)}>
                 Cancel
               </Button>
-              <Button variant="primary" icon={Send} onClick={handleFormSubmit}>
+              <Button variant="primary" icon={Send} disabled={actionLoading} onClick={handleFormSubmit}>
                 Submit Request
               </Button>
             </div>
@@ -896,6 +882,48 @@ export default function ProcurementPage() {
           animation: slideInRight 0.3s ease-out forwards;
         }
       `}</style>
+    </div>
+  )
+}
+
+// One step in the Approval Chain visual. `state` is 'done' | 'active' |
+// 'rejected' | 'waiting'. `detail` may be a string or an array of lines.
+function ChainStep({ state, title, detail, last = false }) {
+  const lines = Array.isArray(detail) ? detail : [detail]
+  const borderColor =
+    state === 'done' ? 'border-emerald-500' :
+    state === 'rejected' ? 'border-uacc-red' :
+    state === 'active' ? 'border-uacc-gold' :
+    'border-[var(--border-subtle)]'
+
+  return (
+    <div className={`flex gap-4 relative z-10 ${last ? '' : 'mb-6'}`}>
+      {state === 'done' ? (
+        <div className="w-6 h-6 rounded-full bg-emerald-500 flex items-center justify-center flex-shrink-0 mt-0.5 shadow-[0_0_10px_rgba(34,197,94,0.3)]">
+          <Check size={14} className="text-white" />
+        </div>
+      ) : state === 'rejected' ? (
+        <div className="w-6 h-6 rounded-full bg-uacc-red flex items-center justify-center flex-shrink-0 mt-0.5 shadow-[0_0_10px_rgba(204,34,0,0.3)]">
+          <X size={14} className="text-white" />
+        </div>
+      ) : state === 'active' ? (
+        <div className="w-6 h-6 rounded-full bg-uacc-gold/20 border-2 border-uacc-gold flex items-center justify-center flex-shrink-0 mt-0.5 animate-pulse">
+          <Clock size={12} className="text-uacc-gold" />
+        </div>
+      ) : (
+        <div className="w-6 h-6 rounded-full bg-[var(--bg-surface-container)] border border-[var(--border-subtle)] flex items-center justify-center flex-shrink-0 mt-0.5">
+          <Clock size={12} className="text-[var(--text-muted)]" />
+        </div>
+      )}
+
+      <div className={`flex flex-col bg-[var(--bg-surface-low)] border-l-2 rounded-r-lg p-3 flex-1 border-y border-r border-y-[var(--border-subtle)] border-r-[var(--border-subtle)] ${borderColor}`}>
+        <span className="text-sm font-bold text-[var(--text-primary)]">{title}</span>
+        {lines.filter(Boolean).map((line, i) => (
+          <span key={i} className="text-xs text-[var(--text-muted)] mt-1 italic first:not-italic first:font-semibold first:text-[var(--text-secondary)]">
+            {line}
+          </span>
+        ))}
+      </div>
     </div>
   )
 }
