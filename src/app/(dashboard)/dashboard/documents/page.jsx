@@ -352,12 +352,12 @@ export default function DocumentsPage() {
       // fetch as a blob (carrying the Authorization header) rather than
       // linking straight to doc.filePath, which is just the original
       // filename now, not a fetchable address.
-      const url = await api.getBlob(`/documents/${doc.id}/file`)
+      const { url, revoke } = await api.getBlob(`/documents/${doc.id}/file`)
       const link = window.document.createElement('a')
       link.href = url
       link.download = doc.filePath || doc.title
       link.click()
-      URL.revokeObjectURL(url)
+      revoke()
     } catch (err) {
       showToast(err.message || 'Failed to download document', 'error')
     }

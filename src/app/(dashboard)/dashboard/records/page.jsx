@@ -567,7 +567,7 @@ export default function RecordsExecutivePage() {
   const handleOpenFiledDocument = async (doc) => {
     if (!doc) return
     try {
-      const url = await api.getBlob(`/documents/${doc.id}/file`)
+      const { url } = await api.getBlob(`/documents/${doc.id}/file`)
       window.open(url, '_blank', 'noopener,noreferrer')
     } catch (err) {
       showToast(err.message || 'Failed to open document', 'error')

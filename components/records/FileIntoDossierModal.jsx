@@ -50,6 +50,7 @@ export default function FileIntoDossierModal({ documentId, documentTitle, onClos
       onFiled?.(fileId)
     } catch (err) {
       setError(err.message || 'Failed to file document')
+    } finally {
       setFiling(false)
     }
   }
@@ -132,6 +133,9 @@ export default function FileIntoDossierModal({ documentId, documentTitle, onClos
                   </div>
                 </button>
               ))
+            )}
+            {!filesLoading && allActiveFiles.length > 0 && activeFiles.length === 0 && (
+              <p className="text-xs text-white/40 text-center py-6">No files match &ldquo;{search}&rdquo;</p>
             )}
             {!filesLoading && allActiveFiles.length === 0 && (
               <p className="text-xs text-white/40 text-center py-6">No active files yet{onCreateNew ? ' — create one above.' : '.'}</p>

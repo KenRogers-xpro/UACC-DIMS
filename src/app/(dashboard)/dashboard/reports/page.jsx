@@ -195,12 +195,12 @@ export default function ReportsPage() {
       params.set('reportType', reportType)
       params.set('format', 'pdf')
 
-      const url = await api.getBlob(`/reports/export?${params}`)
+      const { url, revoke } = await api.getBlob(`/reports/export?${params}`)
       const link = window.document.createElement('a')
       link.href = url
       link.download = `UACC_${reportType}_${dateFrom}_to_${dateTo}.pdf`
       link.click()
-      URL.revokeObjectURL(url)
+      revoke()
 
       setToast({ type: 'success', message: 'Report exported successfully. Check your downloads.' })
       if (previewOpen) setPreviewOpen(false)

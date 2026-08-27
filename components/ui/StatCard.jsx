@@ -26,6 +26,7 @@ export default function StatCard({ title, value, subtitle, icon: Icon,
 
   useEffect(() => {
     if (!isInView) return;
+    if (value === 0) { setDisplayValue(0); return; }
 
     let start = 0;
     const increment = value / 60; // Count up over ~60 frames at 60fps
@@ -40,6 +41,7 @@ export default function StatCard({ title, value, subtitle, icon: Icon,
     }, 1000 / 60);
     return () => clearInterval(interval);
   }, [isInView, value]);
+
   const colors = {
     gold:  { bg: 'rgba(201,151,58,0.08)',   text: '#C9973A',  border: 'rgba(201,151,58,0.18)',  bar: '#C9973A' },
     red:   { bg: 'rgba(204,34,0,0.08)',     text: '#CC2200',  border: 'rgba(204,34,0,0.18)',    bar: '#CC2200' },

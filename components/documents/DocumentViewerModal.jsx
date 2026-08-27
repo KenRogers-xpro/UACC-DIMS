@@ -221,12 +221,12 @@ export default function DocumentViewerModal({
   useEffect(() => {
     if (!document || !isOpen) return
     let cancelled = false
-    let objectUrl = null
+    let revokeUrl = null
     setPreviewLoading(true)
     api.getBlob(`/documents/${document.id}/file`)
-      .then((url) => {
-        if (cancelled) { URL.revokeObjectURL(url); return }
-        objectUrl = url
+      .then(({ url, revoke }) => {
+        if (cancelled) { revoke(); return }
+        revokeUrl = revoke
         setPreviewUrl(url)
       })
       .catch(() => { if (!cancelled) setPreviewUrl(null) })
@@ -234,7 +234,7 @@ export default function DocumentViewerModal({
 
     return () => {
       cancelled = true
-      if (objectUrl) URL.revokeObjectURL(objectUrl)
+      if (revokeUrl) revokeUrl()
     }
   }, [document, isOpen])
 
@@ -346,7 +346,7 @@ export default function DocumentViewerModal({
     setAttachmentPreviewLoading(true)
     setAttachmentPreview({ id: att.document.id, url: null, mimeType: att.document.mimeType, title: att.document.title })
     try {
-      const url = await api.getBlob(`/documents/${att.document.id}/file`)
+      const { url } = await api.getBlob(`/documents/${att.document.id}/file`)
       setAttachmentPreview({ id: att.document.id, url, mimeType: att.document.mimeType, title: att.document.title })
     } catch {
       setAttachmentPreview(null)
@@ -385,12 +385,18 @@ export default function DocumentViewerModal({
   const handleDownload = async () => {
     setDownloading(true)
     try {
-      const url = previewUrl || await api.getBlob(`/documents/${document.id}/file`)
+      let downloadUrl = previewUrl
+      let revoke = null
+      if (!downloadUrl) {
+        const blob = await api.getBlob(`/documents/${document.id}/file`)
+        downloadUrl = blob.url
+        revoke = blob.revoke
+      }
       const link = window.document.createElement('a')
-      link.href = url
+      link.href = downloadUrl
       link.download = document.filePath || document.title
       link.click()
-      if (!previewUrl) URL.revokeObjectURL(url)
+      if (revoke) revoke()
     } catch {
       // no-op — download failing silently degrades to nothing happening,
       // consistent with the rest of this component's error handling
@@ -407,7 +413,7 @@ export default function DocumentViewerModal({
   const handleDownloadAnnotationTrail = async () => {
     setDownloadingWithAnnotations(true)
     try {
-      const url = await api.getBlob(`/documents/${document.id}/export-with-annotations`)
+      const { url, revoke } = await api.getBlob(`/documents/${document.id}/export-with-annotations`)
       const sanitizedTitle = (document.title || 'document')
         .replace(/[^a-zA-Z0-9-_ ]/g, '')
         .trim()
@@ -416,7 +422,7 @@ export default function DocumentViewerModal({
       link.href = url
       link.download = `${sanitizedTitle}_annotation_trail.pdf`
       link.click()
-      URL.revokeObjectURL(url)
+      revoke()
     } catch {
       // no-op — same silent-degrade pattern as handleDownload
     } finally {

@@ -37,7 +37,7 @@ export default function DocumentsAwaitingAction({ onTakeAction, refreshKey }) {
           <div key={doc.id} className="flex flex-col md:flex-row md:items-center justify-between p-3 rounded-lg bg-[#0b1120]/80 border border-uacc-gold/20 gap-4 hover:border-uacc-gold/50 transition-colors">
             <div>
               <span className="text-[10px] text-white/40 uppercase tracking-widest block mb-1">
-                Ref: {doc.id}
+                Ref: {doc.id.slice(-8).toUpperCase()}
               </span>
               <h4 className="text-sm font-semibold text-white">{doc.title}</h4>
               <p className="text-[11px] text-white/60 mt-1">
