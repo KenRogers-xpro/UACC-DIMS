@@ -6,7 +6,6 @@ import {
   Menu, Bell, ChevronLeft, ChevronRight, Search, 
   MessageSquare, Megaphone, CheckCheck, FileText, AlertTriangle 
 } from 'lucide-react'
-import StatusDot from '@/components/ui/StatusDot'
 import { useStore } from '@/lib/store'
 import { useNotifications } from '@/lib/useNotifications'
 
@@ -46,8 +45,6 @@ export default function TopBar({ user, sidebarCollapsed, onToggleSidebar, onMobi
   const pathname = usePathname()
   const router = useRouter()
   const page = PAGE_TITLES[pathname] || { title: 'DIMS', sub: 'Uganda Air Cargo Corporation' }
-  const onlineUsers = useStore((state) => state.onlineUsers) || []
-  const isUserOnline = (userId) => onlineUsers.find((u) => u.id === userId)?.isOnline || false
   const { incoming, outgoing, unreadCount, error: notifError, refresh: refreshNotifications } = useNotifications()
 
   const [notifOpen, setNotifOpen] = useState(false)
@@ -223,25 +220,21 @@ export default function TopBar({ user, sidebarCollapsed, onToggleSidebar, onMobi
              style={{ background: 'var(--border-default)' }} />
 
         {/* User pill */}
-        <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg cursor-default"
+        <div className="hidden sm:flex items-center gap-2.5 px-3 py-1.5 rounded-lg cursor-default"
              style={{
                background: 'var(--glass-bg)',
                border: '1px solid var(--border-default)',
              }}>
-          <div className="relative flex-shrink-0">
-            <div className="w-6 h-6 rounded-full flex items-center justify-center
-                            font-heading font-bold text-[10px] text-white"
-                 style={{ background: 'rgba(201,151,58,0.25)', border: '1px solid rgba(201,151,58,0.35)' }}>
-              {userInitial}
-            </div>
-            <StatusDot online={isUserOnline(user?.id)} size={7} className="absolute -bottom-0.5 -right-0.5" />
+          <div className="w-7 h-7 rounded-full flex items-center justify-center font-heading font-bold text-xs text-white flex-shrink-0"
+               style={{ background: 'rgba(201,151,58,0.2)', border: '1px solid rgba(201,151,58,0.35)' }}>
+            {userInitial}
           </div>
-          <div className="flex flex-col leading-none">
-            <span className="text-[11px] font-semibold font-heading truncate max-w-[90px]"
+          <div className="flex flex-col justify-center min-w-0">
+            <span className="text-xs font-semibold font-heading truncate max-w-[140px] leading-tight"
                   style={{ color: 'var(--text-primary)' }}>
               {firstName}
             </span>
-            <span className="text-[9px] uppercase tracking-wider truncate max-w-[90px]"
+            <span className="text-[9px] uppercase font-medium tracking-wider truncate max-w-[140px] leading-tight mt-0.5"
                   style={{ color: 'var(--text-muted)' }}>
               {roleLabel}
             </span>
