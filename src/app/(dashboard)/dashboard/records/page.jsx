@@ -14,7 +14,9 @@ import {
   PieChart, Pie, Cell
 } from 'recharts'
 import api from '@/lib/api'
+import { useAuth } from '@/lib/auth-context'
 import FileIntoDossierModal from '@/components/records/FileIntoDossierModal'
+import DocumentViewerModal from '@/components/documents/DocumentViewerModal'
 
 // Adapts a real RegistryEntry (from GET/POST /api/records) into the flat
 // display shape this page's JSX already expects — `id` stays the display-
@@ -238,6 +240,7 @@ function CirculationPackageCard({ copy, isExpanded, onToggleExpand, onOpenDocume
 }
 
 export default function RecordsExecutivePage() {
+  const { user } = useAuth()
   const [activeView, setActiveView] = useState('register')
   const [searchQuery, setSearchQuery] = useState('')
   const [filterType, setFilterType] = useState('ALL')
@@ -255,6 +258,7 @@ export default function RecordsExecutivePage() {
   const [currentPage, setCurrentPage] = useState(1)
   const [toast, setToast] = useState(null)
   const [pendingCopiesCount, setPendingCopiesCount] = useState(0)
+  const [viewerDoc, setViewerDoc] = useState(null)
 
   // Real data — replaces the old MOCK_REGISTRY/ANALYTICS_DATA-only prototype.
   const [records, setRecords] = useState([])
@@ -561,16 +565,26 @@ export default function RecordsExecutivePage() {
     }
   }
 
-  // Same auth-gated blob-fetch pattern as documents/page.jsx handleDownload —
-  // works for both Cloudinary-backed and legacy Postgres-backed documents,
-  // rather than assuming every document has a directly linkable URL.
+  // Open filed/archived document in the internal DocumentViewerModal (with
+  // inline preview, download, circulation trail, and signatures in read-only mode).
   const handleOpenFiledDocument = async (doc) => {
     if (!doc) return
     try {
-      const { url } = await api.getBlob(`/documents/${doc.id}/file`)
-      window.open(url, '_blank', 'noopener,noreferrer')
+      const docId = doc.id || doc.sourceId || doc.linkedDocumentId
+      if (docId) {
+        const res = await api.get(`/documents/${docId}`)
+        if (res.success && res.data) {
+          setViewerDoc(res.data)
+          return
+        }
+      }
+      setViewerDoc(doc)
     } catch (err) {
-      showToast(err.message || 'Failed to open document', 'error')
+      if (doc.id || doc.title) {
+        setViewerDoc(doc)
+      } else {
+        showToast(err.message || 'Failed to open document', 'error')
+      }
     }
   }
 
@@ -1935,9 +1949,13 @@ export default function RecordsExecutivePage() {
                     </div>
                   )}
                   {selectedEntry.linkedDocumentId && (
-                    <div className="col-span-2 text-sm text-blue-400 hover:underline cursor-pointer flex items-center gap-1 font-medium">
-                      View in Documents module <ArrowRightCircle size={14} />
-                    </div>
+                    <button
+                      type="button"
+                      onClick={() => handleOpenFiledDocument({ id: selectedEntry.linkedDocumentId })}
+                      className="col-span-2 text-sm text-blue-400 hover:underline cursor-pointer flex items-center gap-1 font-medium bg-transparent border-none p-0 text-left"
+                    >
+                      <Eye size={14} /> Open document in internal viewer <ArrowRightCircle size={14} />
+                    </button>
                   )}
                 </div>
               </div>
@@ -2456,6 +2474,17 @@ export default function RecordsExecutivePage() {
             <p className="text-sm font-medium">{toast.message}</p>
           </div>
         </div>
+      )}
+
+      {/* INTERNAL DOCUMENT VIEWER (Read-Only) */}
+      {viewerDoc && (
+        <DocumentViewerModal
+          document={viewerDoc}
+          isOpen={Boolean(viewerDoc)}
+          onClose={() => setViewerDoc(null)}
+          currentUserId={user?.id}
+          currentUserRole={user?.role}
+        />
       )}
 
     </div>
