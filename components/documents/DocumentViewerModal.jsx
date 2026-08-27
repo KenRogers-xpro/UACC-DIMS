@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { createPortal } from 'react-dom'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Maximize2, Minimize2, FileText, FileDown, Eye, MessageSquare, Clock, Paperclip, Download, PenTool, CloudUpload, User, FolderCheck, Send, X } from 'lucide-react'
+import { Maximize2, Minimize2, FileText, FileDown, Eye, MessageSquare, Clock, Paperclip, Download, PenTool, CloudUpload, User, FolderCheck, Send, X, Lock } from 'lucide-react'
 import Badge from '@/components/ui/Badge'
 import Button from '@/components/ui/Button'
 import EmptyState from '@/components/ui/EmptyState'
@@ -167,7 +167,7 @@ export default function DocumentViewerModal({
   const [isPreviewFullscreen, setIsPreviewFullscreen] = useState(false)
 
   useEffect(() => {
-    const handleFsChange = () => setIsPreviewFullscreen(document.fullscreenElement === previewBoxRef.current)
+    const handleFsChange = () => setIsPreviewFullscreen(window.document.fullscreenElement === previewBoxRef.current)
     window.document.addEventListener('fullscreenchange', handleFsChange)
     return () => window.document.removeEventListener('fullscreenchange', handleFsChange)
   }, [])
@@ -655,7 +655,7 @@ export default function DocumentViewerModal({
                         <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
                           This file type can&apos;t be previewed inline.
                         </p>
-                        <Button size="sm" variant="outline" icon={Download} onClick={() => window.open(fileUrl)} loading={downloading}>
+                        <Button size="sm" variant="outline" icon={Download} onClick={handleDownload} loading={downloading}>
                           Download to view
                         </Button>
                       </div>
