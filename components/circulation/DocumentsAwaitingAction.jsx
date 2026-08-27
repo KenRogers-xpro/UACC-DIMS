@@ -1,7 +1,9 @@
 import React, { useEffect } from 'react'
-import { FileText, ArrowRight } from 'lucide-react'
+import { FileText, ArrowRight, Sparkles } from 'lucide-react'
 import { useCirculation } from '@/lib/useCirculation'
 import Button from '@/components/ui/Button'
+import EmptyState from '@/components/ui/EmptyState'
+import { SkeletonLine } from '@/components/ui/SkeletonLoader'
 import CirculationLiveTracker from '@/components/circulation/CirculationLiveTracker'
 
 // Take Action now opens the full DocumentViewerModal (on its Signatures
@@ -17,8 +19,24 @@ export default function DocumentsAwaitingAction({ onTakeAction, refreshKey }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [fetchInbox, refreshKey])
 
-  if (loading && inbox.length === 0) return null
-  if (inbox.length === 0) return null
+  if (loading && inbox.length === 0) {
+    return (
+      <div className="card rounded-xl p-6 flex flex-col gap-3">
+        <SkeletonLine height="h-6" width="w-48" />
+        <SkeletonLine height="h-20" />
+      </div>
+    )
+  }
+
+  if (inbox.length === 0) {
+    return (
+      <EmptyState
+        icon={Sparkles}
+        title="No new arrivals awaiting action"
+        message="Documents circulated to your role that require your review or action will appear here."
+      />
+    )
+  }
 
   return (
     <div className="card rounded-xl p-5 border border-uacc-gold/30 bg-uacc-gold/5 shadow-[0_0_15px_rgba(201,151,58,0.05)] mb-6 animate-in slide-in-from-top-4">
