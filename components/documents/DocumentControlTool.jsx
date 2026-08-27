@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { CloudUpload, Plus, X } from 'lucide-react'
+import { CloudUpload, Plus, X, FileText } from 'lucide-react'
 import { useAuth } from '@/lib/auth-context'
 import { useDocuments } from '@/lib/useDocuments'
 import Badge from '@/components/ui/Badge'
