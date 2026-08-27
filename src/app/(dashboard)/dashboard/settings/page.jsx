@@ -496,9 +496,20 @@ export default function SettingsPage() {
               <div className="flex items-center justify-between pt-2 pb-2">
                 <div>
                   <h4 className="text-sm font-bold text-[var(--text-primary)]">Theme</h4>
-                  <p className="text-xs text-[var(--text-muted)] mt-1">Choose your preferred color scheme</p>
+                  <p className="text-xs text-[var(--text-muted)] mt-1">System follows your device setting. Choose Dark or Light to override it.</p>
                 </div>
                 <div className="flex gap-2">
+                  <button 
+                    onClick={() => mounted && setTheme('system')}
+                    className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border transition-colors text-sm font-medium ${
+                      mounted && theme === 'system' 
+                        ? 'bg-uacc-gold/20 border-uacc-gold/50 text-uacc-gold' 
+                        : 'bg-white/5 border-white/10 text-[var(--text-muted)] hover:text-[var(--text-primary)]'
+                    }`}
+                  >
+                    <Monitor size={14} />
+                    System
+                  </button>
                   <button 
                     onClick={() => mounted && setTheme('dark')}
                     className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border transition-colors text-sm font-medium ${

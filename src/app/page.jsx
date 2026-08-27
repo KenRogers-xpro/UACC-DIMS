@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import ThemeToggle from '@/components/ui/ThemeToggle';
 import { useTheme } from 'next-themes';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useInView } from 'framer-motion';
@@ -255,7 +254,6 @@ export default function LandingPage() {
 
           {/* Action buttons (desktop) */}
           <div className="hidden md:flex items-center gap-3">
-            <ThemeToggle />
             <Link
               href="/login"
               className="px-5 py-2 border rounded font-heading text-xs uppercase tracking-wider transition-all duration-200"
@@ -304,7 +302,6 @@ export default function LandingPage() {
             <hr style={{ borderColor: 'var(--border-subtle)' }} />
             <div className="flex flex-col gap-3">
               <div className="flex items-center justify-center pt-2">
-                <ThemeToggle />
               </div>
               <Link
                 href="/login"

@@ -7,10 +7,11 @@ export default function Providers({ children }) {
     <AuthProvider>
       <ThemeProvider
         attribute="data-theme"
-        defaultTheme="dark"
-        enableSystem={false}
+        defaultTheme="system"
+        enableSystem={true}
         themes={['dark', 'light']}
         storageKey="dims-theme"
+        disableTransitionOnChange
       >
         {children}
       </ThemeProvider>

@@ -6,7 +6,6 @@ import {
   Menu, Bell, ChevronLeft, ChevronRight, Search, 
   MessageSquare, Megaphone, CheckCheck, FileText, AlertTriangle 
 } from 'lucide-react'
-import ThemeToggle from '@/components/ui/ThemeToggle'
 import StatusDot from '@/components/ui/StatusDot'
 import { useStore } from '@/lib/store'
 import { useNotifications } from '@/lib/useNotifications'
@@ -126,7 +125,6 @@ export default function TopBar({ user, sidebarCollapsed, onToggleSidebar, onMobi
       {/* Right: actions */}
       <div className="flex items-center gap-1.5 flex-shrink-0">
         {/* Theme toggle */}
-        <ThemeToggle />
 
         {/* Notification bell */}
         <div className="relative" ref={notifRef}>
