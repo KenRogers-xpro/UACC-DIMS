@@ -200,7 +200,7 @@ export default function LoginPage() {
                 className="text-[10px] font-heading uppercase tracking-wider"
                 style={{ color: 'rgba(255,255,255,0.20)' }}
               >
-                Uganda Air Cargo &middot; Entebbe Int&apos;l Airport &middot; Est. 1994
+                {/* Uganda Air Cargo &middot; Entebbe Int&apos;l Airport &middot; Est. 1994 */}
               </p>
             </div>
           </div>
